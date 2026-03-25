@@ -27,6 +27,7 @@ contracts/broadcast/
 # OS
 .DS_Store
 Thumbs.db
+nul
 
 # Turbo
 .turbo/
