@@ -296,4 +296,30 @@ contract ForjaMultisendTest is Test {
         multisend.setTreasury(newTreasury);
         assertEq(multisend.treasury(), newTreasury);
     }
+
+    function test_multisend_revertsZeroAmountInArray() public {
+        address[] memory recipients = new address[](2);
+        uint256[] memory amounts = new uint256[](2);
+        recipients[0] = makeAddr("r1");
+        recipients[1] = makeAddr("r2");
+        amounts[0] = 100e6;
+        amounts[1] = 0; // zero amount
+
+        vm.prank(alice);
+        vm.expectRevert(ForjaMultisend.ZeroAmount.selector);
+        multisend.multisendToken(address(token), recipients, amounts);
+    }
+
+    function test_multisend_revertsZeroAddressRecipient() public {
+        address[] memory recipients = new address[](2);
+        uint256[] memory amounts = new uint256[](2);
+        recipients[0] = makeAddr("r1");
+        recipients[1] = address(0); // zero address
+        amounts[0] = 100e6;
+        amounts[1] = 100e6;
+
+        vm.prank(alice);
+        vm.expectRevert(ForjaMultisend.ZeroAddress.selector);
+        multisend.multisendToken(address(token), recipients, amounts);
+    }
 }
