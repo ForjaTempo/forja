@@ -1,0 +1,94 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint-and-typecheck:
+    name: Lint & Typecheck
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Biome check
+        run: pnpm run check
+
+      - name: TypeScript typecheck
+        run: pnpm run typecheck
+
+  build:
+    name: Build
+    needs: lint-and-typecheck
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm run build
+
+      - name: Verify build output
+        run: test -d apps/web/.next
+
+  contracts:
+    name: Contracts
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for contracts
+        id: check
+        run: |
+          if [ -f "contracts/foundry.toml" ]; then
+            echo "has_contracts=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_contracts=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install Foundry
+        if: steps.check.outputs.has_contracts == 'true'
+        uses: foundry-rs/foundry-toolchain@v1
+
+      - name: Build contracts
+        if: steps.check.outputs.has_contracts == 'true'
+        working-directory: contracts
+        run: forge build
+
+      - name: Test contracts
+        if: steps.check.outputs.has_contracts == 'true'
+        working-directory: contracts
+        run: forge test
+
+      - name: Skip
+        if: steps.check.outputs.has_contracts != 'true'
+        run: echo "No contracts found, skipping"

@@ -1,0 +1,26 @@
+{
+	"name": "forja",
+	"version": "0.0.0",
+	"private": true,
+	"packageManager": "pnpm@10.28.1",
+	"scripts": {
+		"build": "turbo run build",
+		"dev": "turbo run dev",
+		"check": "biome check .",
+		"check:fix": "biome check --fix .",
+		"typecheck": "turbo run typecheck",
+		"test": "turbo run test",
+		"clean": "turbo run clean"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^2.0.0",
+		"turbo": "^2.8.0",
+		"typescript": "^5.8.3"
+	},
+	"pnpm": {
+		"onlyBuiltDependencies": [
+			"esbuild",
+			"sharp"
+		]
+	}
+}
