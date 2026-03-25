@@ -24,7 +24,7 @@ contract ForjaTokenFactory is Ownable, ReentrancyGuard {
     event TreasuryUpdated(address oldTreasury, address newTreasury);
 
     error ZeroAddress();
-    error ZeroFee();
+    error RoleTransferFailed();
 
     constructor(
         address _tipFactory,
@@ -44,7 +44,7 @@ contract ForjaTokenFactory is Ownable, ReentrancyGuard {
         string calldata symbol,
         uint256 initialSupply
     ) external nonReentrant returns (address) {
-        usdc.safeTransferFrom(msg.sender, treasury, createFee);
+        if (createFee > 0) usdc.safeTransferFrom(msg.sender, treasury, createFee);
 
         uint256 nonce = userNonce[msg.sender]++;
         bytes32 salt = keccak256(abi.encodePacked(msg.sender, block.timestamp, nonce));
@@ -61,6 +61,9 @@ contract ForjaTokenFactory is Ownable, ReentrancyGuard {
         ITIP20(token).grantRole(defaultAdminRole, msg.sender);
         ITIP20(token).renounceRole(issuerRole, address(this));
         ITIP20(token).renounceRole(defaultAdminRole, address(this));
+
+        if (ITIP20(token).hasRole(issuerRole, address(this))) revert RoleTransferFailed();
+        if (ITIP20(token).hasRole(defaultAdminRole, address(this))) revert RoleTransferFailed();
 
         emit TokenCreated(msg.sender, token, name, symbol, initialSupply);
 

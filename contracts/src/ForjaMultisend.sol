@@ -39,11 +39,12 @@ contract ForjaMultisend is Ownable, ReentrancyGuard {
         address[] calldata recipients,
         uint256[] calldata amounts
     ) external nonReentrant {
+        if (token == address(0)) revert ZeroAddress();
         if (recipients.length == 0) revert EmptyRecipients();
         if (recipients.length != amounts.length) revert MismatchedArrays();
         if (recipients.length > MAX_RECIPIENTS) revert TooManyRecipients();
 
-        usdc.safeTransferFrom(msg.sender, treasury, multisendFee);
+        if (multisendFee > 0) usdc.safeTransferFrom(msg.sender, treasury, multisendFee);
 
         IERC20 sendToken = IERC20(token);
         uint256 totalAmount;
