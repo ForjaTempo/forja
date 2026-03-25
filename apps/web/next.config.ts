@@ -3,7 +3,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
 	turbopack: {
-		root: resolve(__dirname, "../.."),
+		root: resolve(import.meta.dirname, "../.."),
 	},
 };
 
