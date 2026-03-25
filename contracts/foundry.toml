@@ -18,6 +18,14 @@ quote_style = "double"
 number_underscore = "thousands"
 single_line_statement_blocks = "preserve"
 
+[fuzz]
+runs = 512
+seed = "0x666f726a610000000000000000000000000000000000000000000000000000"
+
+[invariant]
+runs = 128
+depth = 50
+
 [rpc_endpoints]
 tempo = "https://rpc.tempo.xyz"
 moderato = "https://rpc.moderato.tempo.xyz"
