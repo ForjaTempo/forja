@@ -19,6 +19,7 @@ contract ForjaMultisend is Ownable, ReentrancyGuard {
     event TreasuryUpdated(address oldTreasury, address newTreasury);
 
     error ZeroAddress();
+    error ZeroAmount();
     error EmptyRecipients();
     error MismatchedArrays();
     error TooManyRecipients();
@@ -39,16 +40,19 @@ contract ForjaMultisend is Ownable, ReentrancyGuard {
         address[] calldata recipients,
         uint256[] calldata amounts
     ) external nonReentrant {
+        if (token == address(0)) revert ZeroAddress();
         if (recipients.length == 0) revert EmptyRecipients();
         if (recipients.length != amounts.length) revert MismatchedArrays();
         if (recipients.length > MAX_RECIPIENTS) revert TooManyRecipients();
 
-        usdc.safeTransferFrom(msg.sender, treasury, multisendFee);
+        if (multisendFee > 0) usdc.safeTransferFrom(msg.sender, treasury, multisendFee);
 
         IERC20 sendToken = IERC20(token);
         uint256 totalAmount;
 
         for (uint256 i; i < recipients.length; ++i) {
+            if (recipients[i] == address(0)) revert ZeroAddress();
+            if (amounts[i] == 0) revert ZeroAmount();
             totalAmount += amounts[i];
             sendToken.safeTransferFrom(msg.sender, recipients[i], amounts[i]);
         }
@@ -59,15 +63,17 @@ contract ForjaMultisend is Ownable, ReentrancyGuard {
     function setMultisendFee(
         uint256 _fee
     ) external onlyOwner {
-        emit FeeUpdated(multisendFee, _fee);
+        uint256 oldFee = multisendFee;
         multisendFee = _fee;
+        emit FeeUpdated(oldFee, _fee);
     }
 
     function setTreasury(
         address _treasury
     ) external onlyOwner {
         if (_treasury == address(0)) revert ZeroAddress();
-        emit TreasuryUpdated(treasury, _treasury);
+        address oldTreasury = treasury;
         treasury = _treasury;
+        emit TreasuryUpdated(oldTreasury, _treasury);
     }
 }

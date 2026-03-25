@@ -52,7 +52,7 @@ contract ForjaLocker is Ownable, ReentrancyGuard {
     error ZeroDuration();
     error CliffExceedsDuration();
     error NotBeneficiary();
-    error LockRevoked_();
+    error LockIsRevoked();
     error NothingToClaim();
     error NotCreator();
     error NotRevocable();
@@ -79,11 +79,12 @@ contract ForjaLocker is Ownable, ReentrancyGuard {
         bool revocable
     ) external nonReentrant returns (uint256) {
         if (beneficiary == address(0)) revert ZeroAddress();
+        if (token == address(0)) revert ZeroAddress();
         if (amount == 0) revert ZeroAmount();
         if (lockDuration == 0) revert ZeroDuration();
         if (cliffDuration > lockDuration) revert CliffExceedsDuration();
 
-        usdc.safeTransferFrom(msg.sender, treasury, lockFee);
+        if (lockFee > 0) usdc.safeTransferFrom(msg.sender, treasury, lockFee);
         IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
 
         uint64 startTime = uint64(block.timestamp);
@@ -117,7 +118,7 @@ contract ForjaLocker is Ownable, ReentrancyGuard {
     ) external nonReentrant {
         Lock storage lock = locks[lockId];
         if (msg.sender != lock.beneficiary) revert NotBeneficiary();
-        if (lock.revoked) revert LockRevoked_();
+        if (lock.revoked) revert LockIsRevoked();
 
         uint256 claimable = _getClaimableAmount(lock);
         if (claimable == 0) revert NothingToClaim();
@@ -138,15 +139,16 @@ contract ForjaLocker is Ownable, ReentrancyGuard {
 
         uint256 vested = _getVestedAmount(lock);
         uint256 unclaimedVested = vested - lock.claimedAmount;
-
-        if (unclaimedVested > 0) {
-            lock.claimedAmount += unclaimedVested;
-            IERC20(lock.token).safeTransfer(lock.beneficiary, unclaimedVested);
-        }
-
         uint256 returnAmount = lock.totalAmount - vested;
+
+        // Effects — update all state before external calls
+        lock.claimedAmount += unclaimedVested;
         lock.revoked = true;
 
+        // Interactions — external calls after state updates
+        if (unclaimedVested > 0) {
+            IERC20(lock.token).safeTransfer(lock.beneficiary, unclaimedVested);
+        }
         if (returnAmount > 0) {
             IERC20(lock.token).safeTransfer(lock.creator, returnAmount);
         }
@@ -175,21 +177,24 @@ contract ForjaLocker is Ownable, ReentrancyGuard {
     function setLockFee(
         uint256 _fee
     ) external onlyOwner {
-        emit FeeUpdated(lockFee, _fee);
+        uint256 oldFee = lockFee;
         lockFee = _fee;
+        emit FeeUpdated(oldFee, _fee);
     }
 
     function setTreasury(
         address _treasury
     ) external onlyOwner {
         if (_treasury == address(0)) revert ZeroAddress();
-        emit TreasuryUpdated(treasury, _treasury);
+        address oldTreasury = treasury;
         treasury = _treasury;
+        emit TreasuryUpdated(oldTreasury, _treasury);
     }
 
     function _getClaimableAmount(
         Lock storage lock
     ) internal view returns (uint256) {
+        if (lock.revoked) return 0;
         uint256 vested = _getVestedAmount(lock);
         return vested - lock.claimedAmount;
     }

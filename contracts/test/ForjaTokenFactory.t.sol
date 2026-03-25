@@ -176,4 +176,38 @@ contract ForjaTokenFactoryTest is Test {
         vm.expectRevert(ForjaTokenFactory.ZeroAddress.selector);
         new ForjaTokenFactory(address(tipFactory), address(usdc), address(0), CREATE_FEE);
     }
+
+    function test_setTreasury_emitsEvent() public {
+        vm.expectEmit(false, false, false, true);
+        emit ForjaTokenFactory.TreasuryUpdated(treasury, bob);
+        factory.setTreasury(bob);
+    }
+
+    function test_createToken_uniqueTokenPerCall() public {
+        usdc.mint(alice, 1000e6);
+        vm.prank(alice);
+        address token1 = factory.createToken("Token A", "TA", 1000e6);
+        vm.prank(alice);
+        address token2 = factory.createToken("Token B", "TB", 1000e6);
+        assertTrue(token1 != token2);
+    }
+
+    function test_createToken_zeroFeeWorks() public {
+        factory.setCreateFee(0);
+        vm.prank(bob);
+        address token = factory.createToken("Free Token", "FREE", 1000e6);
+        assertTrue(token != address(0));
+    }
+
+    function test_createToken_roleTransferVerified() public {
+        vm.prank(alice);
+        address token = factory.createToken("Test Token", "TEST", 1000e6);
+
+        bytes32 adminRole = MockTIP20(token).DEFAULT_ADMIN_ROLE();
+        bytes32 issuerRole = MockTIP20(token).ISSUER_ROLE();
+
+        assertTrue(MockTIP20(token).hasRole(adminRole, alice));
+        assertFalse(MockTIP20(token).hasRole(issuerRole, address(factory)));
+        assertFalse(MockTIP20(token).hasRole(adminRole, address(factory)));
+    }
 }
