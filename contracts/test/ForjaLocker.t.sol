@@ -213,7 +213,7 @@ contract ForjaLockerTest is Test {
 
         vm.warp(block.timestamp + ONE_YEAR);
         vm.prank(bob);
-        vm.expectRevert(ForjaLocker.LockRevoked_.selector);
+        vm.expectRevert(ForjaLocker.LockIsRevoked.selector);
         locker.claim(lockId);
     }
 
@@ -383,5 +383,111 @@ contract ForjaLockerTest is Test {
         uint256 claimed = token.balanceOf(bob);
         assertGt(claimed, 0);
         assertLe(claimed, LOCK_AMOUNT);
+    }
+
+    // ===================== ADDITIONAL EDGE CASES =====================
+
+    function test_createLock_cliffEqualsDuration() public {
+        vm.prank(alice);
+        uint256 lockId = locker.createLock(address(token), bob, LOCK_AMOUNT, ONE_YEAR, ONE_YEAR, true, false);
+        assertEq(lockId, 1);
+
+        // Before cliff (= before end), nothing claimable
+        vm.warp(block.timestamp + ONE_YEAR - 1);
+        assertEq(locker.getClaimableAmount(lockId), 0);
+
+        // At cliff = at end, full amount claimable
+        vm.warp(block.timestamp + 1);
+        assertEq(locker.getClaimableAmount(lockId), LOCK_AMOUNT);
+    }
+
+    function test_createLock_beneficiaryIsCreator() public {
+        vm.prank(alice);
+        uint256 lockId = locker.createLock(address(token), alice, LOCK_AMOUNT, ONE_YEAR, 0, true, false);
+        assertEq(lockId, 1);
+
+        vm.warp(block.timestamp + ONE_YEAR);
+        vm.prank(alice);
+        locker.claim(lockId);
+        assertEq(token.balanceOf(alice), 100_000e6 - LOCK_AMOUNT + LOCK_AMOUNT); // back to original minus fee tokens
+    }
+
+    function test_createLock_revertsZeroAddressToken() public {
+        vm.prank(alice);
+        vm.expectRevert(ForjaLocker.ZeroAddress.selector);
+        locker.createLock(address(0), bob, LOCK_AMOUNT, ONE_YEAR, SIX_MONTHS, true, true);
+    }
+
+    function test_claim_revertsWhenFullyClaimed() public {
+        uint256 lockId = _createDefaultLock();
+
+        vm.warp(block.timestamp + ONE_YEAR);
+        vm.prank(bob);
+        locker.claim(lockId);
+
+        vm.prank(bob);
+        vm.expectRevert(ForjaLocker.NothingToClaim.selector);
+        locker.claim(lockId);
+    }
+
+    function test_claim_noVesting_cliffZero_afterEnd() public {
+        vm.prank(alice);
+        uint256 lockId = locker.createLock(address(token), bob, LOCK_AMOUNT, ONE_YEAR, 0, false, false);
+
+        vm.warp(block.timestamp + ONE_YEAR + 1);
+        vm.prank(bob);
+        locker.claim(lockId);
+        assertEq(token.balanceOf(bob), LOCK_AMOUNT);
+    }
+
+    function test_getClaimableAmount_revokedLockReturnsZero() public {
+        uint256 lockId = _createDefaultLock();
+
+        vm.warp(block.timestamp + SIX_MONTHS);
+        vm.prank(alice);
+        locker.revokeLock(lockId);
+
+        assertEq(locker.getClaimableAmount(lockId), 0);
+    }
+
+    function test_getClaimableAmount_nonExistentLock() public view {
+        assertEq(locker.getClaimableAmount(999), 0);
+    }
+
+    function test_revokeLock_withUnclaimedVested() public {
+        uint256 lockId = _createDefaultLock();
+
+        // Warp past cliff — bob has vested tokens but hasn't claimed
+        vm.warp(block.timestamp + SIX_MONTHS);
+        uint256 bobBefore = token.balanceOf(bob);
+        uint256 aliceBefore = token.balanceOf(alice);
+
+        vm.prank(alice);
+        locker.revokeLock(lockId);
+
+        // Bob should receive unclaimed vested portion
+        uint256 vestedAmount = (LOCK_AMOUNT * SIX_MONTHS) / ONE_YEAR;
+        uint256 unvestedAmount = LOCK_AMOUNT - vestedAmount;
+        assertEq(token.balanceOf(bob), bobBefore + vestedAmount);
+        assertEq(token.balanceOf(alice), aliceBefore + unvestedAmount);
+    }
+
+    function test_setLockFee_emitsEvent() public {
+        vm.expectEmit(false, false, false, true);
+        emit ForjaLocker.FeeUpdated(LOCK_FEE, 20e6);
+        locker.setLockFee(20e6);
+    }
+
+    function test_setTreasury_emitsEvent() public {
+        address newTreasury = makeAddr("newTreasury");
+        vm.expectEmit(false, false, false, true);
+        emit ForjaLocker.TreasuryUpdated(treasury, newTreasury);
+        locker.setTreasury(newTreasury);
+    }
+
+    function test_setTreasury_updatesValue() public {
+        address newTreasury = makeAddr("newTreasury");
+        locker.setTreasury(newTreasury);
+        assertEq(locker.treasury(), newTreasury);
     }
 }

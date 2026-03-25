@@ -232,4 +232,68 @@ contract ForjaMultisendTest is Test {
         vm.expectRevert(ForjaMultisend.ZeroAddress.selector);
         new ForjaMultisend(address(usdc), address(0), MULTISEND_FEE);
     }
+
+    function test_multisend_exactlyMaxRecipients() public {
+        (address[] memory recipients, uint256[] memory amounts) = _makeRecipients(500);
+        token.mint(alice, 50_000_000e6);
+
+        vm.prank(alice);
+        multisend.multisendToken(address(token), recipients, amounts);
+
+        assertEq(token.balanceOf(recipients[0]), 100e6);
+        assertEq(token.balanceOf(recipients[499]), 100e6);
+    }
+
+    function test_multisend_duplicateRecipients() public {
+        address[] memory recipients = new address[](2);
+        uint256[] memory amounts = new uint256[](2);
+        address bob = makeAddr("bob");
+        recipients[0] = bob;
+        recipients[1] = bob;
+        amounts[0] = 100e6;
+        amounts[1] = 200e6;
+
+        vm.prank(alice);
+        multisend.multisendToken(address(token), recipients, amounts);
+        assertEq(token.balanceOf(bob), 300e6);
+    }
+
+    function test_multisend_zeroFeeWorks() public {
+        multisend.setMultisendFee(0);
+        (address[] memory recipients, uint256[] memory amounts) = _makeRecipients(3);
+
+        vm.prank(alice);
+        multisend.multisendToken(address(token), recipients, amounts);
+
+        for (uint256 i; i < 3; ++i) {
+            assertEq(token.balanceOf(recipients[i]), 100e6);
+        }
+    }
+
+    function test_multisend_revertsZeroAddressToken() public {
+        (address[] memory recipients, uint256[] memory amounts) = _makeRecipients(2);
+
+        vm.prank(alice);
+        vm.expectRevert(ForjaMultisend.ZeroAddress.selector);
+        multisend.multisendToken(address(0), recipients, amounts);
+    }
+
+    function test_setMultisendFee_emitsEvent() public {
+        vm.expectEmit(false, false, false, true);
+        emit ForjaMultisend.FeeUpdated(MULTISEND_FEE, 10e6);
+        multisend.setMultisendFee(10e6);
+    }
+
+    function test_setTreasury_emitsEvent() public {
+        address newTreasury = makeAddr("newTreasury");
+        vm.expectEmit(false, false, false, true);
+        emit ForjaMultisend.TreasuryUpdated(treasury, newTreasury);
+        multisend.setTreasury(newTreasury);
+    }
+
+    function test_setTreasury_updatesValue() public {
+        address newTreasury = makeAddr("newTreasury");
+        multisend.setTreasury(newTreasury);
+        assertEq(multisend.treasury(), newTreasury);
+    }
 }
