@@ -73,15 +73,17 @@ contract ForjaTokenFactory is Ownable, ReentrancyGuard {
     function setCreateFee(
         uint256 _fee
     ) external onlyOwner {
-        emit FeeUpdated(createFee, _fee);
+        uint256 oldFee = createFee;
         createFee = _fee;
+        emit FeeUpdated(oldFee, _fee);
     }
 
     function setTreasury(
         address _treasury
     ) external onlyOwner {
         if (_treasury == address(0)) revert ZeroAddress();
-        emit TreasuryUpdated(treasury, _treasury);
+        address oldTreasury = treasury;
         treasury = _treasury;
+        emit TreasuryUpdated(oldTreasury, _treasury);
     }
 }

@@ -177,16 +177,18 @@ contract ForjaLocker is Ownable, ReentrancyGuard {
     function setLockFee(
         uint256 _fee
     ) external onlyOwner {
-        emit FeeUpdated(lockFee, _fee);
+        uint256 oldFee = lockFee;
         lockFee = _fee;
+        emit FeeUpdated(oldFee, _fee);
     }
 
     function setTreasury(
         address _treasury
     ) external onlyOwner {
         if (_treasury == address(0)) revert ZeroAddress();
-        emit TreasuryUpdated(treasury, _treasury);
+        address oldTreasury = treasury;
         treasury = _treasury;
+        emit TreasuryUpdated(oldTreasury, _treasury);
     }
 
     function _getClaimableAmount(
