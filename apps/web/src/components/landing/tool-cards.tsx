@@ -1,7 +1,7 @@
 import { HammerIcon, LockIcon, SendIcon } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 
 const tools = [
 	{
@@ -45,9 +45,7 @@ export function ToolCards() {
 							style={{ animationDelay: `${i * 0.1}s` }}
 						>
 							{/* Top gradient accent line */}
-							<div
-								className={`absolute inset-x-0 top-0 h-px bg-gradient-to-r ${tool.accent}`}
-							/>
+							<div className={`absolute inset-x-0 top-0 h-px bg-gradient-to-r ${tool.accent}`} />
 
 							<CardHeader>
 								<div
@@ -56,13 +54,15 @@ export function ToolCards() {
 									<tool.icon className="size-5" />
 								</div>
 								<CardTitle className="text-lg">{tool.title}</CardTitle>
-								<CardDescription className="text-smoke-dark">
-									{tool.description}
-								</CardDescription>
+								<CardDescription className="text-smoke-dark">{tool.description}</CardDescription>
 							</CardHeader>
 
 							<CardFooter>
-								<Button asChild variant="ghost" className="gap-1.5 px-0 text-sm text-smoke hover:text-steel-white">
+								<Button
+									asChild
+									variant="ghost"
+									className="gap-1.5 px-0 text-sm text-smoke hover:text-steel-white"
+								>
 									<Link href={tool.href}>
 										Get started
 										<SendIcon className="size-3.5" />
