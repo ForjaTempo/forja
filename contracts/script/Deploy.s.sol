@@ -7,26 +7,36 @@ import {ForjaMultisend} from "../src/ForjaMultisend.sol";
 import {ForjaLocker} from "../src/ForjaLocker.sol";
 
 contract Deploy is Script {
+    // Tempo protocol addresses (same on mainnet and Moderato)
+    address constant TIP20_FACTORY = 0x20Fc000000000000000000000000000000000000;
+    address constant PATHUSDC = 0x20C0000000000000000000000000000000000000;
+
     function run() external {
         address treasury = vm.envAddress("TREASURY");
-        address tipFactory = vm.envAddress("TIP20_FACTORY");
-        address usdc = vm.envAddress("USDC");
-
         uint256 createFee = vm.envOr("CREATE_FEE", uint256(20e6));
         uint256 multisendFee = vm.envOr("MULTISEND_FEE", uint256(3e6));
         uint256 lockFee = vm.envOr("LOCK_FEE", uint256(10e6));
 
         vm.startBroadcast();
+        _deploy(TIP20_FACTORY, PATHUSDC, treasury, createFee, multisendFee, lockFee);
+        vm.stopBroadcast();
+    }
 
+    function _deploy(
+        address tipFactory,
+        address usdc,
+        address treasury,
+        uint256 createFee,
+        uint256 multisendFee,
+        uint256 lockFee
+    ) internal {
         ForjaTokenFactory tokenFactory = new ForjaTokenFactory(tipFactory, usdc, treasury, createFee);
-        console.log("ForjaTokenFactory deployed at:", address(tokenFactory));
+        console.log("ForjaTokenFactory:", address(tokenFactory));
 
         ForjaMultisend multisend = new ForjaMultisend(usdc, treasury, multisendFee);
-        console.log("ForjaMultisend deployed at:", address(multisend));
+        console.log("ForjaMultisend:", address(multisend));
 
         ForjaLocker locker = new ForjaLocker(usdc, treasury, lockFee);
-        console.log("ForjaLocker deployed at:", address(locker));
-
-        vm.stopBroadcast();
+        console.log("ForjaLocker:", address(locker));
     }
 }
