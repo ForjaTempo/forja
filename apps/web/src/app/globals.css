@@ -1,0 +1,22 @@
+@import "tailwindcss";
+
+@theme {
+	--color-forge-black: #0f1116;
+	--color-anvil-gray: #1a1d25;
+	--color-anvil-gray-light: #242832;
+	--color-steel-white: #f5f5f5;
+	--color-smoke: #9ca3af;
+	--color-smoke-dark: #6b7280;
+	--color-molten-amber: #f59e0b;
+	--color-molten-amber-hover: #d97706;
+	--color-ember-red: #ef4444;
+	--color-forge-green: #10b981;
+
+	--font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+	--font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+	--radius-sm: 0.375rem;
+	--radius-md: 0.5rem;
+	--radius-lg: 0.75rem;
+	--radius-xl: 1rem;
+}
