@@ -10,8 +10,7 @@ export function useTransactionToast() {
 			description: `${hash.slice(0, 10)}...${hash.slice(-8)}`,
 			action: {
 				label: "View",
-				onClick: () =>
-					window.open(`${TEMPO_EXPLORER}/tx/${hash}`, "_blank"),
+				onClick: () => window.open(`${TEMPO_EXPLORER}/tx/${hash}`, "_blank"),
 			},
 		});
 	}, []);
@@ -21,8 +20,7 @@ export function useTransactionToast() {
 			description: `${hash.slice(0, 10)}...${hash.slice(-8)}`,
 			action: {
 				label: "View",
-				onClick: () =>
-					window.open(`${TEMPO_EXPLORER}/tx/${hash}`, "_blank"),
+				onClick: () => window.open(`${TEMPO_EXPLORER}/tx/${hash}`, "_blank"),
 			},
 		});
 	}, []);

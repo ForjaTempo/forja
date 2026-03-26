@@ -11,11 +11,7 @@ interface AddressDisplayProps {
 	className?: string;
 }
 
-export function AddressDisplay({
-	address,
-	showExplorer = false,
-	className,
-}: AddressDisplayProps) {
+export function AddressDisplay({ address, showExplorer = false, className }: AddressDisplayProps) {
 	const [copied, setCopied] = useState(false);
 	const short = `${address.slice(0, 6)}...${address.slice(-4)}`;
 

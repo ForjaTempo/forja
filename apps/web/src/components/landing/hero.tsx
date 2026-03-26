@@ -6,10 +6,7 @@ export function Hero() {
 	return (
 		<section className="relative isolate overflow-hidden py-24 sm:py-32 lg:py-40">
 			{/* Radial amber glow behind heading */}
-			<div
-				aria-hidden="true"
-				className="pointer-events-none absolute inset-0 -z-10"
-			>
+			<div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10">
 				<div className="absolute left-1/2 top-1/2 size-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-molten-amber/8 blur-[120px] animate-pulse-glow" />
 			</div>
 
@@ -45,14 +42,11 @@ export function Hero() {
 					className="animate-fade-in-up mx-auto mt-6 max-w-xl text-base leading-relaxed text-smoke-dark sm:text-lg"
 					style={{ animationDelay: "0.3s" }}
 				>
-					The no-code token toolkit for Tempo. Create TIP-20 tokens, distribute
-					to thousands, and lock liquidity — all on-chain.
+					The no-code token toolkit for Tempo. Create TIP-20 tokens, distribute to thousands, and
+					lock liquidity — all on-chain.
 				</p>
 
-				<div
-					className="animate-fade-in-up mt-10"
-					style={{ animationDelay: "0.45s" }}
-				>
+				<div className="animate-fade-in-up mt-10" style={{ animationDelay: "0.45s" }}>
 					<Button asChild size="lg" className="h-12 gap-2 px-8 text-base font-semibold">
 						<Link href="/create">
 							Launch App

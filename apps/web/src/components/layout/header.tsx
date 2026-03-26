@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
 import { ConnectButton } from "./connect-button";
 import { MobileNav } from "./mobile-nav";
-import { cn } from "@/lib/utils";
 
 const navLinks = [
 	{ href: "/create", label: "Create" },

@@ -60,9 +60,7 @@ export function TransactionStatus({
 			<DialogContent className="sm:max-w-sm">
 				<DialogHeader>
 					<DialogTitle>{title}</DialogTitle>
-					<DialogDescription className="sr-only">
-						{config.label}
-					</DialogDescription>
+					<DialogDescription className="sr-only">{config.label}</DialogDescription>
 				</DialogHeader>
 
 				<div className="flex flex-col items-center gap-4 py-6">
@@ -91,19 +89,13 @@ export function TransactionStatus({
 					)}
 
 					{error && (
-						<p className="max-w-full break-words text-center text-xs text-ember-red">
-							{error}
-						</p>
+						<p className="max-w-full break-words text-center text-xs text-ember-red">{error}</p>
 					)}
 				</div>
 
 				{canClose && (
 					<DialogFooter>
-						<Button
-							variant="secondary"
-							className="w-full"
-							onClick={() => onOpenChange(false)}
-						>
+						<Button variant="secondary" className="w-full" onClick={() => onOpenChange(false)}>
 							Close
 						</Button>
 					</DialogFooter>

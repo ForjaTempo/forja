@@ -14,12 +14,7 @@ function formatCompact(value: number): string {
 	return value.toLocaleString("en-US", { maximumFractionDigits: 2 });
 }
 
-export function TokenAmount({
-	amount,
-	symbol,
-	decimals = 6,
-	className,
-}: TokenAmountProps) {
+export function TokenAmount({ amount, symbol, decimals = 6, className }: TokenAmountProps) {
 	const value = typeof amount === "bigint" ? Number(amount) / 10 ** decimals : amount;
 
 	return (

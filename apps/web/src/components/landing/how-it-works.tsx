@@ -49,13 +49,9 @@ export function HowItWorks() {
 								<step.icon className="size-6 text-molten-amber" />
 							</div>
 
-							<p className="mt-1 font-mono text-xs text-smoke-dark">
-								{step.step}
-							</p>
+							<p className="mt-1 font-mono text-xs text-smoke-dark">{step.step}</p>
 							<h3 className="mt-2 text-lg font-semibold">{step.title}</h3>
-							<p className="mt-2 text-sm leading-relaxed text-smoke-dark">
-								{step.description}
-							</p>
+							<p className="mt-2 text-sm leading-relaxed text-smoke-dark">{step.description}</p>
 						</div>
 					))}
 				</div>

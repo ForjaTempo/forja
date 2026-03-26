@@ -31,9 +31,7 @@ export function Features() {
 					<p className="font-mono text-xs uppercase tracking-[0.2em] text-molten-amber">
 						Why FORJA
 					</p>
-					<h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
-						Built for builders
-					</h2>
+					<h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Built for builders</h2>
 				</div>
 
 				<div className="mt-14 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
@@ -42,12 +40,8 @@ export function Features() {
 							<div className="mx-auto flex size-12 items-center justify-center rounded-xl border border-anvil-gray-light bg-anvil-gray transition-colors group-hover:border-molten-amber/30 group-hover:bg-anvil-gray-light">
 								<feature.icon className="size-5 text-smoke transition-colors group-hover:text-molten-amber" />
 							</div>
-							<h3 className="mt-4 text-base font-semibold text-steel-white">
-								{feature.title}
-							</h3>
-							<p className="mt-2 text-sm leading-relaxed text-smoke-dark">
-								{feature.description}
-							</p>
+							<h3 className="mt-4 text-base font-semibold text-steel-white">{feature.title}</h3>
+							<p className="mt-2 text-sm leading-relaxed text-smoke-dark">{feature.description}</p>
 						</div>
 					))}
 				</div>
