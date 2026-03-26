@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-@theme {
+@theme inline {
 	--color-forge-black: #0f1116;
 	--color-anvil-gray: #1a1d25;
 	--color-anvil-gray-light: #242832;
@@ -19,4 +19,23 @@
 	--radius-md: 0.5rem;
 	--radius-lg: 0.75rem;
 	--radius-xl: 1rem;
+
+	--color-background: var(--color-forge-black);
+	--color-foreground: var(--color-steel-white);
+	--color-card: var(--color-anvil-gray);
+	--color-card-foreground: var(--color-steel-white);
+	--color-popover: var(--color-anvil-gray);
+	--color-popover-foreground: var(--color-steel-white);
+	--color-primary: var(--color-molten-amber);
+	--color-primary-foreground: var(--color-forge-black);
+	--color-secondary: var(--color-anvil-gray-light);
+	--color-secondary-foreground: var(--color-steel-white);
+	--color-muted: var(--color-anvil-gray-light);
+	--color-muted-foreground: var(--color-smoke);
+	--color-accent: var(--color-anvil-gray-light);
+	--color-accent-foreground: var(--color-steel-white);
+	--color-destructive: var(--color-ember-red);
+	--color-border: var(--color-anvil-gray-light);
+	--color-input: var(--color-anvil-gray-light);
+	--color-ring: var(--color-molten-amber);
 }
