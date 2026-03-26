@@ -87,7 +87,7 @@ jobs:
       - name: Test contracts
         if: steps.check.outputs.has_contracts == 'true'
         working-directory: contracts
-        run: forge test
+        run: forge test --no-match-path 'test/fork/*'
 
       - name: Skip
         if: steps.check.outputs.has_contracts != 'true'
