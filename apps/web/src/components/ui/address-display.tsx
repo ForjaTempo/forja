@@ -1,0 +1,53 @@
+"use client";
+
+import { CheckIcon, CopyIcon, ExternalLinkIcon } from "lucide-react";
+import { useCallback, useState } from "react";
+import { TEMPO_EXPLORER } from "@/lib/constants";
+import { cn } from "@/lib/utils";
+
+interface AddressDisplayProps {
+	address: string;
+	showExplorer?: boolean;
+	className?: string;
+}
+
+export function AddressDisplay({ address, showExplorer = false, className }: AddressDisplayProps) {
+	const [copied, setCopied] = useState(false);
+	const short = `${address.slice(0, 6)}...${address.slice(-4)}`;
+
+	const handleCopy = useCallback(async () => {
+		await navigator.clipboard.writeText(address);
+		setCopied(true);
+		setTimeout(() => setCopied(false), 1500);
+	}, [address]);
+
+	return (
+		<span className={cn("inline-flex items-center gap-1.5", className)}>
+			<button
+				type="button"
+				onClick={handleCopy}
+				className="inline-flex items-center gap-1 font-mono text-sm text-smoke transition-colors hover:text-steel-white"
+				title="Copy address"
+			>
+				{short}
+				{copied ? (
+					<CheckIcon className="size-3 text-forge-green" />
+				) : (
+					<CopyIcon className="size-3" />
+				)}
+			</button>
+
+			{showExplorer && (
+				<a
+					href={`${TEMPO_EXPLORER}/address/${address}`}
+					target="_blank"
+					rel="noopener noreferrer"
+					className="text-smoke-dark transition-colors hover:text-molten-amber"
+					title="View on explorer"
+				>
+					<ExternalLinkIcon className="size-3" />
+				</a>
+			)}
+		</span>
+	);
+}

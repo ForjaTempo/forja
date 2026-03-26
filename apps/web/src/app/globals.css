@@ -1,0 +1,75 @@
+@import "tailwindcss";
+
+@theme inline {
+	--color-forge-black: #0f1116;
+	--color-anvil-gray: #1a1d25;
+	--color-anvil-gray-light: #242832;
+	--color-steel-white: #f5f5f5;
+	--color-smoke: #9ca3af;
+	--color-smoke-dark: #6b7280;
+	--color-molten-amber: #f59e0b;
+	--color-molten-amber-hover: #d97706;
+	--color-ember-red: #ef4444;
+	--color-forge-green: #10b981;
+
+	--font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+	--font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+	--radius-sm: 0.375rem;
+	--radius-md: 0.5rem;
+	--radius-lg: 0.75rem;
+	--radius-xl: 1rem;
+
+	--color-background: var(--color-forge-black);
+	--color-foreground: var(--color-steel-white);
+	--color-card: var(--color-anvil-gray);
+	--color-card-foreground: var(--color-steel-white);
+	--color-popover: var(--color-anvil-gray);
+	--color-popover-foreground: var(--color-steel-white);
+	--color-primary: var(--color-molten-amber);
+	--color-primary-foreground: var(--color-forge-black);
+	--color-secondary: var(--color-anvil-gray-light);
+	--color-secondary-foreground: var(--color-steel-white);
+	--color-muted: var(--color-anvil-gray-light);
+	--color-muted-foreground: var(--color-smoke);
+	--color-accent: var(--color-anvil-gray-light);
+	--color-accent-foreground: var(--color-steel-white);
+	--color-destructive: var(--color-ember-red);
+	--color-border: var(--color-anvil-gray-light);
+	--color-input: var(--color-anvil-gray-light);
+	--color-ring: var(--color-molten-amber);
+
+	--animate-fade-in: fade-in 0.6s ease-out both;
+	--animate-fade-in-up: fade-in-up 0.6s ease-out both;
+	--animate-pulse-glow: pulse-glow 3s ease-in-out infinite;
+}
+
+@keyframes fade-in {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
+
+@keyframes fade-in-up {
+	from {
+		opacity: 0;
+		transform: translateY(20px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+@keyframes pulse-glow {
+	0%,
+	100% {
+		opacity: 0.4;
+	}
+	50% {
+		opacity: 0.8;
+	}
+}
