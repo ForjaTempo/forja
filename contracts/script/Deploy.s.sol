@@ -18,19 +18,20 @@ contract Deploy is Script {
         uint256 lockFee = vm.envOr("LOCK_FEE", uint256(10e6));
 
         vm.startBroadcast();
-        _deploy(TIP20_FACTORY, PATHUSDC, treasury, createFee, multisendFee, lockFee);
+        _deploy(TIP20_FACTORY, PATHUSDC, PATHUSDC, treasury, createFee, multisendFee, lockFee);
         vm.stopBroadcast();
     }
 
     function _deploy(
         address tipFactory,
         address usdc,
+        address pathUsd,
         address treasury,
         uint256 createFee,
         uint256 multisendFee,
         uint256 lockFee
     ) internal {
-        ForjaTokenFactory tokenFactory = new ForjaTokenFactory(tipFactory, usdc, treasury, createFee);
+        ForjaTokenFactory tokenFactory = new ForjaTokenFactory(tipFactory, usdc, pathUsd, treasury, createFee);
         console.log("ForjaTokenFactory:", address(tokenFactory));
 
         ForjaMultisend multisend = new ForjaMultisend(usdc, treasury, multisendFee);
