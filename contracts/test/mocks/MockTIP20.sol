@@ -29,8 +29,6 @@ contract MockTIP20 is ERC20 {
         _currency = currency_;
         _quoteToken = quoteToken_;
         hasRole[admin][DEFAULT_ADMIN_ROLE] = true;
-        hasRole[admin][ISSUER_ROLE] = true;
-        hasRole[admin][PAUSE_ROLE] = true;
     }
 
     function decimals() public pure override returns (uint8) {

@@ -58,11 +58,15 @@ contract ForjaTokenFactory is Ownable, ReentrancyGuard {
 
         address token = tipFactory.createToken(name, symbol, "USD", pathUsd, address(this), salt);
 
+        bytes32 issuerRole = ITIP20(token).ISSUER_ROLE();
+
+        // Factory only receives DEFAULT_ADMIN_ROLE from TIP-20 Factory.
+        // Must self-grant ISSUER_ROLE before minting.
+        ITIP20(token).grantRole(issuerRole, address(this));
+
         if (initialSupply > 0) {
             ITIP20(token).mint(msg.sender, initialSupply);
         }
-
-        bytes32 issuerRole = ITIP20(token).ISSUER_ROLE();
 
         ITIP20(token).grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         ITIP20(token).renounceRole(issuerRole);
