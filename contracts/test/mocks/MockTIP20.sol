@@ -8,11 +8,18 @@ contract MockTIP20 is ERC20, AccessControl {
     bytes32 public constant ISSUER_ROLE = keccak256("ISSUER_ROLE");
     bytes32 public constant PAUSE_ROLE = keccak256("PAUSE_ROLE");
 
+    string private _currency;
+    address private _quoteToken;
+
     constructor(
         string memory name_,
         string memory symbol_,
+        string memory currency_,
+        address quoteToken_,
         address admin
     ) ERC20(name_, symbol_) {
+        _currency = currency_;
+        _quoteToken = quoteToken_;
         _grantRole(DEFAULT_ADMIN_ROLE, admin);
         _grantRole(ISSUER_ROLE, admin);
         _grantRole(PAUSE_ROLE, admin);
@@ -20,6 +27,14 @@ contract MockTIP20 is ERC20, AccessControl {
 
     function decimals() public pure override returns (uint8) {
         return 6;
+    }
+
+    function currency() external view returns (string memory) {
+        return _currency;
+    }
+
+    function quoteToken() external view returns (address) {
+        return _quoteToken;
     }
 
     function mint(
