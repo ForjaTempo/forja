@@ -63,19 +63,17 @@ contract ForjaTokenFactoryTest is Test {
         vm.prank(alice);
         address token = factory.createToken("Test Token", "TEST", 1000e6);
 
-        bytes32 adminRole = MockTIP20(token).DEFAULT_ADMIN_ROLE();
-        assertTrue(MockTIP20(token).hasRole(adminRole, alice));
+        assertTrue(MockTIP20(token).hasRole(alice, bytes32(0)));
     }
 
     function test_createToken_contractRenouncesRoles() public {
         vm.prank(alice);
         address token = factory.createToken("Test Token", "TEST", 1000e6);
 
-        bytes32 adminRole = MockTIP20(token).DEFAULT_ADMIN_ROLE();
         bytes32 issuerRole = MockTIP20(token).ISSUER_ROLE();
 
-        assertFalse(MockTIP20(token).hasRole(adminRole, address(factory)));
-        assertFalse(MockTIP20(token).hasRole(issuerRole, address(factory)));
+        assertFalse(MockTIP20(token).hasRole(address(factory), bytes32(0)));
+        assertFalse(MockTIP20(token).hasRole(address(factory), issuerRole));
     }
 
     function test_createToken_zeroInitialSupply() public {
@@ -208,12 +206,11 @@ contract ForjaTokenFactoryTest is Test {
         vm.prank(alice);
         address token = factory.createToken("Test Token", "TEST", 1000e6);
 
-        bytes32 adminRole = MockTIP20(token).DEFAULT_ADMIN_ROLE();
         bytes32 issuerRole = MockTIP20(token).ISSUER_ROLE();
 
-        assertTrue(MockTIP20(token).hasRole(adminRole, alice));
-        assertFalse(MockTIP20(token).hasRole(issuerRole, address(factory)));
-        assertFalse(MockTIP20(token).hasRole(adminRole, address(factory)));
+        assertTrue(MockTIP20(token).hasRole(alice, bytes32(0)));
+        assertFalse(MockTIP20(token).hasRole(address(factory), issuerRole));
+        assertFalse(MockTIP20(token).hasRole(address(factory), bytes32(0)));
     }
 
     function test_createToken_passesUsdCurrency() public {
