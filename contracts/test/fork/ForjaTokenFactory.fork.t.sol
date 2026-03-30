@@ -33,7 +33,7 @@ contract ForjaTokenFactoryForkTest is Test {
         vm.createSelectFork("moderato");
         treasury = makeAddr("treasury");
         user = makeAddr("user");
-        factory = new ForjaTokenFactory(TIP20_FACTORY, PATHUSDC, treasury, 0);
+        factory = new ForjaTokenFactory(TIP20_FACTORY, PATHUSDC, PATHUSDC, treasury, 0);
     }
 
     /// @dev Skipped: Tempo TIP-20 Factory uses custom precompiled opcodes

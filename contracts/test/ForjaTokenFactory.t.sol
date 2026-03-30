@@ -23,7 +23,7 @@ contract ForjaTokenFactoryTest is Test {
     function setUp() public {
         usdc = new MockERC20("USD Coin", "USDC", 6);
         tipFactory = new MockTIP20Factory();
-        factory = new ForjaTokenFactory(address(tipFactory), address(usdc), treasury, CREATE_FEE);
+        factory = new ForjaTokenFactory(address(tipFactory), address(usdc), address(usdc), treasury, CREATE_FEE);
 
         usdc.mint(alice, 1000e6);
         vm.prank(alice);
@@ -164,17 +164,22 @@ contract ForjaTokenFactoryTest is Test {
 
     function test_constructor_rejectsZeroFactory() public {
         vm.expectRevert(ForjaTokenFactory.ZeroAddress.selector);
-        new ForjaTokenFactory(address(0), address(usdc), treasury, CREATE_FEE);
+        new ForjaTokenFactory(address(0), address(usdc), address(usdc), treasury, CREATE_FEE);
     }
 
     function test_constructor_rejectsZeroUsdc() public {
         vm.expectRevert(ForjaTokenFactory.ZeroAddress.selector);
-        new ForjaTokenFactory(address(tipFactory), address(0), treasury, CREATE_FEE);
+        new ForjaTokenFactory(address(tipFactory), address(0), address(usdc), treasury, CREATE_FEE);
+    }
+
+    function test_constructor_rejectsZeroPathUsd() public {
+        vm.expectRevert(ForjaTokenFactory.ZeroAddress.selector);
+        new ForjaTokenFactory(address(tipFactory), address(usdc), address(0), treasury, CREATE_FEE);
     }
 
     function test_constructor_rejectsZeroTreasury() public {
         vm.expectRevert(ForjaTokenFactory.ZeroAddress.selector);
-        new ForjaTokenFactory(address(tipFactory), address(usdc), address(0), CREATE_FEE);
+        new ForjaTokenFactory(address(tipFactory), address(usdc), address(usdc), address(0), CREATE_FEE);
     }
 
     function test_setTreasury_emitsEvent() public {
@@ -209,5 +214,17 @@ contract ForjaTokenFactoryTest is Test {
         assertTrue(MockTIP20(token).hasRole(adminRole, alice));
         assertFalse(MockTIP20(token).hasRole(issuerRole, address(factory)));
         assertFalse(MockTIP20(token).hasRole(adminRole, address(factory)));
+    }
+
+    function test_createToken_passesUsdCurrency() public {
+        vm.prank(alice);
+        address token = factory.createToken("Test", "TST", 1000e6);
+        assertEq(MockTIP20(token).currency(), "USD");
+    }
+
+    function test_createToken_passesPathUsdAsQuoteToken() public {
+        vm.prank(alice);
+        address token = factory.createToken("Test", "TST", 1000e6);
+        assertEq(MockTIP20(token).quoteToken(), address(usdc));
     }
 }
