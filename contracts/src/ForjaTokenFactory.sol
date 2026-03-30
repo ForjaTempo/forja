@@ -13,6 +13,7 @@ contract ForjaTokenFactory is Ownable, ReentrancyGuard {
 
     ITIP20Factory public immutable tipFactory;
     IERC20 public immutable usdc;
+    address public immutable pathUsd;
     address public treasury;
     uint256 public createFee;
     mapping(address => uint256) public userNonce;
@@ -29,12 +30,16 @@ contract ForjaTokenFactory is Ownable, ReentrancyGuard {
     constructor(
         address _tipFactory,
         address _usdc,
+        address _pathUsd,
         address _treasury,
         uint256 _createFee
     ) Ownable(msg.sender) {
-        if (_tipFactory == address(0) || _usdc == address(0) || _treasury == address(0)) revert ZeroAddress();
+        if (_tipFactory == address(0) || _usdc == address(0) || _pathUsd == address(0) || _treasury == address(0)) {
+            revert ZeroAddress();
+        }
         tipFactory = ITIP20Factory(_tipFactory);
         usdc = IERC20(_usdc);
+        pathUsd = _pathUsd;
         treasury = _treasury;
         createFee = _createFee;
     }
@@ -49,7 +54,7 @@ contract ForjaTokenFactory is Ownable, ReentrancyGuard {
         uint256 nonce = userNonce[msg.sender]++;
         bytes32 salt = keccak256(abi.encodePacked(msg.sender, block.timestamp, nonce));
 
-        address token = tipFactory.createToken(name, symbol, "", address(0), address(this), salt);
+        address token = tipFactory.createToken(name, symbol, "USD", pathUsd, address(this), salt);
 
         if (initialSupply > 0) {
             ITIP20(token).mint(msg.sender, initialSupply);

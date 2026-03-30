@@ -66,6 +66,13 @@ export const tokenFactoryConfig = {
 			inputs: [{ name: "", type: "address" }],
 			outputs: [{ name: "", type: "uint256" }],
 		},
+		{
+			name: "pathUsd",
+			type: "function",
+			stateMutability: "view",
+			inputs: [],
+			outputs: [{ name: "", type: "address" }],
+		},
 	],
 } as const;
 
