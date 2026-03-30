@@ -11,6 +11,8 @@ import {ITIP20} from "./interfaces/ITIP20.sol";
 contract ForjaTokenFactory is Ownable, ReentrancyGuard {
     using SafeERC20 for IERC20;
 
+    bytes32 private constant DEFAULT_ADMIN_ROLE = 0;
+
     ITIP20Factory public immutable tipFactory;
     IERC20 public immutable usdc;
     address public immutable pathUsd;
@@ -60,15 +62,14 @@ contract ForjaTokenFactory is Ownable, ReentrancyGuard {
             ITIP20(token).mint(msg.sender, initialSupply);
         }
 
-        bytes32 defaultAdminRole = ITIP20(token).DEFAULT_ADMIN_ROLE();
         bytes32 issuerRole = ITIP20(token).ISSUER_ROLE();
 
-        ITIP20(token).grantRole(defaultAdminRole, msg.sender);
-        ITIP20(token).renounceRole(issuerRole, address(this));
-        ITIP20(token).renounceRole(defaultAdminRole, address(this));
+        ITIP20(token).grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        ITIP20(token).renounceRole(issuerRole);
+        ITIP20(token).renounceRole(DEFAULT_ADMIN_ROLE);
 
-        if (ITIP20(token).hasRole(issuerRole, address(this))) revert RoleTransferFailed();
-        if (ITIP20(token).hasRole(defaultAdminRole, address(this))) revert RoleTransferFailed();
+        if (ITIP20(token).hasRole(address(this), issuerRole)) revert RoleTransferFailed();
+        if (ITIP20(token).hasRole(address(this), DEFAULT_ADMIN_ROLE)) revert RoleTransferFailed();
 
         emit TokenCreated(msg.sender, token, name, symbol, initialSupply);
 

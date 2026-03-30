@@ -53,11 +53,10 @@ contract ForjaTokenFactoryForkTest is Test {
         assertEq(ITIP20(token).balanceOf(user), 1_000_000e6);
 
         // Verify roles handed off correctly
-        bytes32 adminRole = ITIP20(token).DEFAULT_ADMIN_ROLE();
         bytes32 issuerRole = ITIP20(token).ISSUER_ROLE();
-        assertTrue(ITIP20(token).hasRole(adminRole, user));
-        assertFalse(ITIP20(token).hasRole(adminRole, address(factory)));
-        assertFalse(ITIP20(token).hasRole(issuerRole, address(factory)));
+        assertTrue(ITIP20(token).hasRole(user, bytes32(0)));
+        assertFalse(ITIP20(token).hasRole(address(factory), bytes32(0)));
+        assertFalse(ITIP20(token).hasRole(address(factory), issuerRole));
     }
 
     /// @dev Skipped: Same precompile limitation as above.

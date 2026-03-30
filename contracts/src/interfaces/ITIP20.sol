@@ -28,15 +28,13 @@ interface ITIP20 is IERC20 {
         address account
     ) external;
     function renounceRole(
-        bytes32 role,
-        address callerConfirmation
+        bytes32 role
     ) external;
     function hasRole(
-        bytes32 role,
-        address account
+        address account,
+        bytes32 role
     ) external view returns (bool);
 
     function ISSUER_ROLE() external view returns (bytes32);
     function PAUSE_ROLE() external view returns (bytes32);
-    function DEFAULT_ADMIN_ROLE() external view returns (bytes32);
 }
