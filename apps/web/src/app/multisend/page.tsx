@@ -3,6 +3,7 @@
 import { useCallback, useState } from "react";
 import { PageContainer } from "@/components/layout/page-container";
 import { MultisendForm } from "@/components/multisend/multisend-form";
+import { SendsList } from "@/components/multisend/sends-list";
 import { SuccessModal } from "@/components/multisend/success-modal";
 import { PageHeader } from "@/components/ui/page-header";
 import { Separator } from "@/components/ui/separator";
@@ -19,6 +20,7 @@ interface MultisendSuccess {
 export default function MultisendPage() {
 	const [successData, setSuccessData] = useState<MultisendSuccess | null>(null);
 	const [formKey, setFormKey] = useState(0);
+	const [listKey, setListKey] = useState(0);
 	const { txConfirmed } = useTransactionToast();
 	const addTransaction = useAppStore((s) => s.addTransaction);
 
@@ -32,6 +34,7 @@ export default function MultisendPage() {
 				description: `Sent ${data.tokenSymbol} to ${data.recipientCount} recipients`,
 				timestamp: Date.now(),
 			});
+			setListKey((k) => k + 1);
 		},
 		[txConfirmed, addTransaction],
 	);
@@ -47,6 +50,7 @@ export default function MultisendPage() {
 				<PageHeader title="Multisend" description="Send tokens to multiple recipients at once" />
 				<MultisendForm key={formKey} onSuccess={handleSuccess} />
 				<Separator className="bg-anvil-gray-light" />
+				<SendsList key={listKey} />
 			</div>
 
 			{successData && (
