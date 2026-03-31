@@ -104,13 +104,20 @@ export function useUserLocks(): UseUserLocksReturn {
 		[beneficiaryIds],
 	);
 
+	// Newest first (highest lockId first)
 	const createdLocks = useMemo(
-		() => allLocks.filter((l) => creatorSet.has(Number(l.lockId))),
+		() =>
+			allLocks
+				.filter((l) => creatorSet.has(Number(l.lockId)))
+				.sort((a, b) => (b.lockId > a.lockId ? 1 : -1)),
 		[allLocks, creatorSet],
 	);
 
 	const beneficiaryLocks = useMemo(
-		() => allLocks.filter((l) => beneficiarySet.has(Number(l.lockId))),
+		() =>
+			allLocks
+				.filter((l) => beneficiarySet.has(Number(l.lockId)))
+				.sort((a, b) => (b.lockId > a.lockId ? 1 : -1)),
 		[allLocks, beneficiarySet],
 	);
 

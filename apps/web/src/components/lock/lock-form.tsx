@@ -39,7 +39,7 @@ export function LockForm({ onSuccess }: LockFormProps) {
 	const { address, isConnected } = useAccount();
 
 	const [tokenAddress, setTokenAddress] = useState("");
-	const [beneficiary, setBeneficiary] = useState("");
+	const [beneficiary, setBeneficiary] = useState(address ?? "");
 	const [amount, setAmount] = useState("");
 	const [durationDays, setDurationDays] = useState("");
 	const [vestingEnabled, setVestingEnabled] = useState(false);
@@ -47,6 +47,13 @@ export function LockForm({ onSuccess }: LockFormProps) {
 	const [revocable, setRevocable] = useState(false);
 	const [txDialogOpen, setTxDialogOpen] = useState(false);
 	const successFired = useRef(false);
+
+	// Default beneficiary to connected wallet when wallet connects
+	useEffect(() => {
+		if (address && !beneficiary) {
+			setBeneficiary(address);
+		}
+	}, [address, beneficiary]);
 
 	const validTokenAddress = isAddress(tokenAddress) ? (tokenAddress as Hex) : undefined;
 

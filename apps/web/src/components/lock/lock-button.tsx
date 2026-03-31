@@ -90,7 +90,7 @@ export function LockButton({
 					? "Approving..."
 					: isUsdcApprovalConfirming
 						? "Confirming..."
-						: "Approve USDC Fee (1/2)"}
+						: "Approve USDC Fee (1/3)"}
 			</Button>
 		);
 	}
@@ -104,7 +104,7 @@ export function LockButton({
 					? "Approving..."
 					: isTokenApprovalConfirming
 						? "Confirming..."
-						: `Approve ${tokenSymbol ?? "Token"} (2/2)`}
+						: `Approve ${tokenSymbol ?? "Token"} (2/3)`}
 			</Button>
 		);
 	}
@@ -113,7 +113,7 @@ export function LockButton({
 	return (
 		<Button className="w-full" size="lg" onClick={onCreateLock} disabled={disabled || creating}>
 			{creating && <LoaderIcon className="size-4 animate-spin" />}
-			{isCreating ? "Waiting for approval..." : isConfirming ? "Creating..." : "Create Lock"}
+			{isCreating ? "Waiting for approval..." : isConfirming ? "Creating..." : "Create Lock (3/3)"}
 		</Button>
 	);
 }
