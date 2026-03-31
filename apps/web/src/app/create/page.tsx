@@ -7,7 +7,6 @@ import { TokensList } from "@/components/create/tokens-list";
 import { PageContainer } from "@/components/layout/page-container";
 import { PageHeader } from "@/components/ui/page-header";
 import { Separator } from "@/components/ui/separator";
-import { useCreatedTokens } from "@/hooks/use-created-tokens";
 import { useTransactionToast } from "@/hooks/use-transaction-toast";
 import { useAppStore } from "@/stores/app-store";
 
@@ -21,9 +20,9 @@ interface CreatedToken {
 export default function CreatePage() {
 	const [successData, setSuccessData] = useState<CreatedToken | null>(null);
 	const [formKey, setFormKey] = useState(0);
+	const [listKey, setListKey] = useState(0);
 	const { txConfirmed } = useTransactionToast();
 	const addTransaction = useAppStore((s) => s.addTransaction);
-	const { refetch: refetchTokens } = useCreatedTokens();
 
 	const handleSuccess = useCallback(
 		(data: CreatedToken) => {
@@ -35,9 +34,9 @@ export default function CreatePage() {
 				description: `Created ${data.symbol} token`,
 				timestamp: Date.now(),
 			});
-			refetchTokens();
+			setListKey((k) => k + 1);
 		},
-		[txConfirmed, addTransaction, refetchTokens],
+		[txConfirmed, addTransaction],
 	);
 
 	const handleCreateAnother = useCallback(() => {
@@ -51,7 +50,7 @@ export default function CreatePage() {
 				<PageHeader title="Create Token" description="Create a new TIP-20 token on Tempo" />
 				<TokenForm key={formKey} onSuccess={handleSuccess} />
 				<Separator className="bg-anvil-gray-light" />
-				<TokensList />
+				<TokensList key={listKey} />
 			</div>
 
 			{successData && (

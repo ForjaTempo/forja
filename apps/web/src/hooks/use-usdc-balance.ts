@@ -19,8 +19,8 @@ export function useUsdcBalance() {
 		query: { enabled: !!address },
 	});
 
-	const formatted =
-		balance !== undefined ? Number(formatUnits(balance, TIP20_DECIMALS)) : undefined;
+	// Return string to avoid Number precision loss on large balances
+	const formatted = balance !== undefined ? formatUnits(balance, TIP20_DECIMALS) : undefined;
 
 	return { balance, formatted, isLoading, refetch };
 }

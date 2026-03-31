@@ -1,6 +1,12 @@
 "use client";
 
-import { CheckCircleIcon, ExternalLinkIcon, LoaderIcon, XCircleIcon } from "lucide-react";
+import {
+	CheckCircleIcon,
+	ExternalLinkIcon,
+	LoaderIcon,
+	RefreshCwIcon,
+	XCircleIcon,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -22,6 +28,7 @@ interface TransactionStatusProps {
 	txHash?: string;
 	title?: string;
 	error?: string;
+	onRetry?: () => void;
 }
 
 const stateConfig = {
@@ -51,6 +58,7 @@ export function TransactionStatus({
 	txHash,
 	title = "Transaction",
 	error,
+	onRetry,
 }: TransactionStatusProps) {
 	const config = stateConfig[state];
 	const canClose = state === "confirmed" || state === "failed";
@@ -94,7 +102,13 @@ export function TransactionStatus({
 				</div>
 
 				{canClose && (
-					<DialogFooter>
+					<DialogFooter className="flex-col gap-2 sm:flex-col">
+						{state === "failed" && onRetry && (
+							<Button className="w-full" onClick={onRetry}>
+								<RefreshCwIcon className="size-4" />
+								Try Again
+							</Button>
+						)}
 						<Button variant="secondary" className="w-full" onClick={() => onOpenChange(false)}>
 							Close
 						</Button>
