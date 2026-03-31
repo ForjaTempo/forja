@@ -7,6 +7,8 @@ import type { Log, PublicClient } from "viem";
  * spanning from genesis (block 0). This utility fetches the current block
  * number and queries in reverse chunks of CHUNK_SIZE blocks, accumulating
  * results until MAX_CHUNKS are processed or the genesis block is reached.
+ *
+ * Returns logs sorted by blockNumber ascending (chronological order).
  */
 
 const CHUNK_SIZE = 100_000n;
@@ -55,6 +57,15 @@ export async function getLogsSafe({
 		// We've reached genesis
 		if (safeFrom === 0n) break;
 	}
+
+	// Sort chronologically — chunks are fetched newest-first but each
+	// chunk's internal order is ascending. Sort globally to guarantee
+	// consistent chronological order regardless of chunk boundaries.
+	allLogs.sort((a, b) => {
+		const blockDiff = (a.blockNumber ?? 0n) - (b.blockNumber ?? 0n);
+		if (blockDiff !== 0n) return blockDiff < 0n ? -1 : 1;
+		return (a.logIndex ?? 0) - (b.logIndex ?? 0);
+	});
 
 	return allLogs;
 }

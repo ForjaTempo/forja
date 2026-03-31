@@ -36,7 +36,11 @@ function isHeaderRow(line: string): boolean {
 	return HEADER_RE.test(line) || line.toLowerCase().includes("amount");
 }
 
-function parseLines(text: string): ParseResult {
+/**
+ * Parse text lines into recipients.
+ * When addressOnly=true (equal distribution), only address is required per line.
+ */
+function parseLines(text: string, addressOnly = false): ParseResult {
 	const rawLines = text
 		.split("\n")
 		.map((l) => l.trim())
@@ -59,14 +63,18 @@ function parseLines(text: string): ParseResult {
 
 	for (let i = 0; i < lines.length; i++) {
 		const line = lines[i] as string;
-		// Line number accounts for skipped header
 		const lineNum = rawLines.length !== lines.length ? i + 2 : i + 1;
 
 		const parts = line.split(/[,\t]+/).map((p) => p.trim());
 		const addr = parts[0] ?? "";
 		const amt = parts[1] ?? "";
 
-		if (!addr || !amt) {
+		if (!addr) {
+			errors.push(`Line ${lineNum}: Address is required`);
+			continue;
+		}
+
+		if (!addressOnly && !amt) {
 			errors.push(`Line ${lineNum}: Expected "address,amount" format`);
 			continue;
 		}
@@ -76,9 +84,11 @@ function parseLines(text: string): ParseResult {
 			continue;
 		}
 
-		if (!AMOUNT_RE.test(amt) || Number(amt) <= 0) {
-			errors.push(`Line ${lineNum}: Invalid amount "${amt}"`);
-			continue;
+		if (!addressOnly) {
+			if (!AMOUNT_RE.test(amt) || Number(amt) <= 0) {
+				errors.push(`Line ${lineNum}: Invalid amount "${amt}"`);
+				continue;
+			}
 		}
 
 		const lowerAddr = addr.toLowerCase();
@@ -87,22 +97,28 @@ function parseLines(text: string): ParseResult {
 		}
 		seenAddresses.add(lowerAddr);
 
-		const parsed = parseUnits(amt, TIP20_DECIMALS);
-		totalAmount += parsed;
-		recipients.push({ address: addr as Hex, amount: amt });
+		if (!addressOnly && amt) {
+			const parsed = parseUnits(amt, TIP20_DECIMALS);
+			totalAmount += parsed;
+		}
+		recipients.push({ address: addr as Hex, amount: addressOnly ? "0" : amt });
 	}
 
 	return { recipients, totalAmount, errors, warnings };
 }
 
-function parseManualRows(rows: ManualRow[]): ParseResult {
+/**
+ * Parse manual rows into recipients.
+ * When addressOnly=true (equal distribution), only address is required per row.
+ */
+function parseManualRows(rows: ManualRow[], addressOnly = false): ParseResult {
 	const recipients: Recipient[] = [];
 	const errors: string[] = [];
 	const warnings: string[] = [];
 	let totalAmount = 0n;
 	const seenAddresses = new Set<string>();
 
-	const nonEmptyRows = rows.filter((r) => r.address.trim() || r.amount.trim());
+	const nonEmptyRows = rows.filter((r) => r.address.trim() || (!addressOnly && r.amount.trim()));
 
 	for (let i = 0; i < nonEmptyRows.length; i++) {
 		const row = nonEmptyRows[i] as ManualRow;
@@ -110,7 +126,12 @@ function parseManualRows(rows: ManualRow[]): ParseResult {
 		const addr = row.address.trim();
 		const amt = row.amount.trim();
 
-		if (!addr || !amt) {
+		if (!addr) {
+			errors.push(`Row ${rowNum}: Address is required`);
+			continue;
+		}
+
+		if (!addressOnly && !amt) {
 			errors.push(`Row ${rowNum}: Both address and amount are required`);
 			continue;
 		}
@@ -120,9 +141,11 @@ function parseManualRows(rows: ManualRow[]): ParseResult {
 			continue;
 		}
 
-		if (!AMOUNT_RE.test(amt) || Number(amt) <= 0) {
-			errors.push(`Row ${rowNum}: Invalid amount`);
-			continue;
+		if (!addressOnly && amt) {
+			if (!AMOUNT_RE.test(amt) || Number(amt) <= 0) {
+				errors.push(`Row ${rowNum}: Invalid amount`);
+				continue;
+			}
 		}
 
 		const lowerAddr = addr.toLowerCase();
@@ -131,9 +154,11 @@ function parseManualRows(rows: ManualRow[]): ParseResult {
 		}
 		seenAddresses.add(lowerAddr);
 
-		const parsed = parseUnits(amt, TIP20_DECIMALS);
-		totalAmount += parsed;
-		recipients.push({ address: addr as Hex, amount: amt });
+		if (!addressOnly && amt) {
+			const parsed = parseUnits(amt, TIP20_DECIMALS);
+			totalAmount += parsed;
+		}
+		recipients.push({ address: addr as Hex, amount: addressOnly ? "0" : amt });
 	}
 
 	return { recipients, totalAmount, errors, warnings };
@@ -147,6 +172,9 @@ interface RecipientInputProps {
 	inputMode: InputMode;
 	onInputModeChange: (mode: InputMode) => void;
 	tokenSymbol: string | undefined;
+	addressOnly: boolean;
+	/** When provided, preview uses this instead of internal parse result */
+	displayParsed?: ParseResult;
 }
 
 export function RecipientInput({
@@ -157,13 +185,21 @@ export function RecipientInput({
 	inputMode,
 	onInputModeChange,
 	tokenSymbol,
+	addressOnly,
+	displayParsed,
 }: RecipientInputProps) {
 	const fileInputRef = useRef<HTMLInputElement>(null);
 
-	const parsed = useMemo(
-		() => (inputMode === "paste" ? parseLines(value) : parseManualRows(manualRows)),
-		[inputMode, value, manualRows],
+	const internalParsed = useMemo(
+		() =>
+			inputMode === "paste"
+				? parseLines(value, addressOnly)
+				: parseManualRows(manualRows, addressOnly),
+		[inputMode, value, manualRows, addressOnly],
 	);
+
+	// Use parent-provided parsed data for preview (e.g. equalized amounts)
+	const parsed = displayParsed ?? internalParsed;
 
 	const handleTextChange = useCallback(
 		(e: ChangeEvent<HTMLTextAreaElement>) => {
@@ -219,10 +255,16 @@ export function RecipientInput({
 	const hasContent =
 		inputMode === "paste" ? value.trim().length > 0 : manualRows.some((r) => r.address || r.amount);
 
+	const pasteplaceholder = addressOnly
+		? "0x1234...abcd\n0x5678...efgh\n0xabcd...1234"
+		: "0x1234...abcd,100\n0x5678...efgh,250.5\n0xabcd...1234,75";
+
 	return (
 		<div className="space-y-3">
 			<div className="flex items-center justify-between">
-				<span className="text-sm font-medium text-smoke">Recipients</span>
+				<span id="recipients-label" className="text-sm font-medium text-smoke">
+					Recipients
+				</span>
 				<div className="flex items-center gap-2">
 					{hasContent && (
 						<Button
@@ -261,9 +303,15 @@ export function RecipientInput({
 			</div>
 
 			{/* Mode toggle */}
-			<div className="flex gap-1 rounded-md border border-anvil-gray-light bg-obsidian-black p-1">
+			<div
+				className="flex gap-1 rounded-md border border-anvil-gray-light bg-obsidian-black p-1"
+				role="tablist"
+				aria-label="Input mode"
+			>
 				<button
 					type="button"
+					role="tab"
+					aria-selected={inputMode === "paste"}
 					className={`flex-1 rounded px-3 py-1.5 text-xs font-medium transition-colors ${
 						inputMode === "paste" ? "bg-anvil-gray text-smoke" : "text-smoke-dark hover:text-smoke"
 					}`}
@@ -273,6 +321,8 @@ export function RecipientInput({
 				</button>
 				<button
 					type="button"
+					role="tab"
+					aria-selected={inputMode === "manual"}
 					className={`flex-1 rounded px-3 py-1.5 text-xs font-medium transition-colors ${
 						inputMode === "manual" ? "bg-anvil-gray text-smoke" : "text-smoke-dark hover:text-smoke"
 					}`}
@@ -284,9 +334,10 @@ export function RecipientInput({
 
 			{inputMode === "paste" ? (
 				<textarea
-					id="recipients"
+					id="recipients-textarea"
+					aria-labelledby="recipients-label"
 					className="min-h-[120px] w-full rounded-md border border-anvil-gray-light bg-obsidian-black px-3 py-2 font-mono text-sm text-smoke placeholder:text-smoke-dark focus:border-forge-green focus:outline-none focus:ring-1 focus:ring-forge-green"
-					placeholder={"0x1234...abcd,100\n0x5678...efgh,250.5\n0xabcd...1234,75"}
+					placeholder={pasteplaceholder}
 					value={value}
 					onChange={handleTextChange}
 					spellCheck={false}
@@ -296,6 +347,7 @@ export function RecipientInput({
 					{manualRows.map((row, i) => (
 						<div key={`row-${i.toString()}`} className="flex items-center gap-2">
 							<Input
+								aria-label={`Recipient ${i + 1} address`}
 								placeholder="0x..."
 								value={row.address}
 								onChange={(e) => handleRowChange(i, "address", e.target.value)}
@@ -303,14 +355,17 @@ export function RecipientInput({
 								autoComplete="off"
 								spellCheck={false}
 							/>
-							<Input
-								placeholder="Amount"
-								value={row.amount}
-								onChange={(e) => handleRowChange(i, "amount", e.target.value)}
-								className="flex-1 font-mono text-sm"
-								inputMode="decimal"
-								autoComplete="off"
-							/>
+							{!addressOnly && (
+								<Input
+									aria-label={`Recipient ${i + 1} amount`}
+									placeholder="Amount"
+									value={row.amount}
+									onChange={(e) => handleRowChange(i, "amount", e.target.value)}
+									className="flex-1 font-mono text-sm"
+									inputMode="decimal"
+									autoComplete="off"
+								/>
+							)}
 							<Button
 								type="button"
 								variant="ghost"
@@ -318,6 +373,7 @@ export function RecipientInput({
 								className="h-9 w-9 shrink-0 p-0"
 								onClick={() => handleRemoveRow(i)}
 								disabled={manualRows.length <= 1}
+								aria-label={`Remove recipient ${i + 1}`}
 							>
 								<TrashIcon className="size-3.5 text-smoke-dark" />
 							</Button>
@@ -337,9 +393,10 @@ export function RecipientInput({
 				</div>
 			)}
 
-			{parsed.errors.length > 0 && (
-				<div className="space-y-1">
-					{parsed.errors.map((err) => (
+			{/* Show errors from internal parse (validation) */}
+			{internalParsed.errors.length > 0 && (
+				<div className="space-y-1" role="alert">
+					{internalParsed.errors.map((err) => (
 						<p key={err} className="text-xs text-ember-red">
 							{err}
 						</p>
@@ -347,9 +404,10 @@ export function RecipientInput({
 				</div>
 			)}
 
-			{parsed.warnings.length > 0 && (
+			{/* Show warnings from internal parse */}
+			{internalParsed.warnings.length > 0 && (
 				<div className="space-y-1">
-					{parsed.warnings.map((warn) => (
+					{internalParsed.warnings.map((warn) => (
 						<p key={warn} className="text-xs text-molten-amber">
 							{warn}
 						</p>
@@ -357,41 +415,44 @@ export function RecipientInput({
 				</div>
 			)}
 
-			{parsed.recipients.length > 0 && parsed.errors.length === 0 && (
-				<div className="rounded-lg border border-anvil-gray-light bg-obsidian-black/50 p-3">
-					<div className="mb-2 flex items-center justify-between text-xs text-smoke-dark">
-						<span>Preview ({parsed.recipients.length} recipients)</span>
-						<span className="font-mono text-smoke">
-							Total: {formatUnits(parsed.totalAmount, TIP20_DECIMALS)} {tokenSymbol ?? "tokens"}
-						</span>
-					</div>
-					<div className="max-h-[200px] overflow-y-auto">
-						<table className="w-full text-xs">
-							<thead>
-								<tr className="border-b border-anvil-gray-light text-smoke-dark">
-									<th className="pb-1 text-left font-medium">#</th>
-									<th className="pb-1 text-left font-medium">Address</th>
-									<th className="pb-1 text-right font-medium">Amount</th>
-								</tr>
-							</thead>
-							<tbody>
-								{parsed.recipients.map((r, i) => (
-									<tr
-										key={r.address + i.toString()}
-										className="border-b border-anvil-gray-light/50"
-									>
-										<td className="py-1 text-smoke-dark">{i + 1}</td>
-										<td className="py-1 font-mono text-smoke">
-											{r.address.slice(0, 8)}...{r.address.slice(-6)}
-										</td>
-										<td className="py-1 text-right font-mono text-smoke">{r.amount}</td>
+			{/* Preview table — uses displayParsed (equalized) when available */}
+			{parsed.recipients.length > 0 &&
+				internalParsed.errors.length === 0 &&
+				parsed.totalAmount > 0n && (
+					<div className="rounded-lg border border-anvil-gray-light bg-obsidian-black/50 p-3">
+						<div className="mb-2 flex items-center justify-between text-xs text-smoke-dark">
+							<span>Preview ({parsed.recipients.length} recipients)</span>
+							<span className="font-mono text-smoke">
+								Total: {formatUnits(parsed.totalAmount, TIP20_DECIMALS)} {tokenSymbol ?? "tokens"}
+							</span>
+						</div>
+						<div className="max-h-[200px] overflow-y-auto">
+							<table className="w-full text-xs" aria-label="Recipients preview">
+								<thead>
+									<tr className="border-b border-anvil-gray-light text-smoke-dark">
+										<th className="pb-1 text-left font-medium">#</th>
+										<th className="pb-1 text-left font-medium">Address</th>
+										<th className="pb-1 text-right font-medium">Amount</th>
 									</tr>
-								))}
-							</tbody>
-						</table>
+								</thead>
+								<tbody>
+									{parsed.recipients.map((r, i) => (
+										<tr
+											key={r.address + i.toString()}
+											className="border-b border-anvil-gray-light/50"
+										>
+											<td className="py-1 text-smoke-dark">{i + 1}</td>
+											<td className="py-1 font-mono text-smoke">
+												{r.address.slice(0, 8)}...{r.address.slice(-6)}
+											</td>
+											<td className="py-1 text-right font-mono text-smoke">{r.amount}</td>
+										</tr>
+									))}
+								</tbody>
+							</table>
+						</div>
 					</div>
-				</div>
-			)}
+				)}
 		</div>
 	);
 }

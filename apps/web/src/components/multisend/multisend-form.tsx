@@ -1,8 +1,7 @@
 "use client";
 
 import { type FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { Hex } from "viem";
-import { parseUnits } from "viem";
+import { formatUnits, type Hex, parseUnits } from "viem";
 import { useAccount } from "wagmi";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -69,19 +68,23 @@ export function MultisendForm({ onSuccess }: MultisendFormProps) {
 	const { balance: usdcBalance, formatted: usdcBalanceFormatted } = useUsdcBalance();
 	const { txSubmitted, txFailed } = useTransactionToast();
 
+	const isEqual = distribution === "equal";
+
 	// Parse recipients based on input mode
+	// When equal distribution, only validate addresses (addressOnly=true)
 	const baseParsed = useMemo<ParseResult>(
-		() => (inputMode === "paste" ? parseLines(recipientText) : parseManualRows(manualRows)),
-		[inputMode, recipientText, manualRows],
+		() =>
+			inputMode === "paste"
+				? parseLines(recipientText, isEqual)
+				: parseManualRows(manualRows, isEqual),
+		[inputMode, recipientText, manualRows, isEqual],
 	);
 
-	// Apply equal distribution if selected
+	// Apply equal distribution if selected — uses bigint math exclusively
 	const parsed = useMemo<ParseResult>(() => {
-		if (
-			distribution !== "equal" ||
-			baseParsed.recipients.length === 0 ||
-			baseParsed.errors.length > 0
-		) {
+		if (!isEqual) return baseParsed;
+
+		if (baseParsed.recipients.length === 0 || baseParsed.errors.length > 0) {
 			return baseParsed;
 		}
 
@@ -110,10 +113,9 @@ export function MultisendForm({ onSuccess }: MultisendFormProps) {
 			};
 		}
 
-		// For equal distribution, override amounts
-		// First recipient gets the remainder (dust)
-		const perAmount = (Number(perRecipient) / 10 ** TIP20_DECIMALS).toString();
-		const firstAmount = (Number(perRecipient + remainder) / 10 ** TIP20_DECIMALS).toString();
+		// Use formatUnits for bigint-safe string conversion (no Number precision loss)
+		const perAmount = formatUnits(perRecipient, TIP20_DECIMALS);
+		const firstAmount = formatUnits(perRecipient + remainder, TIP20_DECIMALS);
 
 		return {
 			...baseParsed,
@@ -123,7 +125,7 @@ export function MultisendForm({ onSuccess }: MultisendFormProps) {
 			})),
 			totalAmount: total,
 		};
-	}, [distribution, baseParsed, equalTotalAmount]);
+	}, [isEqual, baseParsed, equalTotalAmount]);
 
 	const feeAmount = fee ?? parseUnits(String(feeFormatted), TIP20_DECIMALS);
 
@@ -292,22 +294,18 @@ export function MultisendForm({ onSuccess }: MultisendFormProps) {
 							)}
 						</div>
 
-						<RecipientInput
-							value={recipientText}
-							onChange={setRecipientText}
-							manualRows={manualRows}
-							onManualRowsChange={setManualRows}
-							inputMode={inputMode}
-							onInputModeChange={setInputMode}
-							tokenSymbol={tokenSymbol}
-						/>
-
 						{/* Distribution mode toggle */}
 						<div className="space-y-3">
 							<span className="text-sm font-medium text-smoke">Distribution</span>
-							<div className="flex gap-1 rounded-md border border-anvil-gray-light bg-obsidian-black p-1">
+							<div
+								className="flex gap-1 rounded-md border border-anvil-gray-light bg-obsidian-black p-1"
+								role="tablist"
+								aria-label="Amount distribution"
+							>
 								<button
 									type="button"
+									role="tab"
+									aria-selected={distribution === "custom"}
 									className={`flex-1 rounded px-3 py-1.5 text-xs font-medium transition-colors ${
 										distribution === "custom"
 											? "bg-anvil-gray text-smoke"
@@ -319,6 +317,8 @@ export function MultisendForm({ onSuccess }: MultisendFormProps) {
 								</button>
 								<button
 									type="button"
+									role="tab"
+									aria-selected={distribution === "equal"}
 									className={`flex-1 rounded px-3 py-1.5 text-xs font-medium transition-colors ${
 										distribution === "equal"
 											? "bg-anvil-gray text-smoke"
@@ -329,9 +329,13 @@ export function MultisendForm({ onSuccess }: MultisendFormProps) {
 									Equal Split
 								</button>
 							</div>
-							{distribution === "equal" && (
+							{isEqual && (
 								<div className="space-y-1">
+									<label htmlFor="equal-total" className="sr-only">
+										Total amount to distribute
+									</label>
 									<Input
+										id="equal-total"
 										placeholder="Total amount to distribute"
 										value={equalTotalAmount}
 										onChange={(e) => setEqualTotalAmount(e.target.value)}
@@ -351,6 +355,18 @@ export function MultisendForm({ onSuccess }: MultisendFormProps) {
 								</div>
 							)}
 						</div>
+
+						<RecipientInput
+							value={recipientText}
+							onChange={setRecipientText}
+							manualRows={manualRows}
+							onManualRowsChange={setManualRows}
+							inputMode={inputMode}
+							onInputModeChange={setInputMode}
+							tokenSymbol={tokenSymbol}
+							addressOnly={isEqual}
+							displayParsed={isEqual ? parsed : undefined}
+						/>
 
 						<Separator className="bg-anvil-gray-light" />
 
