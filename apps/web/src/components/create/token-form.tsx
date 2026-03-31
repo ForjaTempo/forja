@@ -18,6 +18,8 @@ import { CreateButton } from "./create-button";
 
 const NAME_MAX = 50;
 const SYMBOL_MAX = 10;
+/** Only digits with optional single decimal point (no scientific notation, no signs) */
+const VALID_NUMERIC = /^\d+(\.\d+)?$/;
 
 interface TokenFormProps {
 	onSuccess?: (data: {
@@ -56,8 +58,8 @@ export function TokenForm({ onSuccess }: TokenFormProps) {
 	const nameError = name.length > NAME_MAX ? `Max ${NAME_MAX} characters` : "";
 	const symbolError = symbol.length > SYMBOL_MAX ? `Max ${SYMBOL_MAX} characters` : "";
 	const supplyError =
-		initialSupply !== "" && (Number.isNaN(Number(initialSupply)) || Number(initialSupply) < 0)
-			? "Must be a positive number"
+		initialSupply !== "" && !VALID_NUMERIC.test(initialSupply)
+			? "Must be a plain number (e.g. 1000000)"
 			: "";
 	const formValid =
 		name.trim() !== "" && symbol.trim() !== "" && !nameError && !symbolError && !supplyError;
@@ -207,8 +209,8 @@ export function TokenForm({ onSuccess }: TokenFormProps) {
 										</p>
 										<p className="text-sm text-smoke">
 											<span className="text-smoke-dark">Supply:</span>{" "}
-											{initialSupply
-												? Number(initialSupply).toLocaleString("en-US")
+											{initialSupply && VALID_NUMERIC.test(initialSupply)
+												? BigInt(initialSupply.split(".")[0] ?? "0").toLocaleString("en-US")
 												: "0 (no initial mint)"}
 										</p>
 									</div>
