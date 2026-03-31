@@ -7,7 +7,8 @@ import { AddressDisplay } from "@/components/ui/address-display";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { type CreatedTokenEvent, useCreatedTokens } from "@/hooks/use-created-tokens";
-import { TEMPO_EXPLORER, TIP20_DECIMALS } from "@/lib/constants";
+import { useExplorerUrl } from "@/hooks/use-explorer-url";
+import { TIP20_DECIMALS } from "@/lib/constants";
 
 function formatSupply(raw: bigint): string {
 	const str = formatUnits(raw, TIP20_DECIMALS);
@@ -48,7 +49,7 @@ function formatDate(timestamp: number | null): string {
 	});
 }
 
-function TokenRow({ token }: { token: CreatedTokenEvent }) {
+function TokenRow({ token, explorerUrl }: { token: CreatedTokenEvent; explorerUrl: string }) {
 	return (
 		<div className="rounded-lg border border-anvil-gray-light bg-obsidian-black/50 px-4 py-3">
 			<div className="flex items-center justify-between">
@@ -74,7 +75,7 @@ function TokenRow({ token }: { token: CreatedTokenEvent }) {
 				<div className="flex items-center gap-1 text-xs text-smoke-dark">
 					<span>Tx:</span>
 					<a
-						href={`${TEMPO_EXPLORER}/tx/${token.txHash}`}
+						href={`${explorerUrl}/tx/${token.txHash}`}
 						target="_blank"
 						rel="noopener noreferrer"
 						className="inline-flex items-center gap-1 font-mono text-smoke transition-colors hover:text-molten-amber"
@@ -90,6 +91,7 @@ function TokenRow({ token }: { token: CreatedTokenEvent }) {
 
 export function TokensList() {
 	const { isConnected } = useAccount();
+	const explorerUrl = useExplorerUrl();
 	const { tokens, isLoading } = useCreatedTokens();
 
 	if (!isConnected) return null;
@@ -113,7 +115,7 @@ export function TokensList() {
 				) : (
 					<div className="space-y-3">
 						{tokens.map((token) => (
-							<TokenRow key={token.txHash} token={token} />
+							<TokenRow key={token.txHash} token={token} explorerUrl={explorerUrl} />
 						))}
 					</div>
 				)}

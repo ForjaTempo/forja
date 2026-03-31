@@ -1,6 +1,15 @@
 export const TEMPO_CHAIN_ID = 4217;
+export const TEMPO_MODERATO_CHAIN_ID = 42431;
 export const TEMPO_RPC = "https://rpc.tempo.xyz";
-export const TEMPO_EXPLORER = "https://explore.tempo.xyz";
+
+const EXPLORER_URLS: Record<number, string> = {
+	[TEMPO_CHAIN_ID]: "https://explore.tempo.xyz",
+	[TEMPO_MODERATO_CHAIN_ID]: "https://explore.moderato.tempo.xyz",
+};
+
+export function getExplorerUrl(chainId: number): string {
+	return EXPLORER_URLS[chainId] ?? "https://explore.tempo.xyz";
+}
 
 export const PATHUSDC_ADDRESS = "0x20C0000000000000000000000000000000000000" as const;
 export const TIP20_FACTORY_ADDRESS = "0x20Fc000000000000000000000000000000000000" as const;

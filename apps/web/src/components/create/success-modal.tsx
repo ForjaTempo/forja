@@ -11,7 +11,7 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
-import { TEMPO_EXPLORER } from "@/lib/constants";
+import { useExplorerUrl } from "@/hooks/use-explorer-url";
 
 interface SuccessModalProps {
 	open: boolean;
@@ -32,6 +32,8 @@ export function SuccessModal({
 	txHash,
 	onCreateAnother,
 }: SuccessModalProps) {
+	const explorerUrl = useExplorerUrl();
+
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogContent className="sm:max-w-md">
@@ -60,7 +62,7 @@ export function SuccessModal({
 						<div className="flex items-center justify-between">
 							<span className="text-sm text-smoke-dark">Transaction</span>
 							<a
-								href={`${TEMPO_EXPLORER}/tx/${txHash}`}
+								href={`${explorerUrl}/tx/${txHash}`}
 								target="_blank"
 								rel="noopener noreferrer"
 								className="inline-flex items-center gap-1 font-mono text-sm text-smoke transition-colors hover:text-molten-amber"
@@ -76,7 +78,7 @@ export function SuccessModal({
 					<Button
 						variant="outline"
 						className="w-full"
-						onClick={() => window.open(`${TEMPO_EXPLORER}/address/${tokenAddress}`, "_blank")}
+						onClick={() => window.open(`${explorerUrl}/address/${tokenAddress}`, "_blank")}
 					>
 						<ExternalLinkIcon className="size-4" />
 						View on Explorer
