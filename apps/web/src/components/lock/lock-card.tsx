@@ -36,7 +36,8 @@ export function LockCard({ lock, role, onClaim, onRevoke, isActionPending }: Loc
 	const symbol = tokenSymbol ?? "tokens";
 
 	const canClaim = role === "beneficiary" && claimable > 0n && !lock.revoked;
-	const canRevoke = role === "creator" && lock.revocable && !lock.revoked;
+	const canRevoke =
+		role === "creator" && lock.revocable && !lock.revoked && lock.claimedAmount < lock.totalAmount;
 
 	return (
 		<div className="space-y-4 rounded-lg border border-anvil-gray-light bg-deep-charcoal p-4">

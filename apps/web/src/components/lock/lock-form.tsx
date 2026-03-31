@@ -1,7 +1,7 @@
 "use client";
 
 import { type FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { type Hex, parseUnits } from "viem";
+import { type Hex, isAddress, parseUnits } from "viem";
 import { useAccount } from "wagmi";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -48,8 +48,7 @@ export function LockForm({ onSuccess }: LockFormProps) {
 	const [txDialogOpen, setTxDialogOpen] = useState(false);
 	const successFired = useRef(false);
 
-	const validTokenAddress =
-		tokenAddress.length === 42 && tokenAddress.startsWith("0x") ? (tokenAddress as Hex) : undefined;
+	const validTokenAddress = isAddress(tokenAddress) ? (tokenAddress as Hex) : undefined;
 
 	const {
 		name: tokenName,
@@ -84,8 +83,7 @@ export function LockForm({ onSuccess }: LockFormProps) {
 
 	const feeAmount = fee ?? parseUnits(String(feeFormatted), TIP20_DECIMALS);
 
-	const validBeneficiary =
-		beneficiary.length === 42 && beneficiary.startsWith("0x") ? (beneficiary as Hex) : undefined;
+	const validBeneficiary = isAddress(beneficiary) ? (beneficiary as Hex) : undefined;
 
 	const {
 		needsApproval: needsUsdcApproval,

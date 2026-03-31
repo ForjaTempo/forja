@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import type { Hex } from "viem";
 import { useAccount, useReadContract, useReadContracts } from "wagmi";
 import { lockerConfig } from "@/lib/contracts";
@@ -16,14 +16,22 @@ interface UseUserLocksReturn {
 export function useUserLocks(): UseUserLocksReturn {
 	const { address } = useAccount();
 
-	const { data: creatorIds, isLoading: isCreatorLoading } = useReadContract({
+	const {
+		data: creatorIds,
+		isLoading: isCreatorLoading,
+		refetch: refetchCreatorIds,
+	} = useReadContract({
 		...lockerConfig,
 		functionName: "getLocksByCreator",
 		args: address ? [address] : undefined,
 		query: { enabled: !!address },
 	});
 
-	const { data: beneficiaryIds, isLoading: isBeneficiaryLoading } = useReadContract({
+	const {
+		data: beneficiaryIds,
+		isLoading: isBeneficiaryLoading,
+		refetch: refetchBeneficiaryIds,
+	} = useReadContract({
 		...lockerConfig,
 		functionName: "getLocksByBeneficiary",
 		args: address ? [address] : undefined,
@@ -42,7 +50,7 @@ export function useUserLocks(): UseUserLocksReturn {
 	const {
 		data: lockResults,
 		isLoading: isLocksLoading,
-		refetch,
+		refetch: refetchLocks,
 	} = useReadContracts({
 		contracts: allIds.map((id) => ({
 			...lockerConfig,
@@ -105,6 +113,12 @@ export function useUserLocks(): UseUserLocksReturn {
 		() => allLocks.filter((l) => beneficiarySet.has(Number(l.lockId))),
 		[allLocks, beneficiarySet],
 	);
+
+	const refetch = useCallback(() => {
+		refetchCreatorIds();
+		refetchBeneficiaryIds();
+		refetchLocks();
+	}, [refetchCreatorIds, refetchBeneficiaryIds, refetchLocks]);
 
 	return {
 		createdLocks,
