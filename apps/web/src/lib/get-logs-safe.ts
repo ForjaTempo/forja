@@ -11,8 +11,12 @@ import type { Log, PublicClient } from "viem";
  * Returns logs sorted by blockNumber ascending (chronological order).
  */
 
+// Intentional cap: scans only the last ~1M blocks (~23 days at 2s blocks).
+// This is sufficient for testnet and early mainnet usage. Phase 6 will
+// introduce a proper indexer/subgraph, replacing this RPC-based approach
+// with full historical coverage.
 const CHUNK_SIZE = 100_000n;
-const MAX_CHUNKS = 10; // Up to 1M blocks back (~23 days at 2s blocks)
+const MAX_CHUNKS = 10;
 
 interface GetLogsSafeOptions {
 	client: PublicClient;
