@@ -3,8 +3,10 @@
 import { useCallback, useState } from "react";
 import { SuccessModal } from "@/components/create/success-modal";
 import { TokenForm } from "@/components/create/token-form";
+import { TokensList } from "@/components/create/tokens-list";
 import { PageContainer } from "@/components/layout/page-container";
 import { PageHeader } from "@/components/ui/page-header";
+import { Separator } from "@/components/ui/separator";
 import { useTransactionToast } from "@/hooks/use-transaction-toast";
 import { useAppStore } from "@/stores/app-store";
 
@@ -45,6 +47,8 @@ export default function CreatePage() {
 			<div className="mx-auto max-w-lg space-y-8">
 				<PageHeader title="Create Token" description="Create a new TIP-20 token on Tempo" />
 				<TokenForm key={formKey} onSuccess={handleSuccess} />
+				<Separator className="bg-anvil-gray-light" />
+				<TokensList />
 			</div>
 
 			{successData && (
