@@ -75,18 +75,22 @@ forge script script/Deploy.s.sol \
 
 ## Post-Deployment Verification
 
+Replace `$RPC_URL` with the appropriate RPC endpoint:
+- Testnet: `https://rpc.moderato.tempo.xyz`
+- Mainnet: `https://rpc.tempo.xyz`
+
 ```bash
 # Verify ForjaTokenFactory
-cast call <FACTORY_ADDRESS> "treasury()(address)" --rpc-url https://rpc.tempo.xyz
-cast call <FACTORY_ADDRESS> "createFee()(uint256)" --rpc-url https://rpc.tempo.xyz
+cast call <FACTORY_ADDRESS> "treasury()(address)" --rpc-url $RPC_URL
+cast call <FACTORY_ADDRESS> "createFee()(uint256)" --rpc-url $RPC_URL
 
 # Verify ForjaMultisend
-cast call <MULTISEND_ADDRESS> "treasury()(address)" --rpc-url https://rpc.tempo.xyz
-cast call <MULTISEND_ADDRESS> "multisendFee()(uint256)" --rpc-url https://rpc.tempo.xyz
+cast call <MULTISEND_ADDRESS> "treasury()(address)" --rpc-url $RPC_URL
+cast call <MULTISEND_ADDRESS> "multisendFee()(uint256)" --rpc-url $RPC_URL
 
 # Verify ForjaLocker
-cast call <LOCKER_ADDRESS> "treasury()(address)" --rpc-url https://rpc.tempo.xyz
-cast call <LOCKER_ADDRESS> "lockFee()(uint256)" --rpc-url https://rpc.tempo.xyz
+cast call <LOCKER_ADDRESS> "treasury()(address)" --rpc-url $RPC_URL
+cast call <LOCKER_ADDRESS> "lockFee()(uint256)" --rpc-url $RPC_URL
 ```
 
 ## Deployed Addresses

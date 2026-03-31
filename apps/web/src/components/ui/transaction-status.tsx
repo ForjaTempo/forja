@@ -16,7 +16,7 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
-import { TEMPO_EXPLORER } from "@/lib/constants";
+import { useExplorerUrl } from "@/hooks/use-explorer-url";
 import { cn } from "@/lib/utils";
 
 export type TransactionState = "idle" | "waiting" | "pending" | "confirmed" | "failed";
@@ -60,6 +60,7 @@ export function TransactionStatus({
 	error,
 	onRetry,
 }: TransactionStatusProps) {
+	const explorerUrl = useExplorerUrl();
 	const config = stateConfig[state];
 	const canClose = state === "confirmed" || state === "failed";
 
@@ -86,7 +87,7 @@ export function TransactionStatus({
 
 					{txHash && (
 						<a
-							href={`${TEMPO_EXPLORER}/tx/${txHash}`}
+							href={`${explorerUrl}/tx/${txHash}`}
 							target="_blank"
 							rel="noopener noreferrer"
 							className="inline-flex items-center gap-1.5 font-mono text-xs text-smoke-dark transition-colors hover:text-molten-amber"

@@ -2,7 +2,7 @@
 
 import { CheckIcon, CopyIcon, ExternalLinkIcon } from "lucide-react";
 import { useCallback, useState } from "react";
-import { TEMPO_EXPLORER } from "@/lib/constants";
+import { useExplorerUrl } from "@/hooks/use-explorer-url";
 import { cn } from "@/lib/utils";
 
 interface AddressDisplayProps {
@@ -12,6 +12,7 @@ interface AddressDisplayProps {
 }
 
 export function AddressDisplay({ address, showExplorer = false, className }: AddressDisplayProps) {
+	const explorerUrl = useExplorerUrl();
 	const [copied, setCopied] = useState(false);
 	const short = `${address.slice(0, 6)}...${address.slice(-4)}`;
 
@@ -39,7 +40,7 @@ export function AddressDisplay({ address, showExplorer = false, className }: Add
 
 			{showExplorer && (
 				<a
-					href={`${TEMPO_EXPLORER}/address/${address}`}
+					href={`${explorerUrl}/address/${address}`}
 					target="_blank"
 					rel="noopener noreferrer"
 					className="text-smoke-dark transition-colors hover:text-molten-amber"
