@@ -1,13 +1,63 @@
 "use client";
 
 import { ExternalLinkIcon } from "lucide-react";
+import { formatUnits } from "viem";
 import { useAccount } from "wagmi";
 import { AddressDisplay } from "@/components/ui/address-display";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { TokenAmount } from "@/components/ui/token-amount";
-import { useCreatedTokens } from "@/hooks/use-created-tokens";
-import { TEMPO_EXPLORER } from "@/lib/constants";
+import { type CreatedTokenEvent, useCreatedTokens } from "@/hooks/use-created-tokens";
+import { TEMPO_EXPLORER, TIP20_DECIMALS } from "@/lib/constants";
+
+function formatSupply(raw: bigint): string {
+	const value = Number(formatUnits(raw, TIP20_DECIMALS));
+	if (value >= 1_000_000_000) return `${(value / 1_000_000_000).toFixed(1)}B`;
+	if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
+	if (value >= 1_000) return `${(value / 1_000).toFixed(1)}K`;
+	return value.toLocaleString("en-US", { maximumFractionDigits: 2 });
+}
+
+function TokenRow({ token }: { token: CreatedTokenEvent }) {
+	return (
+		<div className="rounded-lg border border-anvil-gray-light bg-obsidian-black/50 px-4 py-3">
+			<div className="flex items-center justify-between">
+				<div className="flex items-center gap-2">
+					<span className="text-sm font-medium text-smoke">{token.name}</span>
+					<span className="rounded bg-anvil-gray px-1.5 py-0.5 font-mono text-xs text-smoke-dark">
+						{token.symbol}
+					</span>
+				</div>
+				<span className="font-mono text-xs text-smoke-dark">
+					Block #{token.blockNumber.toString()}
+				</span>
+			</div>
+			<div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1">
+				<div className="flex items-center gap-1 text-xs text-smoke-dark">
+					<span>Address:</span>
+					<AddressDisplay address={token.address} showExplorer />
+				</div>
+				<div className="flex items-center gap-1 text-xs text-smoke-dark">
+					<span>Supply:</span>
+					<span className="font-mono text-smoke">
+						{formatSupply(token.initialSupply)} {token.symbol}
+					</span>
+				</div>
+				<div className="flex items-center gap-1 text-xs text-smoke-dark">
+					<span>Tx:</span>
+					<a
+						href={`${TEMPO_EXPLORER}/tx/${token.txHash}`}
+						target="_blank"
+						rel="noopener noreferrer"
+						className="inline-flex items-center gap-1 font-mono text-smoke transition-colors hover:text-molten-amber"
+					>
+						{`${token.txHash.slice(0, 8)}...${token.txHash.slice(-6)}`}
+						<ExternalLinkIcon className="size-3" />
+					</a>
+				</div>
+			</div>
+		</div>
+	);
+}
 
 export function TokensList() {
 	const { isConnected } = useAccount();
@@ -24,7 +74,7 @@ export function TokensList() {
 				{isLoading ? (
 					<div className="space-y-3">
 						{Array.from({ length: 3 }).map((_, i) => (
-							<Skeleton key={`skeleton-${i.toString()}`} className="h-12 w-full" />
+							<Skeleton key={`skeleton-${i.toString()}`} className="h-16 w-full" />
 						))}
 					</div>
 				) : tokens.length === 0 ? (
@@ -34,32 +84,7 @@ export function TokensList() {
 				) : (
 					<div className="space-y-3">
 						{tokens.map((token) => (
-							<div
-								key={token.txHash}
-								className="flex items-center justify-between rounded-lg border border-anvil-gray-light bg-obsidian-black/50 px-4 py-3"
-							>
-								<div className="min-w-0 flex-1">
-									<div className="flex items-center gap-2">
-										<span className="text-sm font-medium text-smoke">{token.name}</span>
-										<span className="rounded bg-anvil-gray px-1.5 py-0.5 font-mono text-xs text-smoke-dark">
-											{token.symbol}
-										</span>
-									</div>
-									<div className="mt-1 flex items-center gap-3">
-										<AddressDisplay address={token.address} showExplorer />
-										<TokenAmount amount={token.initialSupply} symbol={token.symbol} />
-									</div>
-								</div>
-								<a
-									href={`${TEMPO_EXPLORER}/tx/${token.txHash}`}
-									target="_blank"
-									rel="noopener noreferrer"
-									className="ml-3 text-smoke-dark transition-colors hover:text-molten-amber"
-									title="View transaction"
-								>
-									<ExternalLinkIcon className="size-4" />
-								</a>
-							</div>
+							<TokenRow key={token.txHash} token={token} />
 						))}
 					</div>
 				)}

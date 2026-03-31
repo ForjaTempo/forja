@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { Hex, Log } from "viem";
 import { useAccount, usePublicClient } from "wagmi";
 import { tokenFactoryConfig } from "@/lib/contracts";
@@ -26,24 +26,39 @@ export interface CreatedTokenEvent {
 	blockNumber: bigint;
 }
 
+function parseLogs(logs: Log[]): CreatedTokenEvent[] {
+	return logs
+		.map((log) => {
+			const args = (log as unknown as { args: Record<string, unknown> }).args;
+			return {
+				name: args.name as string,
+				symbol: args.symbol as string,
+				address: args.token as Hex,
+				initialSupply: args.initialSupply as bigint,
+				txHash: log.transactionHash as Hex,
+				blockNumber: log.blockNumber as bigint,
+			};
+		})
+		.reverse();
+}
+
 export function useCreatedTokens(): {
 	tokens: CreatedTokenEvent[];
 	isLoading: boolean;
+	refetch: () => void;
 } {
 	const { address } = useAccount();
 	const publicClient = usePublicClient();
 	const [tokens, setTokens] = useState<CreatedTokenEvent[]>([]);
 	const [isLoading, setIsLoading] = useState(false);
 
-	useEffect(() => {
+	const fetchTokens = useCallback(() => {
 		if (!address || !publicClient) {
 			setTokens([]);
 			return;
 		}
 
-		let cancelled = false;
 		setIsLoading(true);
-
 		publicClient
 			.getLogs({
 				address: tokenFactoryConfig.address,
@@ -52,34 +67,14 @@ export function useCreatedTokens(): {
 				fromBlock: 0n,
 				toBlock: "latest",
 			})
-			.then((logs: Log[]) => {
-				if (cancelled) return;
-				const parsed: CreatedTokenEvent[] = logs
-					.map((log) => {
-						const args = (log as unknown as { args: Record<string, unknown> }).args;
-						return {
-							name: args.name as string,
-							symbol: args.symbol as string,
-							address: args.token as Hex,
-							initialSupply: args.initialSupply as bigint,
-							txHash: log.transactionHash as Hex,
-							blockNumber: log.blockNumber as bigint,
-						};
-					})
-					.reverse();
-				setTokens(parsed);
-			})
-			.catch(() => {
-				if (!cancelled) setTokens([]);
-			})
-			.finally(() => {
-				if (!cancelled) setIsLoading(false);
-			});
-
-		return () => {
-			cancelled = true;
-		};
+			.then((logs: Log[]) => setTokens(parseLogs(logs)))
+			.catch(() => setTokens([]))
+			.finally(() => setIsLoading(false));
 	}, [address, publicClient]);
 
-	return { tokens, isLoading };
+	useEffect(() => {
+		fetchTokens();
+	}, [fetchTokens]);
+
+	return { tokens, isLoading, refetch: fetchTokens };
 }
