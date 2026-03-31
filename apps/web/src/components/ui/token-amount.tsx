@@ -1,3 +1,4 @@
+import { formatUnits } from "viem";
 import { cn } from "@/lib/utils";
 
 interface TokenAmountProps {
@@ -15,7 +16,7 @@ function formatCompact(value: number): string {
 }
 
 export function TokenAmount({ amount, symbol, decimals = 6, className }: TokenAmountProps) {
-	const value = typeof amount === "bigint" ? Number(amount) / 10 ** decimals : amount;
+	const value = typeof amount === "bigint" ? Number(formatUnits(amount, decimals)) : amount;
 
 	return (
 		<span className={cn("inline-flex items-baseline gap-1 font-mono text-sm", className)}>
