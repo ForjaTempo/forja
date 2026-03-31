@@ -25,7 +25,7 @@ interface MultisendFormProps {
 	onSuccess?: (data: {
 		tokenSymbol: string;
 		recipientCount: number;
-		totalAmount: string;
+		totalAmount: bigint;
 		txHash: string;
 	}) => void;
 }
@@ -143,11 +143,11 @@ export function MultisendForm({ onSuccess }: MultisendFormProps) {
 			onSuccess?.({
 				tokenSymbol: tokenSymbol ?? "tokens",
 				recipientCount: parsed.recipients.length,
-				totalAmount: recipientText,
+				totalAmount: parsed.totalAmount,
 				txHash,
 			});
 		}
-	}, [isSuccess, txHash, onSuccess, tokenSymbol, parsed.recipients.length, recipientText]);
+	}, [isSuccess, txHash, onSuccess, tokenSymbol, parsed.recipients.length, parsed.totalAmount]);
 
 	const handleRetry = useCallback(() => {
 		reset();

@@ -3,24 +3,41 @@
 import { useCallback, useState } from "react";
 import { PageContainer } from "@/components/layout/page-container";
 import { MultisendForm } from "@/components/multisend/multisend-form";
+import { SuccessModal } from "@/components/multisend/success-modal";
 import { PageHeader } from "@/components/ui/page-header";
+import { Separator } from "@/components/ui/separator";
+import { useTransactionToast } from "@/hooks/use-transaction-toast";
+import { useAppStore } from "@/stores/app-store";
+
+interface MultisendSuccess {
+	tokenSymbol: string;
+	recipientCount: number;
+	totalAmount: bigint;
+	txHash: string;
+}
 
 export default function MultisendPage() {
+	const [successData, setSuccessData] = useState<MultisendSuccess | null>(null);
 	const [formKey, setFormKey] = useState(0);
+	const { txConfirmed } = useTransactionToast();
+	const addTransaction = useAppStore((s) => s.addTransaction);
 
 	const handleSuccess = useCallback(
-		(_data: {
-			tokenSymbol: string;
-			recipientCount: number;
-			totalAmount: string;
-			txHash: string;
-		}) => {
-			// Success modal and store integration added in commit 3
+		(data: MultisendSuccess) => {
+			setSuccessData(data);
+			txConfirmed(data.txHash);
+			addTransaction({
+				hash: data.txHash,
+				type: "multisend",
+				description: `Sent ${data.tokenSymbol} to ${data.recipientCount} recipients`,
+				timestamp: Date.now(),
+			});
 		},
-		[],
+		[txConfirmed, addTransaction],
 	);
 
-	const _handleSendAnother = useCallback(() => {
+	const handleSendAnother = useCallback(() => {
+		setSuccessData(null);
 		setFormKey((k) => k + 1);
 	}, []);
 
@@ -29,7 +46,22 @@ export default function MultisendPage() {
 			<div className="mx-auto max-w-lg space-y-8">
 				<PageHeader title="Multisend" description="Send tokens to multiple recipients at once" />
 				<MultisendForm key={formKey} onSuccess={handleSuccess} />
+				<Separator className="bg-anvil-gray-light" />
 			</div>
+
+			{successData && (
+				<SuccessModal
+					open={!!successData}
+					onOpenChange={(open) => {
+						if (!open) setSuccessData(null);
+					}}
+					tokenSymbol={successData.tokenSymbol}
+					recipientCount={successData.recipientCount}
+					totalAmount={successData.totalAmount}
+					txHash={successData.txHash}
+					onSendAnother={handleSendAnother}
+				/>
+			)}
 		</PageContainer>
 	);
 }
