@@ -18,8 +18,19 @@ import { useUsdcApproval } from "@/hooks/use-usdc-approval";
 import { useUsdcBalance } from "@/hooks/use-usdc-balance";
 import { TIP20_DECIMALS } from "@/lib/constants";
 import { multisendConfig } from "@/lib/contracts";
-import { parseLines, RecipientInput } from "./recipient-input";
+import {
+	type ManualRow,
+	type ParseResult,
+	parseLines,
+	parseManualRows,
+	RecipientInput,
+} from "./recipient-input";
 import { SendButton } from "./send-button";
+
+type InputMode = "paste" | "manual";
+type DistributionMode = "custom" | "equal";
+
+const VALID_AMOUNT = /^\d+(\.\d{1,6})?$/;
 
 interface MultisendFormProps {
 	onSuccess?: (data: {
@@ -34,6 +45,10 @@ export function MultisendForm({ onSuccess }: MultisendFormProps) {
 	const { isConnected } = useAccount();
 	const [tokenAddress, setTokenAddress] = useState("");
 	const [recipientText, setRecipientText] = useState("");
+	const [manualRows, setManualRows] = useState<ManualRow[]>([{ address: "", amount: "" }]);
+	const [inputMode, setInputMode] = useState<InputMode>("paste");
+	const [distribution, setDistribution] = useState<DistributionMode>("custom");
+	const [equalTotalAmount, setEqualTotalAmount] = useState("");
 	const successFired = useRef(false);
 	const [txDialogOpen, setTxDialogOpen] = useState(false);
 
@@ -43,6 +58,7 @@ export function MultisendForm({ onSuccess }: MultisendFormProps) {
 	const {
 		name: tokenName,
 		symbol: tokenSymbol,
+		decimals: tokenDecimals,
 		isLoading: isTokenInfoLoading,
 		isError: isTokenError,
 	} = useTokenInfo(validTokenAddress);
@@ -53,8 +69,66 @@ export function MultisendForm({ onSuccess }: MultisendFormProps) {
 	const { balance: usdcBalance, formatted: usdcBalanceFormatted } = useUsdcBalance();
 	const { txSubmitted, txFailed } = useTransactionToast();
 
-	const parsed = useMemo(() => parseLines(recipientText), [recipientText]);
+	// Parse recipients based on input mode
+	const baseParsed = useMemo<ParseResult>(
+		() => (inputMode === "paste" ? parseLines(recipientText) : parseManualRows(manualRows)),
+		[inputMode, recipientText, manualRows],
+	);
+
+	// Apply equal distribution if selected
+	const parsed = useMemo<ParseResult>(() => {
+		if (
+			distribution !== "equal" ||
+			baseParsed.recipients.length === 0 ||
+			baseParsed.errors.length > 0
+		) {
+			return baseParsed;
+		}
+
+		if (
+			!equalTotalAmount ||
+			!VALID_AMOUNT.test(equalTotalAmount) ||
+			Number(equalTotalAmount) <= 0
+		) {
+			return {
+				...baseParsed,
+				totalAmount: 0n,
+				errors: equalTotalAmount ? ["Enter a valid total amount for equal distribution"] : [],
+			};
+		}
+
+		const total = parseUnits(equalTotalAmount, TIP20_DECIMALS);
+		const count = BigInt(baseParsed.recipients.length);
+		const perRecipient = total / count;
+		const remainder = total - perRecipient * count;
+
+		if (perRecipient === 0n) {
+			return {
+				...baseParsed,
+				totalAmount: 0n,
+				errors: ["Total amount too small to split among recipients"],
+			};
+		}
+
+		// For equal distribution, override amounts
+		// First recipient gets the remainder (dust)
+		const perAmount = (Number(perRecipient) / 10 ** TIP20_DECIMALS).toString();
+		const firstAmount = (Number(perRecipient + remainder) / 10 ** TIP20_DECIMALS).toString();
+
+		return {
+			...baseParsed,
+			recipients: baseParsed.recipients.map((r, i) => ({
+				...r,
+				amount: i === 0 ? firstAmount : perAmount,
+			})),
+			totalAmount: total,
+		};
+	}, [distribution, baseParsed, equalTotalAmount]);
+
 	const feeAmount = fee ?? parseUnits(String(feeFormatted), TIP20_DECIMALS);
+
+	// Non-standard decimals warning (Tempo TIP-20 is always 6)
+	const nonStandardDecimals = tokenDecimals !== undefined && tokenDecimals !== TIP20_DECIMALS;
 
 	const {
 		needsApproval: needsUsdcApproval,
@@ -88,8 +162,10 @@ export function MultisendForm({ onSuccess }: MultisendFormProps) {
 	const formValid =
 		validTokenAddress !== undefined &&
 		!isTokenError &&
+		!nonStandardDecimals &&
 		parsed.recipients.length > 0 &&
-		parsed.errors.length === 0;
+		parsed.errors.length === 0 &&
+		parsed.totalAmount > 0n;
 
 	const handleSend = useCallback(() => {
 		if (!formValid || !validTokenAddress) return;
@@ -191,7 +267,13 @@ export function MultisendForm({ onSuccess }: MultisendFormProps) {
 									Invalid token address — could not read token contract
 								</p>
 							)}
-							{validTokenAddress && tokenName && tokenSymbol && (
+							{nonStandardDecimals && (
+								<p className="text-xs text-ember-red">
+									This token uses {tokenDecimals} decimals instead of 6. Only TIP-20 tokens (6
+									decimals) are supported.
+								</p>
+							)}
+							{validTokenAddress && tokenName && tokenSymbol && !nonStandardDecimals && (
 								<div className="flex items-center gap-2 text-sm">
 									<span className="text-smoke">{tokenName}</span>
 									<span className="rounded bg-anvil-gray px-1.5 py-0.5 font-mono text-xs text-smoke-dark">
@@ -213,8 +295,62 @@ export function MultisendForm({ onSuccess }: MultisendFormProps) {
 						<RecipientInput
 							value={recipientText}
 							onChange={setRecipientText}
+							manualRows={manualRows}
+							onManualRowsChange={setManualRows}
+							inputMode={inputMode}
+							onInputModeChange={setInputMode}
 							tokenSymbol={tokenSymbol}
 						/>
+
+						{/* Distribution mode toggle */}
+						<div className="space-y-3">
+							<span className="text-sm font-medium text-smoke">Distribution</span>
+							<div className="flex gap-1 rounded-md border border-anvil-gray-light bg-obsidian-black p-1">
+								<button
+									type="button"
+									className={`flex-1 rounded px-3 py-1.5 text-xs font-medium transition-colors ${
+										distribution === "custom"
+											? "bg-anvil-gray text-smoke"
+											: "text-smoke-dark hover:text-smoke"
+									}`}
+									onClick={() => setDistribution("custom")}
+								>
+									Custom Amounts
+								</button>
+								<button
+									type="button"
+									className={`flex-1 rounded px-3 py-1.5 text-xs font-medium transition-colors ${
+										distribution === "equal"
+											? "bg-anvil-gray text-smoke"
+											: "text-smoke-dark hover:text-smoke"
+									}`}
+									onClick={() => setDistribution("equal")}
+								>
+									Equal Split
+								</button>
+							</div>
+							{distribution === "equal" && (
+								<div className="space-y-1">
+									<Input
+										placeholder="Total amount to distribute"
+										value={equalTotalAmount}
+										onChange={(e) => setEqualTotalAmount(e.target.value)}
+										inputMode="decimal"
+										autoComplete="off"
+										className="font-mono"
+									/>
+									{baseParsed.recipients.length > 0 &&
+										equalTotalAmount &&
+										VALID_AMOUNT.test(equalTotalAmount) && (
+											<p className="text-xs text-smoke-dark">
+												Each recipient gets ~
+												{(Number(equalTotalAmount) / baseParsed.recipients.length).toFixed(6)}{" "}
+												{tokenSymbol ?? "tokens"}
+											</p>
+										)}
+								</div>
+							)}
+						</div>
 
 						<Separator className="bg-anvil-gray-light" />
 

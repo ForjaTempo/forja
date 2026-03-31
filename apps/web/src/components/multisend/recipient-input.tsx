@@ -1,15 +1,17 @@
 "use client";
 
-import { UploadIcon, XIcon } from "lucide-react";
+import { PlusIcon, TrashIcon, UploadIcon, XIcon } from "lucide-react";
 import { type ChangeEvent, useCallback, useMemo, useRef } from "react";
 import type { Hex } from "viem";
 import { formatUnits, parseUnits } from "viem";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { TIP20_DECIMALS } from "@/lib/constants";
 
 const MAX_RECIPIENTS = 500;
 const ADDRESS_RE = /^0x[0-9a-fA-F]{40}$/;
 const AMOUNT_RE = /^\d+(\.\d{1,6})?$/;
+const HEADER_RE = /^(address|recipient|wallet|to)[,\t]/i;
 
 export interface Recipient {
 	address: Hex;
@@ -23,11 +25,26 @@ export interface ParseResult {
 	warnings: string[];
 }
 
+type InputMode = "paste" | "manual";
+
+export interface ManualRow {
+	address: string;
+	amount: string;
+}
+
+function isHeaderRow(line: string): boolean {
+	return HEADER_RE.test(line) || line.toLowerCase().includes("amount");
+}
+
 function parseLines(text: string): ParseResult {
-	const lines = text
+	const rawLines = text
 		.split("\n")
 		.map((l) => l.trim())
 		.filter((l) => l.length > 0);
+
+	// Skip header row if detected
+	const lines =
+		rawLines.length > 0 && isHeaderRow(rawLines[0] as string) ? rawLines.slice(1) : rawLines;
 
 	const recipients: Recipient[] = [];
 	const errors: string[] = [];
@@ -42,9 +59,9 @@ function parseLines(text: string): ParseResult {
 
 	for (let i = 0; i < lines.length; i++) {
 		const line = lines[i] as string;
-		const lineNum = i + 1;
+		// Line number accounts for skipped header
+		const lineNum = rawLines.length !== lines.length ? i + 2 : i + 1;
 
-		// Support both comma and space/tab as delimiter
 		const parts = line.split(/[,\t]+/).map((p) => p.trim());
 		const addr = parts[0] ?? "";
 		const amt = parts[1] ?? "";
@@ -78,18 +95,77 @@ function parseLines(text: string): ParseResult {
 	return { recipients, totalAmount, errors, warnings };
 }
 
+function parseManualRows(rows: ManualRow[]): ParseResult {
+	const recipients: Recipient[] = [];
+	const errors: string[] = [];
+	const warnings: string[] = [];
+	let totalAmount = 0n;
+	const seenAddresses = new Set<string>();
+
+	const nonEmptyRows = rows.filter((r) => r.address.trim() || r.amount.trim());
+
+	for (let i = 0; i < nonEmptyRows.length; i++) {
+		const row = nonEmptyRows[i] as ManualRow;
+		const rowNum = i + 1;
+		const addr = row.address.trim();
+		const amt = row.amount.trim();
+
+		if (!addr || !amt) {
+			errors.push(`Row ${rowNum}: Both address and amount are required`);
+			continue;
+		}
+
+		if (!ADDRESS_RE.test(addr)) {
+			errors.push(`Row ${rowNum}: Invalid address`);
+			continue;
+		}
+
+		if (!AMOUNT_RE.test(amt) || Number(amt) <= 0) {
+			errors.push(`Row ${rowNum}: Invalid amount`);
+			continue;
+		}
+
+		const lowerAddr = addr.toLowerCase();
+		if (seenAddresses.has(lowerAddr)) {
+			warnings.push(`Row ${rowNum}: Duplicate address ${addr.slice(0, 8)}...`);
+		}
+		seenAddresses.add(lowerAddr);
+
+		const parsed = parseUnits(amt, TIP20_DECIMALS);
+		totalAmount += parsed;
+		recipients.push({ address: addr as Hex, amount: amt });
+	}
+
+	return { recipients, totalAmount, errors, warnings };
+}
+
 interface RecipientInputProps {
 	value: string;
 	onChange: (value: string) => void;
+	manualRows: ManualRow[];
+	onManualRowsChange: (rows: ManualRow[]) => void;
+	inputMode: InputMode;
+	onInputModeChange: (mode: InputMode) => void;
 	tokenSymbol: string | undefined;
 }
 
-export function RecipientInput({ value, onChange, tokenSymbol }: RecipientInputProps) {
+export function RecipientInput({
+	value,
+	onChange,
+	manualRows,
+	onManualRowsChange,
+	inputMode,
+	onInputModeChange,
+	tokenSymbol,
+}: RecipientInputProps) {
 	const fileInputRef = useRef<HTMLInputElement>(null);
 
-	const parsed = useMemo(() => parseLines(value), [value]);
+	const parsed = useMemo(
+		() => (inputMode === "paste" ? parseLines(value) : parseManualRows(manualRows)),
+		[inputMode, value, manualRows],
+	);
 
-	const handleChange = useCallback(
+	const handleTextChange = useCallback(
 		(e: ChangeEvent<HTMLTextAreaElement>) => {
 			onChange(e.target.value);
 		},
@@ -109,8 +185,6 @@ export function RecipientInput({ value, onChange, tokenSymbol }: RecipientInputP
 				}
 			};
 			reader.readAsText(file);
-
-			// Reset so same file can be re-uploaded
 			e.target.value = "";
 		},
 		[onChange],
@@ -118,16 +192,37 @@ export function RecipientInput({ value, onChange, tokenSymbol }: RecipientInputP
 
 	const handleClear = useCallback(() => {
 		onChange("");
-	}, [onChange]);
+		onManualRowsChange([{ address: "", amount: "" }]);
+	}, [onChange, onManualRowsChange]);
 
-	const hasContent = value.trim().length > 0;
+	const handleAddRow = useCallback(() => {
+		if (manualRows.length >= MAX_RECIPIENTS) return;
+		onManualRowsChange([...manualRows, { address: "", amount: "" }]);
+	}, [manualRows, onManualRowsChange]);
+
+	const handleRemoveRow = useCallback(
+		(index: number) => {
+			if (manualRows.length <= 1) return;
+			onManualRowsChange(manualRows.filter((_, i) => i !== index));
+		},
+		[manualRows, onManualRowsChange],
+	);
+
+	const handleRowChange = useCallback(
+		(index: number, field: "address" | "amount", val: string) => {
+			const updated = manualRows.map((row, i) => (i === index ? { ...row, [field]: val } : row));
+			onManualRowsChange(updated);
+		},
+		[manualRows, onManualRowsChange],
+	);
+
+	const hasContent =
+		inputMode === "paste" ? value.trim().length > 0 : manualRows.some((r) => r.address || r.amount);
 
 	return (
 		<div className="space-y-3">
 			<div className="flex items-center justify-between">
-				<label htmlFor="recipients" className="text-sm font-medium text-smoke">
-					Recipients
-				</label>
+				<span className="text-sm font-medium text-smoke">Recipients</span>
 				<div className="flex items-center gap-2">
 					{hasContent && (
 						<Button
@@ -141,34 +236,106 @@ export function RecipientInput({ value, onChange, tokenSymbol }: RecipientInputP
 							Clear
 						</Button>
 					)}
+					{inputMode === "paste" && (
+						<>
+							<Button
+								type="button"
+								variant="ghost"
+								size="sm"
+								className="h-7 px-2 text-xs"
+								onClick={() => fileInputRef.current?.click()}
+							>
+								<UploadIcon className="size-3" />
+								Upload CSV
+							</Button>
+							<input
+								ref={fileInputRef}
+								type="file"
+								accept=".csv,.txt"
+								className="hidden"
+								onChange={handleFileUpload}
+							/>
+						</>
+					)}
+				</div>
+			</div>
+
+			{/* Mode toggle */}
+			<div className="flex gap-1 rounded-md border border-anvil-gray-light bg-obsidian-black p-1">
+				<button
+					type="button"
+					className={`flex-1 rounded px-3 py-1.5 text-xs font-medium transition-colors ${
+						inputMode === "paste" ? "bg-anvil-gray text-smoke" : "text-smoke-dark hover:text-smoke"
+					}`}
+					onClick={() => onInputModeChange("paste")}
+				>
+					Paste / CSV
+				</button>
+				<button
+					type="button"
+					className={`flex-1 rounded px-3 py-1.5 text-xs font-medium transition-colors ${
+						inputMode === "manual" ? "bg-anvil-gray text-smoke" : "text-smoke-dark hover:text-smoke"
+					}`}
+					onClick={() => onInputModeChange("manual")}
+				>
+					Manual Entry
+				</button>
+			</div>
+
+			{inputMode === "paste" ? (
+				<textarea
+					id="recipients"
+					className="min-h-[120px] w-full rounded-md border border-anvil-gray-light bg-obsidian-black px-3 py-2 font-mono text-sm text-smoke placeholder:text-smoke-dark focus:border-forge-green focus:outline-none focus:ring-1 focus:ring-forge-green"
+					placeholder={"0x1234...abcd,100\n0x5678...efgh,250.5\n0xabcd...1234,75"}
+					value={value}
+					onChange={handleTextChange}
+					spellCheck={false}
+				/>
+			) : (
+				<div className="space-y-2">
+					{manualRows.map((row, i) => (
+						<div key={`row-${i.toString()}`} className="flex items-center gap-2">
+							<Input
+								placeholder="0x..."
+								value={row.address}
+								onChange={(e) => handleRowChange(i, "address", e.target.value)}
+								className="flex-[2] font-mono text-sm"
+								autoComplete="off"
+								spellCheck={false}
+							/>
+							<Input
+								placeholder="Amount"
+								value={row.amount}
+								onChange={(e) => handleRowChange(i, "amount", e.target.value)}
+								className="flex-1 font-mono text-sm"
+								inputMode="decimal"
+								autoComplete="off"
+							/>
+							<Button
+								type="button"
+								variant="ghost"
+								size="sm"
+								className="h-9 w-9 shrink-0 p-0"
+								onClick={() => handleRemoveRow(i)}
+								disabled={manualRows.length <= 1}
+							>
+								<TrashIcon className="size-3.5 text-smoke-dark" />
+							</Button>
+						</div>
+					))}
 					<Button
 						type="button"
 						variant="ghost"
 						size="sm"
-						className="h-7 px-2 text-xs"
-						onClick={() => fileInputRef.current?.click()}
+						className="h-8 text-xs text-smoke-dark"
+						onClick={handleAddRow}
+						disabled={manualRows.length >= MAX_RECIPIENTS}
 					>
-						<UploadIcon className="size-3" />
-						Upload CSV
+						<PlusIcon className="size-3" />
+						Add Recipient
 					</Button>
-					<input
-						ref={fileInputRef}
-						type="file"
-						accept=".csv,.txt"
-						className="hidden"
-						onChange={handleFileUpload}
-					/>
 				</div>
-			</div>
-
-			<textarea
-				id="recipients"
-				className="min-h-[120px] w-full rounded-md border border-anvil-gray-light bg-obsidian-black px-3 py-2 font-mono text-sm text-smoke placeholder:text-smoke-dark focus:border-forge-green focus:outline-none focus:ring-1 focus:ring-forge-green"
-				placeholder={"0x1234...abcd,100\n0x5678...efgh,250.5\n0xabcd...1234,75"}
-				value={value}
-				onChange={handleChange}
-				spellCheck={false}
-			/>
+			)}
 
 			{parsed.errors.length > 0 && (
 				<div className="space-y-1">
@@ -229,4 +396,4 @@ export function RecipientInput({ value, onChange, tokenSymbol }: RecipientInputP
 	);
 }
 
-export { parseLines };
+export { parseLines, parseManualRows };
