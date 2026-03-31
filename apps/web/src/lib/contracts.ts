@@ -183,6 +183,37 @@ export const lockerConfig = {
 	address: FORJA_LOCKER_ADDRESS,
 	abi: [
 		{
+			type: "event",
+			name: "LockCreated",
+			inputs: [
+				{ name: "lockId", type: "uint256", indexed: true },
+				{ name: "creator", type: "address", indexed: true },
+				{ name: "token", type: "address", indexed: true },
+				{ name: "beneficiary", type: "address", indexed: false },
+				{ name: "amount", type: "uint256", indexed: false },
+				{ name: "startTime", type: "uint64", indexed: false },
+				{ name: "endTime", type: "uint64", indexed: false },
+				{ name: "vestingEnabled", type: "bool", indexed: false },
+			],
+		},
+		{
+			type: "event",
+			name: "TokensClaimed",
+			inputs: [
+				{ name: "lockId", type: "uint256", indexed: true },
+				{ name: "beneficiary", type: "address", indexed: true },
+				{ name: "amount", type: "uint256", indexed: false },
+			],
+		},
+		{
+			type: "event",
+			name: "LockRevoked",
+			inputs: [
+				{ name: "lockId", type: "uint256", indexed: true },
+				{ name: "returnedAmount", type: "uint256", indexed: false },
+			],
+		},
+		{
 			name: "createLock",
 			type: "function",
 			stateMutability: "nonpayable",
