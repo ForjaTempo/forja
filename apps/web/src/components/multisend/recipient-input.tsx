@@ -1,0 +1,232 @@
+"use client";
+
+import { UploadIcon, XIcon } from "lucide-react";
+import { type ChangeEvent, useCallback, useMemo, useRef } from "react";
+import type { Hex } from "viem";
+import { formatUnits, parseUnits } from "viem";
+import { Button } from "@/components/ui/button";
+import { TIP20_DECIMALS } from "@/lib/constants";
+
+const MAX_RECIPIENTS = 500;
+const ADDRESS_RE = /^0x[0-9a-fA-F]{40}$/;
+const AMOUNT_RE = /^\d+(\.\d{1,6})?$/;
+
+export interface Recipient {
+	address: Hex;
+	amount: string;
+}
+
+export interface ParseResult {
+	recipients: Recipient[];
+	totalAmount: bigint;
+	errors: string[];
+	warnings: string[];
+}
+
+function parseLines(text: string): ParseResult {
+	const lines = text
+		.split("\n")
+		.map((l) => l.trim())
+		.filter((l) => l.length > 0);
+
+	const recipients: Recipient[] = [];
+	const errors: string[] = [];
+	const warnings: string[] = [];
+	let totalAmount = 0n;
+	const seenAddresses = new Set<string>();
+
+	if (lines.length > MAX_RECIPIENTS) {
+		errors.push(`Maximum ${MAX_RECIPIENTS} recipients allowed (got ${lines.length})`);
+		return { recipients: [], totalAmount: 0n, errors, warnings };
+	}
+
+	for (let i = 0; i < lines.length; i++) {
+		const line = lines[i] as string;
+		const lineNum = i + 1;
+
+		// Support both comma and space/tab as delimiter
+		const parts = line.split(/[,\t]+/).map((p) => p.trim());
+		const addr = parts[0] ?? "";
+		const amt = parts[1] ?? "";
+
+		if (!addr || !amt) {
+			errors.push(`Line ${lineNum}: Expected "address,amount" format`);
+			continue;
+		}
+
+		if (!ADDRESS_RE.test(addr)) {
+			errors.push(`Line ${lineNum}: Invalid address "${addr.slice(0, 10)}..."`);
+			continue;
+		}
+
+		if (!AMOUNT_RE.test(amt) || Number(amt) <= 0) {
+			errors.push(`Line ${lineNum}: Invalid amount "${amt}"`);
+			continue;
+		}
+
+		const lowerAddr = addr.toLowerCase();
+		if (seenAddresses.has(lowerAddr)) {
+			warnings.push(`Line ${lineNum}: Duplicate address ${addr.slice(0, 8)}...`);
+		}
+		seenAddresses.add(lowerAddr);
+
+		const parsed = parseUnits(amt, TIP20_DECIMALS);
+		totalAmount += parsed;
+		recipients.push({ address: addr as Hex, amount: amt });
+	}
+
+	return { recipients, totalAmount, errors, warnings };
+}
+
+interface RecipientInputProps {
+	value: string;
+	onChange: (value: string) => void;
+	tokenSymbol: string | undefined;
+}
+
+export function RecipientInput({ value, onChange, tokenSymbol }: RecipientInputProps) {
+	const fileInputRef = useRef<HTMLInputElement>(null);
+
+	const parsed = useMemo(() => parseLines(value), [value]);
+
+	const handleChange = useCallback(
+		(e: ChangeEvent<HTMLTextAreaElement>) => {
+			onChange(e.target.value);
+		},
+		[onChange],
+	);
+
+	const handleFileUpload = useCallback(
+		(e: ChangeEvent<HTMLInputElement>) => {
+			const file = e.target.files?.[0];
+			if (!file) return;
+
+			const reader = new FileReader();
+			reader.onload = (ev) => {
+				const text = ev.target?.result;
+				if (typeof text === "string") {
+					onChange(text.trim());
+				}
+			};
+			reader.readAsText(file);
+
+			// Reset so same file can be re-uploaded
+			e.target.value = "";
+		},
+		[onChange],
+	);
+
+	const handleClear = useCallback(() => {
+		onChange("");
+	}, [onChange]);
+
+	const hasContent = value.trim().length > 0;
+
+	return (
+		<div className="space-y-3">
+			<div className="flex items-center justify-between">
+				<label htmlFor="recipients" className="text-sm font-medium text-smoke">
+					Recipients
+				</label>
+				<div className="flex items-center gap-2">
+					{hasContent && (
+						<Button
+							type="button"
+							variant="ghost"
+							size="sm"
+							className="h-7 px-2 text-xs"
+							onClick={handleClear}
+						>
+							<XIcon className="size-3" />
+							Clear
+						</Button>
+					)}
+					<Button
+						type="button"
+						variant="ghost"
+						size="sm"
+						className="h-7 px-2 text-xs"
+						onClick={() => fileInputRef.current?.click()}
+					>
+						<UploadIcon className="size-3" />
+						Upload CSV
+					</Button>
+					<input
+						ref={fileInputRef}
+						type="file"
+						accept=".csv,.txt"
+						className="hidden"
+						onChange={handleFileUpload}
+					/>
+				</div>
+			</div>
+
+			<textarea
+				id="recipients"
+				className="min-h-[120px] w-full rounded-md border border-anvil-gray-light bg-obsidian-black px-3 py-2 font-mono text-sm text-smoke placeholder:text-smoke-dark focus:border-forge-green focus:outline-none focus:ring-1 focus:ring-forge-green"
+				placeholder={"0x1234...abcd,100\n0x5678...efgh,250.5\n0xabcd...1234,75"}
+				value={value}
+				onChange={handleChange}
+				spellCheck={false}
+			/>
+
+			{parsed.errors.length > 0 && (
+				<div className="space-y-1">
+					{parsed.errors.map((err) => (
+						<p key={err} className="text-xs text-ember-red">
+							{err}
+						</p>
+					))}
+				</div>
+			)}
+
+			{parsed.warnings.length > 0 && (
+				<div className="space-y-1">
+					{parsed.warnings.map((warn) => (
+						<p key={warn} className="text-xs text-molten-amber">
+							{warn}
+						</p>
+					))}
+				</div>
+			)}
+
+			{parsed.recipients.length > 0 && parsed.errors.length === 0 && (
+				<div className="rounded-lg border border-anvil-gray-light bg-obsidian-black/50 p-3">
+					<div className="mb-2 flex items-center justify-between text-xs text-smoke-dark">
+						<span>Preview ({parsed.recipients.length} recipients)</span>
+						<span className="font-mono text-smoke">
+							Total: {formatUnits(parsed.totalAmount, TIP20_DECIMALS)} {tokenSymbol ?? "tokens"}
+						</span>
+					</div>
+					<div className="max-h-[200px] overflow-y-auto">
+						<table className="w-full text-xs">
+							<thead>
+								<tr className="border-b border-anvil-gray-light text-smoke-dark">
+									<th className="pb-1 text-left font-medium">#</th>
+									<th className="pb-1 text-left font-medium">Address</th>
+									<th className="pb-1 text-right font-medium">Amount</th>
+								</tr>
+							</thead>
+							<tbody>
+								{parsed.recipients.map((r, i) => (
+									<tr
+										key={r.address + i.toString()}
+										className="border-b border-anvil-gray-light/50"
+									>
+										<td className="py-1 text-smoke-dark">{i + 1}</td>
+										<td className="py-1 font-mono text-smoke">
+											{r.address.slice(0, 8)}...{r.address.slice(-6)}
+										</td>
+										<td className="py-1 text-right font-mono text-smoke">{r.amount}</td>
+									</tr>
+								))}
+							</tbody>
+						</table>
+					</div>
+				</div>
+			)}
+		</div>
+	);
+}
+
+export { parseLines };
