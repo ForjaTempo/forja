@@ -1,7 +1,7 @@
 "use client";
 
 import { type ChangeEvent, type FormEvent, useCallback, useEffect, useRef, useState } from "react";
-import { parseUnits } from "viem";
+import { formatUnits, parseUnits } from "viem";
 import { useAccount } from "wagmi";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -18,8 +18,8 @@ import { CreateButton } from "./create-button";
 
 const NAME_MAX = 50;
 const SYMBOL_MAX = 10;
-/** Only digits with optional single decimal point (no scientific notation, no signs) */
-const VALID_NUMERIC = /^\d+(\.\d+)?$/;
+/** Digits with optional decimal point, max 6 decimal places (TIP-20 precision) */
+const VALID_SUPPLY = /^\d+(\.\d{1,6})?$/;
 
 interface TokenFormProps {
 	onSuccess?: (data: {
@@ -58,8 +58,8 @@ export function TokenForm({ onSuccess }: TokenFormProps) {
 	const nameError = name.length > NAME_MAX ? `Max ${NAME_MAX} characters` : "";
 	const symbolError = symbol.length > SYMBOL_MAX ? `Max ${SYMBOL_MAX} characters` : "";
 	const supplyError =
-		initialSupply !== "" && !VALID_NUMERIC.test(initialSupply)
-			? "Must be a plain number (e.g. 1000000)"
+		initialSupply !== "" && !VALID_SUPPLY.test(initialSupply)
+			? "Must be a plain number with max 6 decimals (e.g. 1000000 or 1.5)"
 			: "";
 	const formValid =
 		name.trim() !== "" && symbol.trim() !== "" && !nameError && !symbolError && !supplyError;
@@ -209,8 +209,8 @@ export function TokenForm({ onSuccess }: TokenFormProps) {
 										</p>
 										<p className="text-sm text-smoke">
 											<span className="text-smoke-dark">Supply:</span>{" "}
-											{initialSupply && VALID_NUMERIC.test(initialSupply)
-												? BigInt(initialSupply.split(".")[0] ?? "0").toLocaleString("en-US")
+											{initialSupply && VALID_SUPPLY.test(initialSupply)
+												? formatUnits(parseUnits(initialSupply, TIP20_DECIMALS), TIP20_DECIMALS)
 												: "0 (no initial mint)"}
 										</p>
 									</div>
