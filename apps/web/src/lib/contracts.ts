@@ -60,6 +60,17 @@ export const tokenFactoryConfig = {
 			outputs: [{ name: "", type: "uint256" }],
 		},
 		{
+			type: "event",
+			name: "TokenCreated",
+			inputs: [
+				{ name: "creator", type: "address", indexed: true },
+				{ name: "token", type: "address", indexed: true },
+				{ name: "name", type: "string", indexed: false },
+				{ name: "symbol", type: "string", indexed: false },
+				{ name: "initialSupply", type: "uint256", indexed: false },
+			],
+		},
+		{
 			name: "userNonce",
 			type: "function",
 			stateMutability: "view",
