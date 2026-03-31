@@ -24,9 +24,10 @@ export interface CreatedTokenEvent {
 	initialSupply: bigint;
 	txHash: Hex;
 	blockNumber: bigint;
+	timestamp: number | null;
 }
 
-function parseLogs(logs: Log[]): CreatedTokenEvent[] {
+function parseLogs(logs: Log[]): Omit<CreatedTokenEvent, "timestamp">[] {
 	return logs
 		.map((log) => {
 			const args = (log as unknown as { args: Record<string, unknown> }).args;
@@ -67,7 +68,35 @@ export function useCreatedTokens(): {
 				fromBlock: 0n,
 				toBlock: "latest",
 			})
-			.then((logs: Log[]) => setTokens(parseLogs(logs)))
+			.then(async (logs: Log[]) => {
+				const parsed = parseLogs(logs);
+				if (parsed.length === 0) {
+					setTokens([]);
+					return;
+				}
+
+				// Fetch timestamps for unique block numbers
+				const uniqueBlocks = [...new Set(parsed.map((t) => t.blockNumber))];
+				const timestampMap = new Map<bigint, number>();
+
+				await Promise.all(
+					uniqueBlocks.map(async (blockNum) => {
+						try {
+							const block = await publicClient.getBlock({ blockNumber: blockNum });
+							timestampMap.set(blockNum, Number(block.timestamp));
+						} catch {
+							// Timestamp unavailable, leave as null
+						}
+					}),
+				);
+
+				setTokens(
+					parsed.map((t) => ({
+						...t,
+						timestamp: timestampMap.get(t.blockNumber) ?? null,
+					})),
+				);
+			})
 			.catch(() => setTokens([]))
 			.finally(() => setIsLoading(false));
 	}, [address, publicClient]);

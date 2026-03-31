@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 
 interface CreateButtonProps {
 	needsApproval: boolean;
+	isAllowanceLoading: boolean;
 	insufficientBalance: boolean;
 	isApproving: boolean;
 	isApprovalConfirming: boolean;
@@ -19,6 +20,7 @@ interface CreateButtonProps {
 
 export function CreateButton({
 	needsApproval,
+	isAllowanceLoading,
 	insufficientBalance,
 	isApproving,
 	isApprovalConfirming,
@@ -39,6 +41,15 @@ export function CreateButton({
 					</Button>
 				)}
 			</ConnectButton.Custom>
+		);
+	}
+
+	if (isAllowanceLoading) {
+		return (
+			<Button className="w-full" size="lg" disabled>
+				<LoaderIcon className="size-4 animate-spin" />
+				Checking allowance...
+			</Button>
 		);
 	}
 
