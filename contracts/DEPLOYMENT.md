@@ -10,9 +10,11 @@
 
 ## Prerequisites
 
-- [Foundry](https://book.getfoundry.sh/getting-started/installation) installed
-- Deployer wallet with TEMPO for gas
+- [Tempo Foundry fork](https://docs.tempo.xyz/sdk/foundry) installed (`foundryup -n tempo`)
+- Deployer wallet funded with pathUSD (gas fees are paid in stablecoins on Tempo)
 - Treasury wallet address
+
+**Important**: Tempo has no native gas token. All gas fees are paid in TIP-20 stablecoins (pathUSD, AlphaUSD, etc.) via the Fee AMM. Use `--tempo.fee-token` flag with forge/cast commands.
 
 ## Environment Variables
 
@@ -33,6 +35,13 @@ MULTISEND_FEE=3000000
 LOCK_FEE=10000000
 ```
 
+## Fund Deployer (Testnet)
+
+```bash
+# Get testnet stablecoins (1M each: pathUSD, AlphaUSD, BetaUSD, ThetaUSD)
+cast rpc tempo_fundAddress $DEPLOYER_ADDRESS --rpc-url https://rpc.moderato.tempo.xyz
+```
+
 ## Deploy to Testnet (Moderato)
 
 ```bash
@@ -41,11 +50,12 @@ cd contracts
 # Load env
 source .env
 
-# Deploy
+# Deploy (--tempo.fee-token pays gas in pathUSD)
 forge script script/Deploy.s.sol \
   --rpc-url https://rpc.moderato.tempo.xyz \
   --private-key $DEPLOYER_PRIVATE_KEY \
-  --broadcast
+  --broadcast \
+  --tempo.fee-token 0x20C0000000000000000000000000000000000000
 ```
 
 ## Deploy to Mainnet (Tempo)
@@ -59,7 +69,8 @@ forge script script/Deploy.s.sol \
   --rpc-url https://rpc.tempo.xyz \
   --private-key $DEPLOYER_PRIVATE_KEY \
   --broadcast \
-  --verify
+  --verify \
+  --tempo.fee-token 0x20C0000000000000000000000000000000000000
 ```
 
 ## Post-Deployment Verification
@@ -92,9 +103,12 @@ cast call <LOCKER_ADDRESS> "lockFee()(uint256)" --rpc-url https://rpc.tempo.xyz
 
 | Contract | Address |
 |----------|---------|
-| ForjaTokenFactory | TBD |
-| ForjaMultisend | TBD |
-| ForjaLocker | TBD |
+| ForjaTokenFactory | `0xC513F939402ED2e751Ca315AB0388F9c176e3bE0` |
+| ForjaMultisend | `0x315e9CF87DbbCF38F41b8705A298FCAB9E1Ae787` |
+| ForjaLocker | `0x6d2F881e84b5D87579d2735510104b76AD728BBa` |
+
+**Deployer/Treasury**: `0x60aD30D45ebc64E1F9DC10ae9C1c30729Cd0c8A7`
+**Deployed**: 2026-03-31
 
 ## Key Addresses (Tempo)
 
