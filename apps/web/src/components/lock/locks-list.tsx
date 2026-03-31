@@ -19,12 +19,12 @@ import { LockCard } from "./lock-card";
 
 interface LocksListProps {
 	locks: LockData[];
-	role: "creator" | "beneficiary";
+	viewRole: "creator" | "beneficiary";
 	isLoading: boolean;
 	onActionComplete?: () => void;
 }
 
-export function LocksList({ locks, role, isLoading, onActionComplete }: LocksListProps) {
+export function LocksList({ locks, viewRole, isLoading, onActionComplete }: LocksListProps) {
 	const [revokeTarget, setRevokeTarget] = useState<bigint | null>(null);
 	const { txSubmitted, txConfirmed, txFailed } = useTransactionToast();
 
@@ -110,7 +110,9 @@ export function LocksList({ locks, role, isLoading, onActionComplete }: LocksLis
 		return (
 			<div className="flex flex-col items-center gap-2 py-12 text-center">
 				<p className="text-sm text-smoke-dark">
-					{role === "creator" ? "You haven't created any locks yet." : "No tokens locked for you."}
+					{viewRole === "creator"
+						? "You haven't created any locks yet."
+						: "No tokens locked for you."}
 				</p>
 			</div>
 		);
@@ -123,7 +125,7 @@ export function LocksList({ locks, role, isLoading, onActionComplete }: LocksLis
 					<LockCard
 						key={lock.lockId.toString()}
 						lock={lock}
-						role={role}
+						role={viewRole}
 						onClaim={handleClaim}
 						onRevoke={(id) => setRevokeTarget(id)}
 						isActionPending={isActionPending}
