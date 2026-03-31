@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import type { Hex, Log } from "viem";
 import { useAccount, usePublicClient } from "wagmi";
 import { tokenFactoryConfig } from "@/lib/contracts";
+import { getLogsSafe } from "@/lib/get-logs-safe";
 
 const TOKEN_CREATED_EVENT = {
 	type: "event" as const,
@@ -60,22 +61,19 @@ export function useCreatedTokens(): {
 		}
 
 		setIsLoading(true);
-		publicClient
-			.getLogs({
-				address: tokenFactoryConfig.address,
-				event: TOKEN_CREATED_EVENT,
-				args: { creator: address },
-				fromBlock: 0n,
-				toBlock: "latest",
-			})
-			.then(async (logs: Log[]) => {
+		getLogsSafe({
+			client: publicClient,
+			address: tokenFactoryConfig.address,
+			event: TOKEN_CREATED_EVENT,
+			args: { creator: address },
+		})
+			.then(async (logs) => {
 				const parsed = parseLogs(logs);
 				if (parsed.length === 0) {
 					setTokens([]);
 					return;
 				}
 
-				// Fetch timestamps for unique block numbers
 				const uniqueBlocks = [...new Set(parsed.map((t) => t.blockNumber))];
 				const timestampMap = new Map<bigint, number>();
 
@@ -85,7 +83,7 @@ export function useCreatedTokens(): {
 							const block = await publicClient.getBlock({ blockNumber: blockNum });
 							timestampMap.set(blockNum, Number(block.timestamp));
 						} catch {
-							// Timestamp unavailable, leave as null
+							// Timestamp unavailable
 						}
 					}),
 				);

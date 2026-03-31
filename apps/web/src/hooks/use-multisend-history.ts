@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import type { Hex, Log } from "viem";
 import { useAccount, usePublicClient } from "wagmi";
 import { multisendConfig } from "@/lib/contracts";
+import { getLogsSafe } from "@/lib/get-logs-safe";
 
 const MULTISEND_EXECUTED_EVENT = {
 	type: "event" as const,
@@ -57,15 +58,13 @@ export function useMultisendHistory(): {
 		}
 
 		setIsLoading(true);
-		publicClient
-			.getLogs({
-				address: multisendConfig.address,
-				event: MULTISEND_EXECUTED_EVENT,
-				args: { sender: address },
-				fromBlock: 0n,
-				toBlock: "latest",
-			})
-			.then(async (logs: Log[]) => {
+		getLogsSafe({
+			client: publicClient,
+			address: multisendConfig.address,
+			event: MULTISEND_EXECUTED_EVENT,
+			args: { sender: address },
+		})
+			.then(async (logs) => {
 				const parsed = parseLogs(logs);
 				if (parsed.length === 0) {
 					setSends([]);
