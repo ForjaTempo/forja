@@ -42,10 +42,11 @@ export function TokenForm({ onSuccess }: TokenFormProps) {
 
 	const feeAmount = fee ?? parseUnits(String(feeFormatted), TIP20_DECIMALS);
 
-	const { needsApproval, approve, isApproving, isApprovalConfirming } = useUsdcApproval({
-		spender: tokenFactoryConfig.address,
-		amount: feeAmount,
-	});
+	const { needsApproval, isAllowanceLoading, approve, isApproving, isApprovalConfirming } =
+		useUsdcApproval({
+			spender: tokenFactoryConfig.address,
+			amount: feeAmount,
+		});
 
 	const { createToken, isCreating, isConfirming, isSuccess, txHash, tokenAddress, error, reset } =
 		useCreateToken();
@@ -118,6 +119,13 @@ export function TokenForm({ onSuccess }: TokenFormProps) {
 			});
 		}
 	}, [isSuccess, txHash, tokenAddress, onSuccess, name, symbol]);
+
+	const handleRetry = useCallback(() => {
+		reset();
+		setTxDialogOpen(false);
+		// Re-trigger after state clears
+		setTimeout(() => handleCreate(), 0);
+	}, [reset, handleCreate]);
 
 	const handleTxDialogClose = useCallback(
 		(open: boolean) => {
@@ -220,7 +228,7 @@ export function TokenForm({ onSuccess }: TokenFormProps) {
 									<span className="text-smoke-dark">Your balance</span>
 									<span className="font-mono text-smoke">
 										{balanceFormatted !== undefined
-											? `${balanceFormatted.toLocaleString("en-US", { maximumFractionDigits: 2 })} USDC`
+											? `${Number.parseFloat(balanceFormatted).toLocaleString("en-US", { maximumFractionDigits: 2 })} USDC`
 											: "\u2014"}
 									</span>
 								</div>
@@ -234,6 +242,7 @@ export function TokenForm({ onSuccess }: TokenFormProps) {
 
 						<CreateButton
 							needsApproval={needsApproval}
+							isAllowanceLoading={isAllowanceLoading}
 							insufficientBalance={insufficientBalance}
 							isApproving={isApproving}
 							isApprovalConfirming={isApprovalConfirming}
@@ -253,6 +262,7 @@ export function TokenForm({ onSuccess }: TokenFormProps) {
 				state={txState}
 				txHash={txHash}
 				title="Creating Token"
+				onRetry={error ? handleRetry : undefined}
 				error={
 					error
 						? error.message?.includes("User rejected")

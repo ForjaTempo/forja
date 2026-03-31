@@ -10,11 +10,42 @@ import { type CreatedTokenEvent, useCreatedTokens } from "@/hooks/use-created-to
 import { TEMPO_EXPLORER, TIP20_DECIMALS } from "@/lib/constants";
 
 function formatSupply(raw: bigint): string {
-	const value = Number(formatUnits(raw, TIP20_DECIMALS));
-	if (value >= 1_000_000_000) return `${(value / 1_000_000_000).toFixed(1)}B`;
-	if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
-	if (value >= 1_000) return `${(value / 1_000).toFixed(1)}K`;
-	return value.toLocaleString("en-US", { maximumFractionDigits: 2 });
+	const str = formatUnits(raw, TIP20_DECIMALS);
+	const dotIdx = str.indexOf(".");
+	const intPart = dotIdx === -1 ? str : str.slice(0, dotIdx);
+	const decPart = dotIdx === -1 ? "" : str.slice(dotIdx + 1);
+	const n = BigInt(intPart);
+
+	if (n >= 1_000_000_000n) {
+		const whole = n / 1_000_000_000n;
+		const frac = (n % 1_000_000_000n) / 100_000_000n;
+		return `${whole}.${frac}B`;
+	}
+	if (n >= 1_000_000n) {
+		const whole = n / 1_000_000n;
+		const frac = (n % 1_000_000n) / 100_000n;
+		return `${whole}.${frac}M`;
+	}
+	if (n >= 1_000n) {
+		const whole = n / 1_000n;
+		const frac = (n % 1_000n) / 100n;
+		return `${whole}.${frac}K`;
+	}
+
+	// Small values — show with decimals
+	if (decPart && decPart !== "0") {
+		return `${intPart}.${decPart.slice(0, 2)}`;
+	}
+	return intPart;
+}
+
+function formatDate(timestamp: number | null): string {
+	if (!timestamp) return "\u2014";
+	return new Date(timestamp * 1000).toLocaleDateString("en-US", {
+		month: "short",
+		day: "numeric",
+		year: "numeric",
+	});
 }
 
 function TokenRow({ token }: { token: CreatedTokenEvent }) {
@@ -27,9 +58,7 @@ function TokenRow({ token }: { token: CreatedTokenEvent }) {
 						{token.symbol}
 					</span>
 				</div>
-				<span className="font-mono text-xs text-smoke-dark">
-					Block #{token.blockNumber.toString()}
-				</span>
+				<span className="text-xs text-smoke-dark">{formatDate(token.timestamp)}</span>
 			</div>
 			<div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1">
 				<div className="flex items-center gap-1 text-xs text-smoke-dark">
