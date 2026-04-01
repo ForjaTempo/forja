@@ -136,9 +136,9 @@ cast call <LOCKER_ADDRESS> "lockFee()(uint256)" --rpc-url $RPC_URL
 
 ```bash
 # Update fees (owner only)
-cast send <FACTORY_ADDRESS> "setCreateFee(uint256)" 30000000 --private-key $DEPLOYER_PRIVATE_KEY --rpc-url https://rpc.tempo.xyz
-cast send <MULTISEND_ADDRESS> "setMultisendFee(uint256)" 5000000 --private-key $DEPLOYER_PRIVATE_KEY --rpc-url https://rpc.tempo.xyz
-cast send <LOCKER_ADDRESS> "setLockFee(uint256)" 15000000 --private-key $DEPLOYER_PRIVATE_KEY --rpc-url https://rpc.tempo.xyz
+cast send <FACTORY_ADDRESS> "setCreateFee(uint256)" 2000000 --private-key $DEPLOYER_PRIVATE_KEY --rpc-url https://rpc.tempo.xyz
+cast send <MULTISEND_ADDRESS> "setMultisendFee(uint256)" 500000 --private-key $DEPLOYER_PRIVATE_KEY --rpc-url https://rpc.tempo.xyz
+cast send <LOCKER_ADDRESS> "setLockFee(uint256)" 1000000 --private-key $DEPLOYER_PRIVATE_KEY --rpc-url https://rpc.tempo.xyz
 
 # Update treasury (owner only)
 cast send <FACTORY_ADDRESS> "setTreasury(address)" <NEW_TREASURY> --private-key $DEPLOYER_PRIVATE_KEY --rpc-url https://rpc.tempo.xyz
