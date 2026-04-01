@@ -107,6 +107,8 @@ cast call <LOCKER_ADDRESS> "lockFee()(uint256)" --rpc-url $RPC_URL
 **Deployed**: 2026-04-01
 **Fees**: Create 2 USDC, Multisend 0.5 USDC, Lock 1 USDC
 
+**E2E Verification**: Pending — smoke transactions to be documented after first mainnet usage.
+
 ### Moderato Testnet (Chain ID: 42431)
 
 | Contract | Address |
@@ -134,12 +136,23 @@ cast call <LOCKER_ADDRESS> "lockFee()(uint256)" --rpc-url $RPC_URL
 
 ## Fee Management (Post-Deploy)
 
+Current fees: Create 2 USDC, Multisend 0.5 USDC, Lock 1 USDC (TIP-20 6 decimals).
+
 ```bash
-# Update fees (owner only)
-cast send <FACTORY_ADDRESS> "setCreateFee(uint256)" 2000000 --private-key $DEPLOYER_PRIVATE_KEY --rpc-url https://rpc.tempo.xyz
-cast send <MULTISEND_ADDRESS> "setMultisendFee(uint256)" 500000 --private-key $DEPLOYER_PRIVATE_KEY --rpc-url https://rpc.tempo.xyz
-cast send <LOCKER_ADDRESS> "setLockFee(uint256)" 1000000 --private-key $DEPLOYER_PRIVATE_KEY --rpc-url https://rpc.tempo.xyz
+# Update fees (owner only) — values in TIP-20 units (6 decimals)
+# Example: set Create=5 USDC, Multisend=1 USDC, Lock=2 USDC
+cast send <FACTORY_ADDRESS> "setCreateFee(uint256)" 5000000 \
+  --private-key $DEPLOYER_PRIVATE_KEY --rpc-url https://rpc.tempo.xyz \
+  --tempo.fee-token 0x20C0000000000000000000000000000000000000
+cast send <MULTISEND_ADDRESS> "setMultisendFee(uint256)" 1000000 \
+  --private-key $DEPLOYER_PRIVATE_KEY --rpc-url https://rpc.tempo.xyz \
+  --tempo.fee-token 0x20C0000000000000000000000000000000000000
+cast send <LOCKER_ADDRESS> "setLockFee(uint256)" 2000000 \
+  --private-key $DEPLOYER_PRIVATE_KEY --rpc-url https://rpc.tempo.xyz \
+  --tempo.fee-token 0x20C0000000000000000000000000000000000000
 
 # Update treasury (owner only)
-cast send <FACTORY_ADDRESS> "setTreasury(address)" <NEW_TREASURY> --private-key $DEPLOYER_PRIVATE_KEY --rpc-url https://rpc.tempo.xyz
+cast send <FACTORY_ADDRESS> "setTreasury(address)" <NEW_TREASURY> \
+  --private-key $DEPLOYER_PRIVATE_KEY --rpc-url https://rpc.tempo.xyz \
+  --tempo.fee-token 0x20C0000000000000000000000000000000000000
 ```
