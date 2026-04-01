@@ -41,7 +41,8 @@
 			"**/*.json",
 			"**/*.css",
 			"!**/next-env.d.ts",
-			"!contracts/lib"
+			"!contracts/lib",
+			"!packages/db/src/migrations"
 		]
 	}
 }
