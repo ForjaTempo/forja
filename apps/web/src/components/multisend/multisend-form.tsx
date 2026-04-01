@@ -1,22 +1,23 @@
 "use client";
 
-import { type FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { type FormEvent, useCallback, useMemo, useRef, useState } from "react";
 import { formatUnits, type Hex, parseUnits } from "viem";
 import { useAccount } from "wagmi";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { type TransactionState, TransactionStatus } from "@/components/ui/transaction-status";
+import { TransactionStatus } from "@/components/ui/transaction-status";
 import { useMultisend } from "@/hooks/use-multisend";
 import { useMultisendFee } from "@/hooks/use-multisend-fee";
 import { useTokenApproval } from "@/hooks/use-token-approval";
 import { useTokenBalance } from "@/hooks/use-token-balance";
 import { useTokenInfo } from "@/hooks/use-token-info";
-import { useTransactionToast } from "@/hooks/use-transaction-toast";
+import { useTransactionEffects } from "@/hooks/use-transaction-effects";
 import { useUsdcApproval } from "@/hooks/use-usdc-approval";
 import { useUsdcBalance } from "@/hooks/use-usdc-balance";
 import { TIP20_DECIMALS } from "@/lib/constants";
 import { multisendConfig } from "@/lib/contracts";
+import { deriveTxState, formatErrorMessage } from "@/lib/format";
 import {
 	type ManualRow,
 	type ParseResult,
@@ -66,7 +67,6 @@ export function MultisendForm({ onSuccess }: MultisendFormProps) {
 
 	const { fee, formatted: feeFormatted } = useMultisendFee();
 	const { balance: usdcBalance, formatted: usdcBalanceFormatted } = useUsdcBalance();
-	const { txSubmitted, txFailed } = useTransactionToast();
 
 	const isEqual = distribution === "equal";
 
@@ -188,44 +188,26 @@ export function MultisendForm({ onSuccess }: MultisendFormProps) {
 		[handleSend],
 	);
 
-	// Derive TransactionStatus state
-	let txState: TransactionState = "idle";
-	if (isSending) txState = "waiting";
-	else if (isConfirming) txState = "pending";
-	else if (isSuccess) txState = "confirmed";
-	else if (error) txState = "failed";
+	const txState = deriveTxState(isSending, isConfirming, isSuccess, error);
 
-	// Toast on tx submitted
-	useEffect(() => {
-		if (txHash && isConfirming) {
-			txSubmitted(txHash);
-		}
-	}, [txHash, isConfirming, txSubmitted]);
-
-	// Toast on failure
-	useEffect(() => {
-		if (error) {
-			txFailed(
-				error.message?.includes("User rejected")
-					? "Transaction rejected by user"
-					: (error.message?.slice(0, 80) ?? "Transaction failed"),
-			);
-		}
-	}, [error, txFailed]);
-
-	// Notify parent on success
-	useEffect(() => {
-		if (isSuccess && txHash && !successFired.current) {
-			successFired.current = true;
-			setTxDialogOpen(false);
-			onSuccess?.({
-				tokenSymbol: tokenSymbol ?? "tokens",
-				recipientCount: parsed.recipients.length,
-				totalAmount: parsed.totalAmount,
-				txHash,
-			});
-		}
-	}, [isSuccess, txHash, onSuccess, tokenSymbol, parsed.recipients.length, parsed.totalAmount]);
+	useTransactionEffects({
+		txHash,
+		isConfirming,
+		isSuccess,
+		error,
+		onSuccess: () => {
+			if (txHash) {
+				successFired.current = true;
+				setTxDialogOpen(false);
+				onSuccess?.({
+					tokenSymbol: tokenSymbol ?? "tokens",
+					recipientCount: parsed.recipients.length,
+					totalAmount: parsed.totalAmount,
+					txHash,
+				});
+			}
+		},
+	});
 
 	const handleRetry = useCallback(() => {
 		reset();
@@ -426,13 +408,7 @@ export function MultisendForm({ onSuccess }: MultisendFormProps) {
 				txHash={txHash}
 				title="Sending Tokens"
 				onRetry={error ? handleRetry : undefined}
-				error={
-					error
-						? error.message?.includes("User rejected")
-							? "Transaction rejected by user"
-							: (error.message?.slice(0, 120) ?? "Transaction failed")
-						: undefined
-				}
+				error={error ? formatErrorMessage(error, 120) : undefined}
 			/>
 		</>
 	);
