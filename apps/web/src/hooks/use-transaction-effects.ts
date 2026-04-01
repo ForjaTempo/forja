@@ -31,6 +31,7 @@ export function useTransactionEffects({
 	const successFired = useRef(false);
 
 	// Reset guard when txHash changes (new transaction)
+	// biome-ignore lint/correctness/useExhaustiveDependencies: txHash is intentionally used to reset ref on new tx
 	useEffect(() => {
 		successFired.current = false;
 	}, [txHash]);

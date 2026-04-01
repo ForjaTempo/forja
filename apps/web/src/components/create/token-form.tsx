@@ -10,11 +10,11 @@ import { TransactionStatus } from "@/components/ui/transaction-status";
 import { useCreateFee } from "@/hooks/use-create-fee";
 import { useCreateToken } from "@/hooks/use-create-token";
 import { useTransactionEffects } from "@/hooks/use-transaction-effects";
-import { deriveTxState, formatErrorMessage } from "@/lib/format";
 import { useUsdcApproval } from "@/hooks/use-usdc-approval";
 import { useUsdcBalance } from "@/hooks/use-usdc-balance";
 import { TIP20_DECIMALS } from "@/lib/constants";
 import { tokenFactoryConfig } from "@/lib/contracts";
+import { deriveTxState, formatErrorMessage } from "@/lib/format";
 import { CreateButton } from "./create-button";
 
 const NAME_MAX = 50;

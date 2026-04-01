@@ -1,6 +1,6 @@
 "use client";
 
-import { type FormEvent, useCallback, useMemo, useRef, useState } from "react";
+import { type FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { type Hex, isAddress, parseUnits } from "viem";
 import { useAccount } from "wagmi";
 import { Card, CardContent } from "@/components/ui/card";

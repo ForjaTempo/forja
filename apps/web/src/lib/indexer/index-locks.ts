@@ -55,11 +55,12 @@ async function readOnChainLocks(
 	client: PublicClient,
 	lockIds: bigint[],
 ): Promise<Map<bigint, Awaited<ReturnType<typeof readOnChainLock>>>> {
+	type OnChainLock = Awaited<ReturnType<typeof readOnChainLock>>;
 	const results = await Promise.all(lockIds.map((id) => readOnChainLock(client, id)));
-	const map = new Map<bigint, Awaited<ReturnType<typeof readOnChainLock>>>();
-	for (let i = 0; i < lockIds.length; i++) {
-		map.set(lockIds[i], results[i]);
-	}
+	const map = new Map<bigint, OnChainLock>();
+	lockIds.forEach((id, i) => {
+		map.set(id, results[i] as OnChainLock);
+	});
 	return map;
 }
 
