@@ -24,9 +24,9 @@ export const FORJA_LOCKER_ADDRESS = (process.env.NEXT_PUBLIC_FORJA_LOCKER ?? "0x
 export const TIP20_DECIMALS = 6;
 
 export const FEES = {
-	tokenCreate: 20,
-	multisend: 3,
-	tokenLock: 10,
+	tokenCreate: 2,
+	multisend: 0.5,
+	tokenLock: 1,
 } as const;
 
 export const APP_NAME = "FORJA";
