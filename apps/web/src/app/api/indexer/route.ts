@@ -22,6 +22,10 @@ function isRateLimited(): boolean {
 }
 
 export async function POST(request: Request) {
+	if (isRateLimited()) {
+		return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+	}
+
 	const apiKey = process.env.INDEXER_API_KEY;
 	if (!apiKey) {
 		return NextResponse.json({ error: "Indexer not configured" }, { status: 500 });
@@ -30,10 +34,6 @@ export async function POST(request: Request) {
 	const authHeader = request.headers.get("authorization");
 	if (authHeader !== `Bearer ${apiKey}`) {
 		return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-	}
-
-	if (isRateLimited()) {
-		return NextResponse.json({ error: "Too many requests" }, { status: 429 });
 	}
 
 	const result = await runIndexer();
