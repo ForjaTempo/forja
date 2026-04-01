@@ -3,6 +3,7 @@ import { type getDb, schema } from "@forja/db";
 import type { PublicClient } from "viem";
 import { parseAbiItem } from "viem";
 import { FORJA_TOKEN_FACTORY_ADDRESS } from "../constants";
+import { fetchBlockTimestamps } from "./utils";
 
 const tokenCreatedEvent = parseAbiItem(
 	"event TokenCreated(address indexed creator, address indexed token, string name, string symbol, uint256 initialSupply)",
@@ -23,6 +24,11 @@ export async function indexTokenEvents(
 
 	if (logs.length === 0) return 0;
 
+	const blockTimestamps = await fetchBlockTimestamps(
+		client,
+		logs.map((l) => l.blockNumber),
+	);
+
 	const rows = logs.map((log) => {
 		const { creator, token, name, symbol, initialSupply } = log.args;
 		return {
@@ -33,6 +39,7 @@ export async function indexTokenEvents(
 			creatorAddress: (creator ?? "").toLowerCase(),
 			txHash: log.transactionHash ?? "",
 			blockNumber: Number(log.blockNumber),
+			createdAt: blockTimestamps.get(log.blockNumber) ?? new Date(),
 		};
 	});
 

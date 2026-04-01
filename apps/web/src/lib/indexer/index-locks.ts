@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 import type { PublicClient } from "viem";
 import { parseAbiItem } from "viem";
 import { FORJA_LOCKER_ADDRESS } from "../constants";
+import { fetchBlockTimestamps } from "./utils";
 
 const lockCreatedEvent = parseAbiItem(
 	"event LockCreated(uint256 indexed lockId, address indexed creator, address indexed token, address beneficiary, uint256 amount, uint64 startTime, uint64 endTime, bool vestingEnabled)",
@@ -17,6 +18,38 @@ const lockRevokedEvent = parseAbiItem(
 	"event LockRevoked(uint256 indexed lockId, uint256 returnedAmount)",
 );
 
+// View function ABI for reading full on-chain lock state
+const lockerViewAbi = [
+	{
+		name: "locks",
+		type: "function",
+		stateMutability: "view",
+		inputs: [{ name: "", type: "uint256" }],
+		outputs: [
+			{ name: "token", type: "address" },
+			{ name: "creator", type: "address" },
+			{ name: "beneficiary", type: "address" },
+			{ name: "totalAmount", type: "uint256" },
+			{ name: "claimedAmount", type: "uint256" },
+			{ name: "startTime", type: "uint64" },
+			{ name: "endTime", type: "uint64" },
+			{ name: "cliffDuration", type: "uint64" },
+			{ name: "vestingEnabled", type: "bool" },
+			{ name: "revocable", type: "bool" },
+			{ name: "revoked", type: "bool" },
+		],
+	},
+] as const;
+
+async function readOnChainLock(client: PublicClient, lockId: bigint) {
+	return client.readContract({
+		address: FORJA_LOCKER_ADDRESS,
+		abi: lockerViewAbi,
+		functionName: "locks",
+		args: [lockId],
+	});
+}
+
 export async function indexLockEvents(
 	db: ReturnType<typeof getDb>,
 	client: PublicClient,
@@ -25,20 +58,58 @@ export async function indexLockEvents(
 ) {
 	let count = 0;
 
-	// Index LockCreated events
-	const createLogs = await client.getLogs({
-		address: FORJA_LOCKER_ADDRESS,
-		event: lockCreatedEvent,
-		fromBlock,
-		toBlock,
-	});
+	// Fetch all event types in parallel
+	const [createLogs, claimLogs, revokeLogs] = await Promise.all([
+		client.getLogs({
+			address: FORJA_LOCKER_ADDRESS,
+			event: lockCreatedEvent,
+			fromBlock,
+			toBlock,
+		}),
+		client.getLogs({
+			address: FORJA_LOCKER_ADDRESS,
+			event: tokensClaimedEvent,
+			fromBlock,
+			toBlock,
+		}),
+		client.getLogs({
+			address: FORJA_LOCKER_ADDRESS,
+			event: lockRevokedEvent,
+			fromBlock,
+			toBlock,
+		}),
+	]);
 
-	if (createLogs.length > 0) {
-		const lockRows = createLogs.map((log) => {
-			const { lockId, creator, token, beneficiary, amount, startTime, endTime, vestingEnabled } =
-				log.args;
-			return {
-				lockId: Number(lockId ?? 0n),
+	const totalLogs = createLogs.length + claimLogs.length + revokeLogs.length;
+	if (totalLogs === 0) return 0;
+
+	// Fetch block timestamps for all events
+	const blockTimestamps = await fetchBlockTimestamps(client, [
+		...createLogs.map((l) => l.blockNumber),
+		...claimLogs.map((l) => l.blockNumber),
+		...revokeLogs.map((l) => l.blockNumber),
+	]);
+
+	// Process LockCreated events
+	for (const log of createLogs) {
+		const {
+			lockId: rawLockId,
+			creator,
+			token,
+			beneficiary,
+			amount,
+			startTime,
+			endTime,
+			vestingEnabled,
+		} = log.args;
+		const lockId = Number(rawLockId ?? 0n);
+		const blockTs = blockTimestamps.get(log.blockNumber) ?? new Date();
+
+		// Insert from event data (idempotent via onConflictDoNothing)
+		await db
+			.insert(schema.locks)
+			.values({
+				lockId,
 				tokenAddress: (token ?? "").toLowerCase(),
 				creatorAddress: (creator ?? "").toLowerCase(),
 				beneficiaryAddress: (beneficiary ?? "").toLowerCase(),
@@ -48,79 +119,73 @@ export async function indexLockEvents(
 				vestingEnabled: vestingEnabled ?? false,
 				txHash: log.transactionHash ?? "",
 				blockNumber: Number(log.blockNumber),
-			};
-		});
-
-		await db
-			.insert(schema.locks)
-			.values(lockRows)
+				createdAt: blockTs,
+			})
 			.onConflictDoNothing({ target: schema.locks.lockId });
 
-		count += lockRows.length;
+		// Read on-chain state for fields missing from event (cliffDuration, revocable)
+		// and always-correct fields (claimedAmount, revoked)
+		const onChain = await readOnChainLock(client, BigInt(lockId));
+		await db
+			.update(schema.locks)
+			.set({
+				cliffDuration: Number(onChain[7]),
+				revocable: onChain[9],
+				claimedAmount: onChain[4].toString(),
+				revoked: onChain[10],
+				updatedAt: new Date(),
+			})
+			.where(eq(schema.locks.lockId, lockId));
+
+		count++;
 	}
 
-	// Index TokensClaimed events
-	const claimLogs = await client.getLogs({
-		address: FORJA_LOCKER_ADDRESS,
-		event: tokensClaimedEvent,
-		fromBlock,
-		toBlock,
-	});
-
+	// Process TokensClaimed events
 	for (const log of claimLogs) {
 		const { lockId: rawLockId, beneficiary, amount } = log.args;
 		const lockId = Number(rawLockId ?? 0n);
-		const amountStr = (amount ?? 0n).toString();
+		const blockTs = blockTimestamps.get(log.blockNumber) ?? new Date();
 
+		// Insert claim row (idempotent via onConflictDoNothing on txHash)
 		await db
 			.insert(schema.claims)
 			.values({
 				lockId,
 				beneficiaryAddress: (beneficiary ?? "").toLowerCase(),
-				amount: amountStr,
+				amount: (amount ?? 0n).toString(),
 				txHash: log.transactionHash ?? "",
 				blockNumber: Number(log.blockNumber),
+				createdAt: blockTs,
 			})
 			.onConflictDoNothing({ target: schema.claims.txHash });
 
-		// Update claimed amount on the lock
-		const [lock] = await db
-			.select({ claimedAmount: schema.locks.claimedAmount })
-			.from(schema.locks)
-			.where(eq(schema.locks.lockId, lockId))
-			.limit(1);
-
-		if (lock) {
-			const newClaimed = BigInt(lock.claimedAmount) + BigInt(amountStr);
-			await db
-				.update(schema.locks)
-				.set({
-					claimedAmount: newClaimed.toString(),
-					updatedAt: new Date(),
-				})
-				.where(eq(schema.locks.lockId, lockId));
-		}
+		// Overwrite claimedAmount from on-chain state (idempotent — no increment)
+		const onChain = await readOnChainLock(client, BigInt(lockId));
+		await db
+			.update(schema.locks)
+			.set({
+				claimedAmount: onChain[4].toString(),
+				updatedAt: new Date(),
+			})
+			.where(eq(schema.locks.lockId, lockId));
 
 		count++;
 	}
 
-	// Index LockRevoked events
-	const revokeLogs = await client.getLogs({
-		address: FORJA_LOCKER_ADDRESS,
-		event: lockRevokedEvent,
-		fromBlock,
-		toBlock,
-	});
-
+	// Process LockRevoked events
 	for (const log of revokeLogs) {
-		const { lockId } = log.args;
+		const lockId = Number(log.args.lockId ?? 0n);
+
+		// Read on-chain state for final claimedAmount (revoke can trigger a claim)
+		const onChain = await readOnChainLock(client, BigInt(lockId));
 		await db
 			.update(schema.locks)
 			.set({
 				revoked: true,
+				claimedAmount: onChain[4].toString(),
 				updatedAt: new Date(),
 			})
-			.where(eq(schema.locks.lockId, Number(lockId ?? 0n)));
+			.where(eq(schema.locks.lockId, lockId));
 
 		count++;
 	}

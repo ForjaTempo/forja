@@ -3,6 +3,7 @@ import { type getDb, schema } from "@forja/db";
 import type { PublicClient } from "viem";
 import { parseAbiItem } from "viem";
 import { FORJA_MULTISEND_ADDRESS } from "../constants";
+import { fetchBlockTimestamps } from "./utils";
 
 const multisendExecutedEvent = parseAbiItem(
 	"event MultisendExecuted(address indexed sender, address indexed token, uint256 recipientCount, uint256 totalAmount)",
@@ -23,6 +24,11 @@ export async function indexMultisendEvents(
 
 	if (logs.length === 0) return 0;
 
+	const blockTimestamps = await fetchBlockTimestamps(
+		client,
+		logs.map((l) => l.blockNumber),
+	);
+
 	const rows = logs.map((log) => {
 		const { sender, token, recipientCount, totalAmount } = log.args;
 		return {
@@ -32,6 +38,7 @@ export async function indexMultisendEvents(
 			totalAmount: (totalAmount ?? 0n).toString(),
 			txHash: log.transactionHash ?? "",
 			blockNumber: Number(log.blockNumber),
+			createdAt: blockTimestamps.get(log.blockNumber) ?? new Date(),
 		};
 	});
 
