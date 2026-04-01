@@ -64,9 +64,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 					// biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD structured data
 					dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
 				/>
+				<a
+					href="#main-content"
+					className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-molten-amber focus:px-4 focus:py-2 focus:font-medium focus:text-forge-black"
+				>
+					Skip to content
+				</a>
 				<Providers>
 					<Header />
-					<main className="flex-1">{children}</main>
+					<main id="main-content" className="flex-1">
+						{children}
+					</main>
 					<Footer />
 				</Providers>
 			</body>
