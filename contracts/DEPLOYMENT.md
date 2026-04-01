@@ -99,9 +99,13 @@ cast call <LOCKER_ADDRESS> "lockFee()(uint256)" --rpc-url $RPC_URL
 
 | Contract | Address |
 |----------|---------|
-| ForjaTokenFactory | TBD |
-| ForjaMultisend | TBD |
-| ForjaLocker | TBD |
+| ForjaTokenFactory | `0xC513F939402ED2e751Ca315AB0388F9c176e3bE0` |
+| ForjaMultisend | `0x315e9CF87DbbCF38F41b8705A298FCAB9E1Ae787` |
+| ForjaLocker | `0x6d2F881e84b5D87579d2735510104b76AD728BBa` |
+
+**Deployer/Treasury**: `0x60aD30D45ebc64E1F9DC10ae9C1c30729Cd0c8A7`
+**Deployed**: 2026-04-01
+**Fees**: Create 2 USDC, Multisend 0.5 USDC, Lock 1 USDC
 
 ### Moderato Testnet (Chain ID: 42431)
 
@@ -113,6 +117,13 @@ cast call <LOCKER_ADDRESS> "lockFee()(uint256)" --rpc-url $RPC_URL
 
 **Deployer/Treasury**: `0x60aD30D45ebc64E1F9DC10ae9C1c30729Cd0c8A7`
 **Deployed**: 2026-03-31
+
+**E2E Verification** (2026-04-01):
+- Test token: Forja Lock Test (FLT) at `0x20c000000000000000000000f787c74e992465a7`
+- createLock #1 (1000 FLT, 120s, 30s cliff, vesting, revocable): `0x2af90e7722d0fdf9095363b7180f5fc4b11a3fb4478b351649686d4750eb4a35`
+- claim (Lock #1, 850 FLT vested): `0x1b4ec9ff4d2895fb6a588a182e12de228e60d72cf1e81f3e08367a45159553f0`
+- createLock #2 (500 FLT, no vesting, revocable): `0xcf4247978cc99b6cdf1268e2f3f20a823b471e723657fd54760d6c38a88d4ba1`
+- revokeLock (Lock #2, 500 FLT returned): `0x8d739ac2b0f937b15a86c08b7bec570e398336f345b7105dfa4e66d564f60d90`
 
 ## Key Addresses (Tempo)
 
