@@ -3,6 +3,7 @@ import { Inter, JetBrains_Mono } from "next/font/google";
 import { Footer } from "@/components/layout/footer";
 import { Header } from "@/components/layout/header";
 import { Providers } from "@/components/providers";
+import { APP_DESCRIPTION, APP_NAME, APP_URL } from "@/lib/constants";
 import "./globals.css";
 
 const inter = Inter({
@@ -18,13 +19,39 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-	title: "FORJA - Token Toolkit for Tempo",
-	description: "Create, Send, Lock tokens on Tempo blockchain",
-	metadataBase: new URL("https://forja.fun"),
+	title: {
+		template: `%s | ${APP_NAME}`,
+		default: `${APP_NAME} — Create. Send. Lock. | Token Toolkit for Tempo`,
+	},
+	description: APP_DESCRIPTION,
+	metadataBase: new URL(APP_URL),
+	keywords: ["tempo", "blockchain", "token", "TIP-20", "multisend", "token lock", "vesting"],
 	openGraph: {
-		title: "FORJA - Token Toolkit for Tempo",
-		description: "Create, Send, Lock tokens on Tempo blockchain",
-		siteName: "FORJA",
+		title: `${APP_NAME} — Create. Send. Lock.`,
+		description: APP_DESCRIPTION,
+		url: APP_URL,
+		siteName: APP_NAME,
+		type: "website",
+	},
+	twitter: {
+		card: "summary_large_image",
+		title: `${APP_NAME} — Create. Send. Lock.`,
+		description: APP_DESCRIPTION,
+	},
+};
+
+const jsonLd = {
+	"@context": "https://schema.org",
+	"@type": "SoftwareApplication",
+	name: APP_NAME,
+	description: APP_DESCRIPTION,
+	url: APP_URL,
+	applicationCategory: "FinanceApplication",
+	operatingSystem: "Web",
+	offers: {
+		"@type": "Offer",
+		price: "0",
+		priceCurrency: "USD",
 	},
 };
 
@@ -32,9 +59,22 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 	return (
 		<html lang="en" className={`${inter.variable} ${jetbrainsMono.variable}`}>
 			<body className="flex min-h-screen flex-col bg-forge-black font-sans text-steel-white antialiased">
+				<script
+					type="application/ld+json"
+					// biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD structured data
+					dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+				/>
+				<a
+					href="#main-content"
+					className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-molten-amber focus:px-4 focus:py-2 focus:font-medium focus:text-forge-black"
+				>
+					Skip to content
+				</a>
 				<Providers>
 					<Header />
-					<main className="flex-1">{children}</main>
+					<main id="main-content" className="flex-1">
+						{children}
+					</main>
 					<Footer />
 				</Providers>
 			</body>
