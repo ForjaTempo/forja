@@ -50,17 +50,25 @@ async function readOnChainLock(client: PublicClient, lockId: bigint) {
 	});
 }
 
-/** Batch-read multiple locks in parallel. */
+/** Max concurrent RPC reads to avoid overwhelming the node. */
+const RPC_BATCH_SIZE = 10;
+
+/** Batch-read multiple locks with bounded concurrency. */
 async function readOnChainLocks(
 	client: PublicClient,
 	lockIds: bigint[],
 ): Promise<Map<bigint, Awaited<ReturnType<typeof readOnChainLock>>>> {
 	type OnChainLock = Awaited<ReturnType<typeof readOnChainLock>>;
-	const results = await Promise.all(lockIds.map((id) => readOnChainLock(client, id)));
 	const map = new Map<bigint, OnChainLock>();
-	lockIds.forEach((id, i) => {
-		map.set(id, results[i] as OnChainLock);
-	});
+
+	for (let i = 0; i < lockIds.length; i += RPC_BATCH_SIZE) {
+		const batch = lockIds.slice(i, i + RPC_BATCH_SIZE);
+		const results = await Promise.all(batch.map((id) => readOnChainLock(client, id)));
+		batch.forEach((id, j) => {
+			map.set(id, results[j] as OnChainLock);
+		});
+	}
+
 	return map;
 }
 

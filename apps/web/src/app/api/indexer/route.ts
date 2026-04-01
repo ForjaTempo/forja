@@ -22,10 +22,6 @@ function isRateLimited(): boolean {
 }
 
 export async function POST(request: Request) {
-	if (isRateLimited()) {
-		return NextResponse.json({ error: "Too many requests" }, { status: 429 });
-	}
-
 	const apiKey = process.env.INDEXER_API_KEY;
 	if (!apiKey) {
 		return NextResponse.json({ error: "Indexer not configured" }, { status: 500 });
@@ -34,6 +30,13 @@ export async function POST(request: Request) {
 	const authHeader = request.headers.get("authorization");
 	if (authHeader !== `Bearer ${apiKey}`) {
 		return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+	}
+
+	// Rate limit after auth — only authenticated callers consume quota.
+	// Unauthenticated requests are rejected above without touching the limit,
+	// so an attacker cannot exhaust the quota and starve the real cron job.
+	if (isRateLimited()) {
+		return NextResponse.json({ error: "Too many requests" }, { status: 429 });
 	}
 
 	const result = await runIndexer();
