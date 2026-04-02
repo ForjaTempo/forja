@@ -9,15 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useExplorerUrl } from "@/hooks/use-explorer-url";
 import { type MultisendEvent, useMultisendHistory } from "@/hooks/use-multisend-history";
 import { TIP20_DECIMALS } from "@/lib/constants";
-
-function formatDate(timestamp: number | null): string {
-	if (!timestamp) return "\u2014";
-	return new Date(timestamp * 1000).toLocaleDateString("en-US", {
-		month: "short",
-		day: "numeric",
-		year: "numeric",
-	});
-}
+import { formatUnixDate } from "@/lib/format";
 
 function SendRow({ send, explorerUrl }: { send: MultisendEvent; explorerUrl: string }) {
 	return (
@@ -32,7 +24,7 @@ function SendRow({ send, explorerUrl }: { send: MultisendEvent; explorerUrl: str
 						{formatUnits(send.totalAmount, TIP20_DECIMALS)} tokens
 					</span>
 				</div>
-				<span className="text-xs text-smoke-dark">{formatDate(send.timestamp)}</span>
+				<span className="text-xs text-smoke-dark">{formatUnixDate(send.timestamp)}</span>
 			</div>
 			<div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1">
 				<div className="flex items-center gap-1 text-xs text-smoke-dark">

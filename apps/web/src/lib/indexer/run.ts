@@ -7,6 +7,7 @@ import { indexMultisendEvents } from "./index-multisends";
 import { indexTokenEvents } from "./index-tokens";
 
 const CHUNK_SIZE = 50_000n;
+const MAX_RETRIES = 3;
 
 interface ContractIndexer {
 	name: string;
@@ -82,8 +83,17 @@ export async function runIndexer(): Promise<{
 				const chunkEnd =
 					chunkStart + CHUNK_SIZE - 1n > currentBlock ? currentBlock : chunkStart + CHUNK_SIZE - 1n;
 
-				const count = await contract.index(db, indexerClient, chunkStart, chunkEnd);
-				totalIndexed += count;
+				let chunkCount = 0;
+				for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+					try {
+						chunkCount = await contract.index(db, indexerClient, chunkStart, chunkEnd);
+						break;
+					} catch (err) {
+						if (attempt === MAX_RETRIES - 1) throw err;
+						await new Promise((r) => setTimeout(r, 2000 * (attempt + 1)));
+					}
+				}
+				totalIndexed += chunkCount;
 				chunkStart = chunkEnd + 1n;
 			}
 

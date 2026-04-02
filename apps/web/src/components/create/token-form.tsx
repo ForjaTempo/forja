@@ -1,19 +1,20 @@
 "use client";
 
-import { type ChangeEvent, type FormEvent, useCallback, useEffect, useRef, useState } from "react";
+import { type ChangeEvent, type FormEvent, useCallback, useRef, useState } from "react";
 import { formatUnits, parseUnits } from "viem";
 import { useAccount } from "wagmi";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { type TransactionState, TransactionStatus } from "@/components/ui/transaction-status";
+import { TransactionStatus } from "@/components/ui/transaction-status";
 import { useCreateFee } from "@/hooks/use-create-fee";
 import { useCreateToken } from "@/hooks/use-create-token";
-import { useTransactionToast } from "@/hooks/use-transaction-toast";
+import { useTransactionEffects } from "@/hooks/use-transaction-effects";
 import { useUsdcApproval } from "@/hooks/use-usdc-approval";
 import { useUsdcBalance } from "@/hooks/use-usdc-balance";
 import { TIP20_DECIMALS } from "@/lib/constants";
 import { tokenFactoryConfig } from "@/lib/contracts";
+import { deriveTxState, formatErrorMessage } from "@/lib/format";
 import { CreateButton } from "./create-button";
 
 const NAME_MAX = 50;
@@ -40,7 +41,6 @@ export function TokenForm({ onSuccess }: TokenFormProps) {
 
 	const { fee, formatted: feeFormatted } = useCreateFee();
 	const { balance, formatted: balanceFormatted } = useUsdcBalance();
-	const { txSubmitted, txFailed } = useTransactionToast();
 
 	const feeAmount = fee ?? parseUnits(String(feeFormatted), TIP20_DECIMALS);
 
@@ -83,44 +83,26 @@ export function TokenForm({ onSuccess }: TokenFormProps) {
 		[handleCreate],
 	);
 
-	// Derive TransactionStatus state
-	let txState: TransactionState = "idle";
-	if (isCreating) txState = "waiting";
-	else if (isConfirming) txState = "pending";
-	else if (isSuccess) txState = "confirmed";
-	else if (error) txState = "failed";
+	const txState = deriveTxState(isCreating, isConfirming, isSuccess, error);
 
-	// Toast on tx submitted (hash received)
-	useEffect(() => {
-		if (txHash && isConfirming) {
-			txSubmitted(txHash);
-		}
-	}, [txHash, isConfirming, txSubmitted]);
-
-	// Toast on failure
-	useEffect(() => {
-		if (error) {
-			txFailed(
-				error.message?.includes("User rejected")
-					? "Transaction rejected by user"
-					: (error.message?.slice(0, 80) ?? "Transaction failed"),
-			);
-		}
-	}, [error, txFailed]);
-
-	// Notify parent on success
-	useEffect(() => {
-		if (isSuccess && txHash && tokenAddress && !successFired.current) {
-			successFired.current = true;
-			setTxDialogOpen(false);
-			onSuccess?.({
-				name: name.trim(),
-				symbol: symbol.trim(),
-				txHash,
-				tokenAddress,
-			});
-		}
-	}, [isSuccess, txHash, tokenAddress, onSuccess, name, symbol]);
+	useTransactionEffects({
+		txHash,
+		isConfirming,
+		isSuccess,
+		error,
+		onSuccess: () => {
+			if (txHash && tokenAddress) {
+				successFired.current = true;
+				setTxDialogOpen(false);
+				onSuccess?.({
+					name: name.trim(),
+					symbol: symbol.trim(),
+					txHash,
+					tokenAddress,
+				});
+			}
+		},
+	});
 
 	const handleRetry = useCallback(() => {
 		reset();
@@ -265,13 +247,7 @@ export function TokenForm({ onSuccess }: TokenFormProps) {
 				txHash={txHash}
 				title="Creating Token"
 				onRetry={error ? handleRetry : undefined}
-				error={
-					error
-						? error.message?.includes("User rejected")
-							? "Transaction rejected by user"
-							: (error.message?.slice(0, 120) ?? "Transaction failed")
-						: undefined
-				}
+				error={error ? formatErrorMessage(error, 120) : undefined}
 			/>
 		</>
 	);

@@ -1,7 +1,7 @@
 "use client";
 
 import { LoaderIcon } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useClaim, useRevokeLock } from "@/hooks/use-lock-actions";
-import { useTransactionToast } from "@/hooks/use-transaction-toast";
+import { useTransactionEffects } from "@/hooks/use-transaction-effects";
 import type { LockData } from "@/lib/lock-utils";
 import { LockCard } from "./lock-card";
 
@@ -26,7 +26,6 @@ interface LocksListProps {
 
 export function LocksList({ locks, viewRole, isLoading, onActionComplete }: LocksListProps) {
 	const [revokeTarget, setRevokeTarget] = useState<bigint | null>(null);
-	const { txSubmitted, txConfirmed, txFailed } = useTransactionToast();
 
 	const claim = useClaim();
 	const revoke = useRevokeLock();
@@ -46,53 +45,23 @@ export function LocksList({ locks, viewRole, isLoading, onActionComplete }: Lock
 		setRevokeTarget(null);
 	}, [revokeTarget, revoke]);
 
-	// Claim toast + refetch
-	useEffect(() => {
-		if (claim.txHash && claim.isConfirming) {
-			txSubmitted(claim.txHash);
-		}
-	}, [claim.txHash, claim.isConfirming, txSubmitted]);
+	useTransactionEffects({
+		txHash: claim.txHash,
+		isConfirming: claim.isConfirming,
+		isSuccess: claim.isSuccess,
+		error: claim.error,
+		showConfirmedToast: true,
+		onSuccess: () => onActionComplete?.(),
+	});
 
-	useEffect(() => {
-		if (claim.isSuccess && claim.txHash) {
-			txConfirmed(claim.txHash);
-			onActionComplete?.();
-		}
-	}, [claim.isSuccess, claim.txHash, txConfirmed, onActionComplete]);
-
-	useEffect(() => {
-		if (claim.error) {
-			txFailed(
-				claim.error.message?.includes("User rejected")
-					? "Transaction rejected"
-					: (claim.error.message?.slice(0, 80) ?? "Claim failed"),
-			);
-		}
-	}, [claim.error, txFailed]);
-
-	// Revoke toast + refetch
-	useEffect(() => {
-		if (revoke.txHash && revoke.isConfirming) {
-			txSubmitted(revoke.txHash);
-		}
-	}, [revoke.txHash, revoke.isConfirming, txSubmitted]);
-
-	useEffect(() => {
-		if (revoke.isSuccess && revoke.txHash) {
-			txConfirmed(revoke.txHash);
-			onActionComplete?.();
-		}
-	}, [revoke.isSuccess, revoke.txHash, txConfirmed, onActionComplete]);
-
-	useEffect(() => {
-		if (revoke.error) {
-			txFailed(
-				revoke.error.message?.includes("User rejected")
-					? "Transaction rejected"
-					: (revoke.error.message?.slice(0, 80) ?? "Revoke failed"),
-			);
-		}
-	}, [revoke.error, txFailed]);
+	useTransactionEffects({
+		txHash: revoke.txHash,
+		isConfirming: revoke.isConfirming,
+		isSuccess: revoke.isSuccess,
+		error: revoke.error,
+		showConfirmedToast: true,
+		onSuccess: () => onActionComplete?.(),
+	});
 
 	const isActionPending =
 		claim.isPending || claim.isConfirming || revoke.isPending || revoke.isConfirming;

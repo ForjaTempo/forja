@@ -50,6 +50,28 @@ async function readOnChainLock(client: PublicClient, lockId: bigint) {
 	});
 }
 
+/** Max concurrent RPC reads to avoid overwhelming the node. */
+const RPC_BATCH_SIZE = 10;
+
+/** Batch-read multiple locks with bounded concurrency. */
+async function readOnChainLocks(
+	client: PublicClient,
+	lockIds: bigint[],
+): Promise<Map<bigint, Awaited<ReturnType<typeof readOnChainLock>>>> {
+	type OnChainLock = Awaited<ReturnType<typeof readOnChainLock>>;
+	const map = new Map<bigint, OnChainLock>();
+
+	for (let i = 0; i < lockIds.length; i += RPC_BATCH_SIZE) {
+		const batch = lockIds.slice(i, i + RPC_BATCH_SIZE);
+		const results = await Promise.all(batch.map((id) => readOnChainLock(client, id)));
+		batch.forEach((id, j) => {
+			map.set(id, results[j] as OnChainLock);
+		});
+	}
+
+	return map;
+}
+
 export async function indexLockEvents(
 	db: ReturnType<typeof getDb>,
 	client: PublicClient,
@@ -90,6 +112,21 @@ export async function indexLockEvents(
 		...revokeLogs.map((l) => l.blockNumber),
 	]);
 
+	// Collect all unique lockIds across all event types for batch RPC read
+	const allLockIds = new Set<bigint>();
+	for (const log of createLogs) {
+		allLockIds.add(log.args.lockId ?? 0n);
+	}
+	for (const log of claimLogs) {
+		allLockIds.add(log.args.lockId ?? 0n);
+	}
+	for (const log of revokeLogs) {
+		allLockIds.add(log.args.lockId ?? 0n);
+	}
+
+	// Batch-read all lock states from chain in parallel
+	const onChainStates = await readOnChainLocks(client, [...allLockIds]);
+
 	// Process LockCreated events
 	for (const log of createLogs) {
 		const {
@@ -123,19 +160,21 @@ export async function indexLockEvents(
 			})
 			.onConflictDoNothing({ target: schema.locks.lockId });
 
-		// Read on-chain state for fields missing from event (cliffDuration, revocable)
-		// and always-correct fields (claimedAmount, revoked)
-		const onChain = await readOnChainLock(client, BigInt(lockId));
-		await db
-			.update(schema.locks)
-			.set({
-				cliffDuration: Number(onChain[7]),
-				revocable: onChain[9],
-				claimedAmount: onChain[4].toString(),
-				revoked: onChain[10],
-				updatedAt: new Date(),
-			})
-			.where(eq(schema.locks.lockId, lockId));
+		// Use batch-fetched on-chain state for fields missing from event
+		const onChain = onChainStates.get(rawLockId ?? 0n);
+		if (onChain) {
+			const [, , , , claimedAmount, , , cliffDuration, , revocable, revoked] = onChain;
+			await db
+				.update(schema.locks)
+				.set({
+					cliffDuration: Number(cliffDuration),
+					revocable,
+					claimedAmount: claimedAmount.toString(),
+					revoked,
+					updatedAt: new Date(),
+				})
+				.where(eq(schema.locks.lockId, lockId));
+		}
 
 		count++;
 	}
@@ -160,14 +199,17 @@ export async function indexLockEvents(
 			.onConflictDoNothing({ target: schema.claims.txHash });
 
 		// Overwrite claimedAmount from on-chain state (idempotent — no increment)
-		const onChain = await readOnChainLock(client, BigInt(lockId));
-		await db
-			.update(schema.locks)
-			.set({
-				claimedAmount: onChain[4].toString(),
-				updatedAt: new Date(),
-			})
-			.where(eq(schema.locks.lockId, lockId));
+		const onChain = onChainStates.get(rawLockId ?? 0n);
+		if (onChain) {
+			const [, , , , claimedAmount] = onChain;
+			await db
+				.update(schema.locks)
+				.set({
+					claimedAmount: claimedAmount.toString(),
+					updatedAt: new Date(),
+				})
+				.where(eq(schema.locks.lockId, lockId));
+		}
 
 		count++;
 	}
@@ -176,16 +218,19 @@ export async function indexLockEvents(
 	for (const log of revokeLogs) {
 		const lockId = Number(log.args.lockId ?? 0n);
 
-		// Read on-chain state for final claimedAmount (revoke can trigger a claim)
-		const onChain = await readOnChainLock(client, BigInt(lockId));
-		await db
-			.update(schema.locks)
-			.set({
-				revoked: true,
-				claimedAmount: onChain[4].toString(),
-				updatedAt: new Date(),
-			})
-			.where(eq(schema.locks.lockId, lockId));
+		// Use batch-fetched on-chain state for final claimedAmount
+		const onChain = onChainStates.get(log.args.lockId ?? 0n);
+		if (onChain) {
+			const [, , , , claimedAmount] = onChain;
+			await db
+				.update(schema.locks)
+				.set({
+					revoked: true,
+					claimedAmount: claimedAmount.toString(),
+					updatedAt: new Date(),
+				})
+				.where(eq(schema.locks.lockId, lockId));
+		}
 
 		count++;
 	}

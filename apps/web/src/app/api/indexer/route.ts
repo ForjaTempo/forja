@@ -32,6 +32,9 @@ export async function POST(request: Request) {
 		return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 	}
 
+	// Rate limit after auth — only authenticated callers consume quota.
+	// Unauthenticated requests are rejected above without touching the limit,
+	// so an attacker cannot exhaust the quota and starve the real cron job.
 	if (isRateLimited()) {
 		return NextResponse.json({ error: "Too many requests" }, { status: 429 });
 	}

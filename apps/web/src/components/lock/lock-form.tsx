@@ -6,17 +6,18 @@ import { useAccount } from "wagmi";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { type TransactionState, TransactionStatus } from "@/components/ui/transaction-status";
+import { TransactionStatus } from "@/components/ui/transaction-status";
 import { useCreateLock } from "@/hooks/use-create-lock";
 import { useLockFee } from "@/hooks/use-lock-fee";
 import { useTokenApproval } from "@/hooks/use-token-approval";
 import { useTokenBalance } from "@/hooks/use-token-balance";
 import { useTokenInfo } from "@/hooks/use-token-info";
-import { useTransactionToast } from "@/hooks/use-transaction-toast";
+import { useTransactionEffects } from "@/hooks/use-transaction-effects";
 import { useUsdcApproval } from "@/hooks/use-usdc-approval";
 import { useUsdcBalance } from "@/hooks/use-usdc-balance";
 import { TIP20_DECIMALS } from "@/lib/constants";
 import { lockerConfig } from "@/lib/contracts";
+import { deriveTxState, formatErrorMessage } from "@/lib/format";
 import { CLIFF_PRESETS, DURATION_PRESETS } from "@/lib/lock-utils";
 import { LockButton } from "./lock-button";
 import { VestingPreview } from "./vesting-preview";
@@ -69,7 +70,6 @@ export function LockForm({ onSuccess }: LockFormProps) {
 
 	const { fee, formatted: feeFormatted } = useLockFee();
 	const { balance: usdcBalance, formatted: usdcBalanceFormatted } = useUsdcBalance();
-	const { txSubmitted, txFailed } = useTransactionToast();
 
 	const nonStandardDecimals = tokenDecimals !== undefined && tokenDecimals !== TIP20_DECIMALS;
 
@@ -168,43 +168,29 @@ export function LockForm({ onSuccess }: LockFormProps) {
 		[handleCreateLock],
 	);
 
-	let txState: TransactionState = "idle";
-	if (isCreating) txState = "waiting";
-	else if (isConfirming) txState = "pending";
-	else if (isSuccess) txState = "confirmed";
-	else if (error) txState = "failed";
+	const txState = deriveTxState(isCreating, isConfirming, isSuccess, error);
 
-	useEffect(() => {
-		if (txHash && isConfirming) {
-			txSubmitted(txHash);
-		}
-	}, [txHash, isConfirming, txSubmitted]);
-
-	useEffect(() => {
-		if (error) {
-			txFailed(
-				error.message?.includes("User rejected")
-					? "Transaction rejected by user"
-					: (error.message?.slice(0, 80) ?? "Transaction failed"),
-			);
-		}
-	}, [error, txFailed]);
-
-	useEffect(() => {
-		if (isSuccess && txHash && lockId !== undefined && !successFired.current) {
-			successFired.current = true;
-			setTxDialogOpen(false);
-			const endTime = new Date(Date.now() + Number(lockDurationSeconds) * 1000);
-			onSuccess?.({
-				lockId,
-				tokenSymbol: tokenSymbol ?? "tokens",
-				amount,
-				beneficiary,
-				txHash,
-				endTime,
-			});
-		}
-	}, [isSuccess, txHash, lockId, onSuccess, tokenSymbol, amount, beneficiary, lockDurationSeconds]);
+	useTransactionEffects({
+		txHash,
+		isConfirming,
+		isSuccess,
+		error,
+		onSuccess: () => {
+			if (txHash && lockId !== undefined) {
+				successFired.current = true;
+				setTxDialogOpen(false);
+				const endTime = new Date(Date.now() + Number(lockDurationSeconds) * 1000);
+				onSuccess?.({
+					lockId,
+					tokenSymbol: tokenSymbol ?? "tokens",
+					amount,
+					beneficiary,
+					txHash,
+					endTime,
+				});
+			}
+		},
+	});
 
 	const handleRetry = useCallback(() => {
 		reset();
@@ -553,13 +539,7 @@ export function LockForm({ onSuccess }: LockFormProps) {
 				txHash={txHash}
 				title="Creating Lock"
 				onRetry={error ? handleRetry : undefined}
-				error={
-					error
-						? error.message?.includes("User rejected")
-							? "Transaction rejected by user"
-							: (error.message?.slice(0, 120) ?? "Transaction failed")
-						: undefined
-				}
+				error={error ? formatErrorMessage(error, 120) : undefined}
 			/>
 		</>
 	);
