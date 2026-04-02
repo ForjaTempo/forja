@@ -12,13 +12,16 @@ function createDb() {
 	return drizzle(client, { schema });
 }
 
-let _db: ReturnType<typeof createDb> | null = null;
+type DbInstance = ReturnType<typeof createDb>;
+
+// Use globalThis to prevent connection leaks during Next.js hot-reload in dev
+const globalForDb = globalThis as unknown as { _forjaDb?: DbInstance };
 
 export function getDb() {
-	if (!_db) {
-		_db = createDb();
+	if (!globalForDb._forjaDb) {
+		globalForDb._forjaDb = createDb();
 	}
-	return _db;
+	return globalForDb._forjaDb;
 }
 
 export { schema };

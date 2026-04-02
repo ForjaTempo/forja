@@ -1,3 +1,5 @@
+import { formatDate } from "@/lib/format";
+
 interface VestingPreviewProps {
 	amount: string;
 	lockDurationDays: number;
@@ -24,9 +26,6 @@ export function VestingPreview({
 	const numAmount = Number(amount);
 	const vestingRate =
 		vestingEnabled && lockDurationDays > 0 ? (numAmount / lockDurationDays).toFixed(2) : null;
-
-	const formatDate = (d: Date) =>
-		d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 
 	return (
 		<div className="space-y-3 rounded-lg border border-anvil-gray-light bg-obsidian-black/50 p-4">

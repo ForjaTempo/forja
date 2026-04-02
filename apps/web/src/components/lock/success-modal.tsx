@@ -11,6 +11,7 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog";
 import { useExplorerUrl } from "@/hooks/use-explorer-url";
+import { formatDate } from "@/lib/format";
 
 interface LockSuccessModalProps {
 	open: boolean;
@@ -38,9 +39,6 @@ export function LockSuccessModal({
 	onViewLocks,
 }: LockSuccessModalProps) {
 	const explorerUrl = useExplorerUrl();
-
-	const formatDate = (d: Date) =>
-		d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>

@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { type CreatedTokenEvent, useCreatedTokens } from "@/hooks/use-created-tokens";
 import { useExplorerUrl } from "@/hooks/use-explorer-url";
 import { TIP20_DECIMALS } from "@/lib/constants";
+import { formatUnixDate } from "@/lib/format";
 
 function formatSupply(raw: bigint): string {
 	const str = formatUnits(raw, TIP20_DECIMALS);
@@ -40,15 +41,6 @@ function formatSupply(raw: bigint): string {
 	return intPart;
 }
 
-function formatDate(timestamp: number | null): string {
-	if (!timestamp) return "\u2014";
-	return new Date(timestamp * 1000).toLocaleDateString("en-US", {
-		month: "short",
-		day: "numeric",
-		year: "numeric",
-	});
-}
-
 function TokenRow({ token, explorerUrl }: { token: CreatedTokenEvent; explorerUrl: string }) {
 	return (
 		<div className="rounded-lg border border-anvil-gray-light bg-obsidian-black/50 px-4 py-3">
@@ -59,7 +51,7 @@ function TokenRow({ token, explorerUrl }: { token: CreatedTokenEvent; explorerUr
 						{token.symbol}
 					</span>
 				</div>
-				<span className="text-xs text-smoke-dark">{formatDate(token.timestamp)}</span>
+				<span className="text-xs text-smoke-dark">{formatUnixDate(token.timestamp)}</span>
 			</div>
 			<div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1">
 				<div className="flex items-center gap-1 text-xs text-smoke-dark">
