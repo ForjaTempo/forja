@@ -2,6 +2,11 @@ name: Deploy
 
 on:
   workflow_dispatch:
+    inputs:
+      ref:
+        description: "Git ref to deploy (branch, tag, or SHA)"
+        required: false
+        default: "main"
 
 concurrency:
   group: deploy
@@ -19,4 +24,8 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
-          script: /home/forja/deploy.sh
+          script: |
+            cd /home/forja/forja
+            git fetch origin
+            git checkout ${{ github.event.inputs.ref }}
+            /home/forja/deploy.sh
