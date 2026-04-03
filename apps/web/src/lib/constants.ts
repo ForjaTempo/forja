@@ -43,4 +43,8 @@ if (typeof window === "undefined") {
 	if (missing.length > 0) {
 		console.warn(`[config] Missing env vars: ${missing.join(", ")}`);
 	}
+
+	if (!process.env.NEXT_PUBLIC_OPENPANEL_CLIENT_ID) {
+		console.warn("[config] Missing NEXT_PUBLIC_OPENPANEL_CLIENT_ID — analytics disabled");
+	}
 }
