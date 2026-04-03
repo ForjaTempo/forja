@@ -14,14 +14,20 @@ export async function GET(request: Request) {
 		return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 	}
 
-	const db = getDb();
-	const states = await db.select().from(schema.indexerState);
+	try {
+		const db = getDb();
+		const states = await db.select().from(schema.indexerState);
 
-	return NextResponse.json({
-		contracts: states.map((s) => ({
-			name: s.contractName,
-			lastIndexedBlock: s.lastIndexedBlock,
-			updatedAt: s.updatedAt,
-		})),
-	});
+		return NextResponse.json({
+			contracts: states.map((s) => ({
+				name: s.contractName,
+				lastIndexedBlock: s.lastIndexedBlock,
+				updatedAt: s.updatedAt,
+			})),
+		});
+	} catch (err) {
+		const message = err instanceof Error ? err.message : "Unknown error";
+		console.error("[indexer-status] DB query failed:", message);
+		return NextResponse.json({ status: "unhealthy", error: message }, { status: 503 });
+	}
 }
