@@ -62,9 +62,12 @@ async function updateLastIndexedBlock(
 export async function runIndexer(): Promise<{
 	results: Record<string, { indexed: number; toBlock: number } | { error: string }>;
 }> {
+	const startTime = Date.now();
 	const db = getDb();
 	const currentBlock = await indexerClient.getBlockNumber();
 	const results: Record<string, { indexed: number; toBlock: number } | { error: string }> = {};
+
+	console.log(`[indexer] Starting run at block ${currentBlock}`);
 
 	for (const contract of contracts) {
 		try {
@@ -89,6 +92,8 @@ export async function runIndexer(): Promise<{
 						chunkCount = await contract.index(db, indexerClient, chunkStart, chunkEnd);
 						break;
 					} catch (err) {
+						const msg = err instanceof Error ? err.message : "Unknown error";
+						console.warn(`[indexer] ${contract.name} attempt ${attempt + 1} failed: ${msg}`);
 						if (attempt === MAX_RETRIES - 1) throw err;
 						await new Promise((r) => setTimeout(r, 2000 * (attempt + 1)));
 					}
@@ -98,12 +103,16 @@ export async function runIndexer(): Promise<{
 			}
 
 			await updateLastIndexedBlock(db, contract.name, currentBlock);
+			console.log(`[indexer] ${contract.name}: indexed ${totalIndexed} events`);
 			results[contract.name] = { indexed: totalIndexed, toBlock: Number(currentBlock) };
 		} catch (err) {
 			const message = err instanceof Error ? err.message : "Unknown error";
+			console.error(`[indexer] ${contract.name} failed: ${message}`);
 			results[contract.name] = { error: message };
 		}
 	}
 
+	const duration = Date.now() - startTime;
+	console.log(`[indexer] Run completed in ${duration}ms`);
 	return { results };
 }
