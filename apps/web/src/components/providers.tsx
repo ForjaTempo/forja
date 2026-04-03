@@ -7,6 +7,7 @@ import { type ReactNode, useState } from "react";
 import { Toaster } from "sonner";
 import { WagmiProvider } from "wagmi";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { useWrongNetwork } from "@/hooks/use-wrong-network";
 import { config } from "@/lib/wagmi";
 
 const rainbowTheme = darkTheme({
@@ -16,6 +17,11 @@ const rainbowTheme = darkTheme({
 	fontStack: "system",
 });
 
+function NetworkGuard({ children }: { children: ReactNode }) {
+	useWrongNetwork();
+	return children;
+}
+
 export function Providers({ children }: { children: ReactNode }) {
 	const [queryClient] = useState(() => new QueryClient());
 
@@ -24,7 +30,7 @@ export function Providers({ children }: { children: ReactNode }) {
 			<QueryClientProvider client={queryClient}>
 				<RainbowKitProvider theme={rainbowTheme}>
 					<TooltipProvider delayDuration={300}>
-						{children}
+						<NetworkGuard>{children}</NetworkGuard>
 						<Toaster
 							theme="dark"
 							toastOptions={{
