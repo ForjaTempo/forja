@@ -2,6 +2,8 @@ export const TEMPO_CHAIN_ID = 4217;
 export const TEMPO_MODERATO_CHAIN_ID = 42431;
 export const TEMPO_RPC = "https://rpc.tempo.xyz";
 
+export const SUPPORTED_CHAIN_IDS = new Set([TEMPO_CHAIN_ID, TEMPO_MODERATO_CHAIN_ID]);
+
 const EXPLORER_URLS: Record<number, string> = {
 	[TEMPO_CHAIN_ID]: "https://explore.tempo.xyz",
 	[TEMPO_MODERATO_CHAIN_ID]: "https://explore.moderato.tempo.xyz",
@@ -32,3 +34,13 @@ export const FEES = {
 export const APP_NAME = "FORJA";
 export const APP_DESCRIPTION = "Token toolkit for Tempo blockchain";
 export const APP_URL = "https://forja.fun";
+
+if (typeof window === "undefined") {
+	const missing: string[] = [];
+	if (FORJA_TOKEN_FACTORY_ADDRESS === "0x") missing.push("NEXT_PUBLIC_FORJA_TOKEN_FACTORY");
+	if (FORJA_MULTISEND_ADDRESS === "0x") missing.push("NEXT_PUBLIC_FORJA_MULTISEND");
+	if (FORJA_LOCKER_ADDRESS === "0x") missing.push("NEXT_PUBLIC_FORJA_LOCKER");
+	if (missing.length > 0) {
+		console.warn(`[config] Missing env vars: ${missing.join(", ")}`);
+	}
+}
