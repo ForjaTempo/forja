@@ -5,12 +5,15 @@ import { indexerClient } from "./client";
 import { indexLockEvents } from "./index-locks";
 import { indexMultisendEvents } from "./index-multisends";
 import { indexTokenEvents } from "./index-tokens";
+import { indexTransferEvents } from "./index-transfers";
 
-const CHUNK_SIZE = 50_000n;
+const DEFAULT_CHUNK_SIZE = 50_000n;
+const TRANSFER_CHUNK_SIZE = 10_000n;
 const MAX_RETRIES = 3;
 
 interface ContractIndexer {
 	name: string;
+	chunkSize?: bigint;
 	index: (
 		db: ReturnType<typeof getDb>,
 		client: typeof indexerClient,
@@ -23,6 +26,7 @@ const contracts: ContractIndexer[] = [
 	{ name: "token-factory", index: indexTokenEvents },
 	{ name: "multisend", index: indexMultisendEvents },
 	{ name: "locker", index: indexLockEvents },
+	{ name: "transfers", chunkSize: TRANSFER_CHUNK_SIZE, index: indexTransferEvents },
 ];
 
 async function getLastIndexedBlock(
@@ -81,10 +85,11 @@ export async function runIndexer(): Promise<{
 
 			let totalIndexed = 0;
 			let chunkStart = fromBlock;
+			const chunkSize = contract.chunkSize ?? DEFAULT_CHUNK_SIZE;
 
 			while (chunkStart <= currentBlock) {
 				const chunkEnd =
-					chunkStart + CHUNK_SIZE - 1n > currentBlock ? currentBlock : chunkStart + CHUNK_SIZE - 1n;
+					chunkStart + chunkSize - 1n > currentBlock ? currentBlock : chunkStart + chunkSize - 1n;
 
 				let chunkCount = 0;
 				for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
