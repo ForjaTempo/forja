@@ -11,6 +11,10 @@ const DEFAULT_CHUNK_SIZE = 50_000n;
 const TRANSFER_CHUNK_SIZE = 10_000n;
 const MAX_RETRIES = 3;
 
+/** Confirmation buffer — only index blocks that are at least this many blocks old.
+ *  Protects against chain reorgs. 10 blocks ≈ 10s on Tempo PoA. */
+const CONFIRMATION_BLOCKS = 10n;
+
 interface ContractIndexer {
 	name: string;
 	chunkSize?: bigint;
@@ -68,18 +72,24 @@ export async function runIndexer(): Promise<{
 }> {
 	const startTime = Date.now();
 	const db = getDb();
-	const currentBlock = await indexerClient.getBlockNumber();
+	const latestBlock = await indexerClient.getBlockNumber();
+	const safeBlock = latestBlock - CONFIRMATION_BLOCKS;
 	const results: Record<string, { indexed: number; toBlock: number } | { error: string }> = {};
 
-	console.log(`[indexer] Starting run at block ${currentBlock}`);
+	if (safeBlock < 1n) {
+		console.log(`[indexer] Chain too young (block ${latestBlock}), skipping`);
+		return { results };
+	}
+
+	console.log(`[indexer] Starting run at block ${latestBlock} (safe: ${safeBlock})`);
 
 	for (const contract of contracts) {
 		try {
 			const lastBlock = await getLastIndexedBlock(db, contract.name);
 			const fromBlock = lastBlock === 0n ? 1n : lastBlock + 1n;
 
-			if (fromBlock > currentBlock) {
-				results[contract.name] = { indexed: 0, toBlock: Number(currentBlock) };
+			if (fromBlock > safeBlock) {
+				results[contract.name] = { indexed: 0, toBlock: Number(safeBlock) };
 				continue;
 			}
 
@@ -87,9 +97,9 @@ export async function runIndexer(): Promise<{
 			let chunkStart = fromBlock;
 			const chunkSize = contract.chunkSize ?? DEFAULT_CHUNK_SIZE;
 
-			while (chunkStart <= currentBlock) {
+			while (chunkStart <= safeBlock) {
 				const chunkEnd =
-					chunkStart + chunkSize - 1n > currentBlock ? currentBlock : chunkStart + chunkSize - 1n;
+					chunkStart + chunkSize - 1n > safeBlock ? safeBlock : chunkStart + chunkSize - 1n;
 
 				let chunkCount = 0;
 				for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
@@ -107,9 +117,9 @@ export async function runIndexer(): Promise<{
 				chunkStart = chunkEnd + 1n;
 			}
 
-			await updateLastIndexedBlock(db, contract.name, currentBlock);
+			await updateLastIndexedBlock(db, contract.name, safeBlock);
 			console.log(`[indexer] ${contract.name}: indexed ${totalIndexed} events`);
-			results[contract.name] = { indexed: totalIndexed, toBlock: Number(currentBlock) };
+			results[contract.name] = { indexed: totalIndexed, toBlock: Number(safeBlock) };
 		} catch (err) {
 			const message = err instanceof Error ? err.message : "Unknown error";
 			console.error(`[indexer] ${contract.name} failed: ${message}`);

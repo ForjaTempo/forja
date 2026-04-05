@@ -11,12 +11,71 @@ const transferEvent = parseAbiItem(
 /** Max token addresses per getLogs call. */
 const ADDRESS_BATCH_SIZE = 50;
 
+/** Max transfer rows per DB insert batch. */
+const INSERT_BATCH_SIZE = 500;
+
 /** Zero address — from=0x0 is mint, to=0x0 is burn. */
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 
+interface BalanceDelta {
+	delta: bigint;
+	minBlock: number;
+	maxBlock: number;
+}
+
+/**
+ * Compute holder balance deltas from a set of transfer rows.
+ * Pure function — no DB side effects.
+ */
+function computeBalanceDeltas(
+	rows: {
+		tokenAddress: string;
+		fromAddress: string;
+		toAddress: string;
+		amount: string;
+		blockNumber: number;
+	}[],
+): Map<string, BalanceDelta> {
+	const deltas = new Map<string, BalanceDelta>();
+
+	for (const { tokenAddress, fromAddress, toAddress, amount, blockNumber } of rows) {
+		const value = BigInt(amount);
+
+		if (fromAddress !== ZERO_ADDRESS) {
+			const key = `${tokenAddress}:${fromAddress}`;
+			const existing = deltas.get(key);
+			if (existing) {
+				existing.delta -= value;
+				existing.maxBlock = Math.max(existing.maxBlock, blockNumber);
+			} else {
+				deltas.set(key, { delta: -value, minBlock: blockNumber, maxBlock: blockNumber });
+			}
+		}
+
+		if (toAddress !== ZERO_ADDRESS) {
+			const key = `${tokenAddress}:${toAddress}`;
+			const existing = deltas.get(key);
+			if (existing) {
+				existing.delta += value;
+				existing.maxBlock = Math.max(existing.maxBlock, blockNumber);
+			} else {
+				deltas.set(key, { delta: value, minBlock: blockNumber, maxBlock: blockNumber });
+			}
+		}
+	}
+
+	return deltas;
+}
+
 /**
  * Index TIP-20 Transfer events for all tokens tracked in the DB.
- * Updates both token_transfers (append-only log) and token_holder_balances (incremental).
+ *
+ * Idempotency strategy:
+ * - Each batch is wrapped in a DB transaction
+ * - INSERT ... ON CONFLICT DO NOTHING RETURNING only yields newly-inserted rows
+ * - Balance deltas are computed solely from those new rows
+ * - If balance update fails, the transaction rolls back (transfers too),
+ *   so a retry re-inserts and re-computes correctly
  */
 export async function indexTransferEvents(
 	db: ReturnType<typeof getDb>,
@@ -65,106 +124,75 @@ export async function indexTransferEvents(
 		createdAt: blockTimestamps.get(log.blockNumber) ?? new Date(),
 	}));
 
-	// 5. Batch insert transfers (idempotent via unique constraint)
-	const INSERT_BATCH_SIZE = 500;
+	// 5. Process in transactional batches — insert + balance update are atomic
 	for (let i = 0; i < transferRows.length; i += INSERT_BATCH_SIZE) {
 		const batch = transferRows.slice(i, i + INSERT_BATCH_SIZE);
-		await db.insert(schema.tokenTransfers).values(batch).onConflictDoNothing();
-	}
 
-	// 6. Update holder balances incrementally
-	const balanceDeltas = new Map<string, { delta: bigint; minBlock: number; maxBlock: number }>();
+		await db.transaction(async (tx) => {
+			// Insert transfers — RETURNING only yields actually-inserted rows (not conflicts)
+			const inserted = await tx
+				.insert(schema.tokenTransfers)
+				.values(batch)
+				.onConflictDoNothing()
+				.returning();
 
-	for (const row of transferRows) {
-		const { tokenAddress, fromAddress, toAddress, amount, blockNumber } = row;
-		const value = BigInt(amount);
+			if (inserted.length === 0) return;
 
-		// Debit sender (skip zero address — that's a mint)
-		if (fromAddress !== ZERO_ADDRESS) {
-			const senderKey = `${tokenAddress}:${fromAddress}`;
-			const existing = balanceDeltas.get(senderKey);
-			if (existing) {
-				existing.delta -= value;
-				existing.maxBlock = Math.max(existing.maxBlock, blockNumber);
-			} else {
-				balanceDeltas.set(senderKey, {
-					delta: -value,
-					minBlock: blockNumber,
-					maxBlock: blockNumber,
-				});
+			// Compute balance deltas ONLY from newly inserted transfers
+			const deltas = computeBalanceDeltas(inserted);
+
+			// Apply balance upserts within the same transaction
+			for (const [key, { delta, minBlock, maxBlock }] of deltas) {
+				const [tokenAddress, holderAddress] = key.split(":");
+				if (!tokenAddress || !holderAddress) continue;
+
+				if (delta > 0n) {
+					await tx
+						.insert(schema.tokenHolderBalances)
+						.values({
+							tokenAddress,
+							holderAddress,
+							balance: delta.toString(),
+							firstSeenBlock: minBlock,
+							lastUpdatedBlock: maxBlock,
+						})
+						.onConflictDoUpdate({
+							target: [
+								schema.tokenHolderBalances.tokenAddress,
+								schema.tokenHolderBalances.holderAddress,
+							],
+							set: {
+								balance: sql`(CAST(${schema.tokenHolderBalances.balance} AS NUMERIC) + ${delta.toString()})::TEXT`,
+								lastUpdatedBlock: maxBlock,
+							},
+						});
+				} else if (delta < 0n) {
+					const absDelta = (-delta).toString();
+					await tx
+						.insert(schema.tokenHolderBalances)
+						.values({
+							tokenAddress,
+							holderAddress,
+							balance: "0",
+							firstSeenBlock: minBlock,
+							lastUpdatedBlock: maxBlock,
+						})
+						.onConflictDoUpdate({
+							target: [
+								schema.tokenHolderBalances.tokenAddress,
+								schema.tokenHolderBalances.holderAddress,
+							],
+							set: {
+								balance: sql`GREATEST(CAST(${schema.tokenHolderBalances.balance} AS NUMERIC) - ${absDelta}, 0)::TEXT`,
+								lastUpdatedBlock: maxBlock,
+							},
+						});
+				}
 			}
-		}
-
-		// Credit receiver (skip zero address — that's a burn)
-		if (toAddress !== ZERO_ADDRESS) {
-			const receiverKey = `${tokenAddress}:${toAddress}`;
-			const existing = balanceDeltas.get(receiverKey);
-			if (existing) {
-				existing.delta += value;
-				existing.maxBlock = Math.max(existing.maxBlock, blockNumber);
-			} else {
-				balanceDeltas.set(receiverKey, {
-					delta: value,
-					minBlock: blockNumber,
-					maxBlock: blockNumber,
-				});
-			}
-		}
+		});
 	}
 
-	// 7. Apply balance upserts
-	for (const [key, { delta, minBlock, maxBlock }] of balanceDeltas) {
-		const [tokenAddress, holderAddress] = key.split(":");
-		if (!tokenAddress || !holderAddress) continue;
-
-		if (delta > 0n) {
-			// Credit: upsert with positive delta
-			await db
-				.insert(schema.tokenHolderBalances)
-				.values({
-					tokenAddress,
-					holderAddress,
-					balance: delta.toString(),
-					firstSeenBlock: minBlock,
-					lastUpdatedBlock: maxBlock,
-				})
-				.onConflictDoUpdate({
-					target: [
-						schema.tokenHolderBalances.tokenAddress,
-						schema.tokenHolderBalances.holderAddress,
-					],
-					set: {
-						balance: sql`(CAST(${schema.tokenHolderBalances.balance} AS NUMERIC) + ${delta.toString()})::TEXT`,
-						lastUpdatedBlock: maxBlock,
-					},
-				});
-		} else if (delta < 0n) {
-			// Debit: upsert with negative delta (absolute subtraction)
-			const absDelta = (-delta).toString();
-			await db
-				.insert(schema.tokenHolderBalances)
-				.values({
-					tokenAddress,
-					holderAddress,
-					balance: "0",
-					firstSeenBlock: minBlock,
-					lastUpdatedBlock: maxBlock,
-				})
-				.onConflictDoUpdate({
-					target: [
-						schema.tokenHolderBalances.tokenAddress,
-						schema.tokenHolderBalances.holderAddress,
-					],
-					set: {
-						balance: sql`GREATEST(CAST(${schema.tokenHolderBalances.balance} AS NUMERIC) - ${absDelta}, 0)::TEXT`,
-						lastUpdatedBlock: maxBlock,
-					},
-				});
-		}
-		// delta === 0n → no-op
-	}
-
-	// 8. Clean up zero-balance rows
+	// 6. Clean up zero-balance rows (safe outside transaction — runs after all inserts committed)
 	await db
 		.delete(schema.tokenHolderBalances)
 		.where(sql`${schema.tokenHolderBalances.balance} = '0'`);
