@@ -29,4 +29,6 @@ export type Token = typeof schema.tokens.$inferSelect;
 export type Multisend = typeof schema.multisends.$inferSelect;
 export type Lock = typeof schema.locks.$inferSelect;
 export type Claim = typeof schema.claims.$inferSelect;
+export type TokenTransfer = typeof schema.tokenTransfers.$inferSelect;
+export type TokenHolderBalance = typeof schema.tokenHolderBalances.$inferSelect;
 export type IndexerState = typeof schema.indexerState.$inferSelect;
