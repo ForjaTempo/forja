@@ -1,4 +1,13 @@
-import { boolean, index, integer, pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
+import {
+	boolean,
+	index,
+	integer,
+	pgTable,
+	serial,
+	text,
+	timestamp,
+	unique,
+} from "drizzle-orm/pg-core";
 
 export const tokens = pgTable(
 	"tokens",
@@ -74,6 +83,44 @@ export const claims = pgTable(
 		createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 	},
 	(table) => [index("claims_lock_id_idx").on(table.lockId)],
+);
+
+export const tokenTransfers = pgTable(
+	"token_transfers",
+	{
+		id: serial("id").primaryKey(),
+		tokenAddress: text("token_address").notNull(),
+		fromAddress: text("from_address").notNull(),
+		toAddress: text("to_address").notNull(),
+		amount: text("amount").notNull(),
+		txHash: text("tx_hash").notNull(),
+		logIndex: integer("log_index").notNull(),
+		blockNumber: integer("block_number").notNull(),
+		createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
+	},
+	(table) => [
+		unique("token_transfers_tx_log_idx").on(table.txHash, table.logIndex),
+		index("token_transfers_token_address_idx").on(table.tokenAddress),
+		index("token_transfers_from_address_idx").on(table.fromAddress),
+		index("token_transfers_to_address_idx").on(table.toAddress),
+		index("token_transfers_block_number_idx").on(table.blockNumber),
+	],
+);
+
+export const tokenHolderBalances = pgTable(
+	"token_holder_balances",
+	{
+		id: serial("id").primaryKey(),
+		tokenAddress: text("token_address").notNull(),
+		holderAddress: text("holder_address").notNull(),
+		balance: text("balance").notNull().default("0"),
+		firstSeenBlock: integer("first_seen_block").notNull(),
+		lastUpdatedBlock: integer("last_updated_block").notNull(),
+	},
+	(table) => [
+		unique("token_holder_balances_token_holder_idx").on(table.tokenAddress, table.holderAddress),
+		index("token_holder_balances_token_address_idx").on(table.tokenAddress),
+	],
 );
 
 export const indexerState = pgTable("indexer_state", {
