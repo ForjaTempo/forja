@@ -10,6 +10,7 @@ const navLinks = [
 	{ href: "/create", label: "Create" },
 	{ href: "/multisend", label: "Multisend" },
 	{ href: "/lock", label: "Lock" },
+	{ href: "/tokens", label: "Tokens" },
 ];
 
 export function Header() {
