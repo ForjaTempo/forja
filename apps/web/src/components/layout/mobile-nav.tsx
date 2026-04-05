@@ -4,11 +4,12 @@ import { MenuIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { useAccount } from "wagmi";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 
-const navLinks = [
+const baseNavLinks = [
 	{ href: "/create", label: "Create" },
 	{ href: "/multisend", label: "Multisend" },
 	{ href: "/lock", label: "Lock" },
@@ -18,6 +19,11 @@ const navLinks = [
 export function MobileNav() {
 	const [open, setOpen] = useState(false);
 	const pathname = usePathname();
+	const { isConnected } = useAccount();
+
+	const navLinks = isConnected
+		? [...baseNavLinks, { href: "/dashboard", label: "Dashboard" }]
+		: baseNavLinks;
 
 	return (
 		<Sheet open={open} onOpenChange={setOpen}>

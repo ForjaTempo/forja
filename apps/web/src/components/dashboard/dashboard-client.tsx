@@ -4,15 +4,19 @@ import { useQuery } from "@tanstack/react-query";
 import { WalletIcon } from "lucide-react";
 import { useState } from "react";
 import { useAccount } from "wagmi";
-import { getDashboardOverview, getCreatorTokensWithStats } from "@/actions/dashboard";
+import { getDashboardOverview, getCreatorTokensWithStats, getUnlockCalendar } from "@/actions/dashboard";
+import { getCreatorMultisends, getCreatorLocks } from "@/actions/token-hub";
 import { ConnectButton } from "@/components/layout/connect-button";
 import { PageContainer } from "@/components/layout/page-container";
 import { PageHeader } from "@/components/ui/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DashboardOverview } from "./dashboard-overview";
+import { LockHistory } from "./lock-history";
+import { MultisendHistory } from "./multisend-history";
 import { MyTokens } from "./my-tokens";
 import { TokenAnalytics } from "./token-analytics";
+import { UnlockCalendar } from "./unlock-calendar";
 
 export function DashboardClient() {
 	const { address, isConnected } = useAccount();
@@ -32,6 +36,27 @@ export function DashboardClient() {
 	const { data: tokens = [], isLoading: tokensLoading } = useQuery({
 		queryKey: ["creator-tokens-stats", address],
 		queryFn: () => getCreatorTokensWithStats(address!),
+		enabled: isConnected && !!address,
+		staleTime: 60_000,
+	});
+
+	const { data: multisends = [] } = useQuery({
+		queryKey: ["dashboard-multisends", address],
+		queryFn: () => getCreatorMultisends(address!),
+		enabled: isConnected && !!address,
+		staleTime: 60_000,
+	});
+
+	const { data: locks = [] } = useQuery({
+		queryKey: ["dashboard-locks", address],
+		queryFn: () => getCreatorLocks(address!),
+		enabled: isConnected && !!address,
+		staleTime: 60_000,
+	});
+
+	const { data: unlockEvents = [] } = useQuery({
+		queryKey: ["unlock-calendar", address],
+		queryFn: () => getUnlockCalendar(address!),
 		enabled: isConnected && !!address,
 		staleTime: 60_000,
 	});
@@ -86,6 +111,12 @@ export function DashboardClient() {
 						<TabsTrigger value="tokens" className="text-smoke data-[state=active]:text-molten-amber">
 							My Tokens ({tokens.length})
 						</TabsTrigger>
+						<TabsTrigger value="multisends" className="text-smoke data-[state=active]:text-molten-amber">
+							Multisends ({multisends.length})
+						</TabsTrigger>
+						<TabsTrigger value="locks" className="text-smoke data-[state=active]:text-molten-amber">
+							Locks ({locks.length})
+						</TabsTrigger>
 					</TabsList>
 
 					<TabsContent value="tokens" className="mt-6">
@@ -109,6 +140,19 @@ export function DashboardClient() {
 									}
 								}}
 							/>
+						)}
+					</TabsContent>
+
+					<TabsContent value="multisends" className="mt-6">
+						<MultisendHistory multisends={multisends} />
+					</TabsContent>
+
+					<TabsContent value="locks" className="mt-6">
+						<LockHistory locks={locks} />
+						{unlockEvents.length > 0 && (
+							<div className="mt-8">
+								<UnlockCalendar events={unlockEvents} />
+							</div>
 						)}
 					</TabsContent>
 				</Tabs>
