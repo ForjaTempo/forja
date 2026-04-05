@@ -6,6 +6,14 @@ const nextConfig: NextConfig = {
 		root: resolve(import.meta.dirname, "../.."),
 	},
 	serverExternalPackages: ["postgres"],
+	images: {
+		remotePatterns: [
+			{
+				protocol: "https",
+				hostname: "esm.sh",
+			},
+		],
+	},
 };
 
 export default nextConfig;

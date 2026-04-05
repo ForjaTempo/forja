@@ -31,4 +31,5 @@ export type Lock = typeof schema.locks.$inferSelect;
 export type Claim = typeof schema.claims.$inferSelect;
 export type TokenTransfer = typeof schema.tokenTransfers.$inferSelect;
 export type TokenHolderBalance = typeof schema.tokenHolderBalances.$inferSelect;
+export type TokenHubCache = typeof schema.tokenHubCache.$inferSelect;
 export type IndexerState = typeof schema.indexerState.$inferSelect;
