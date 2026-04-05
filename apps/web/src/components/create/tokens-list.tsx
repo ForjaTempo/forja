@@ -1,45 +1,13 @@
 "use client";
 
 import { ExternalLinkIcon } from "lucide-react";
-import { formatUnits } from "viem";
 import { useAccount } from "wagmi";
 import { AddressDisplay } from "@/components/ui/address-display";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { type CreatedTokenEvent, useCreatedTokens } from "@/hooks/use-created-tokens";
 import { useExplorerUrl } from "@/hooks/use-explorer-url";
-import { TIP20_DECIMALS } from "@/lib/constants";
-import { formatUnixDate } from "@/lib/format";
-
-function formatSupply(raw: bigint): string {
-	const str = formatUnits(raw, TIP20_DECIMALS);
-	const dotIdx = str.indexOf(".");
-	const intPart = dotIdx === -1 ? str : str.slice(0, dotIdx);
-	const decPart = dotIdx === -1 ? "" : str.slice(dotIdx + 1);
-	const n = BigInt(intPart);
-
-	if (n >= 1_000_000_000n) {
-		const whole = n / 1_000_000_000n;
-		const frac = (n % 1_000_000_000n) / 100_000_000n;
-		return `${whole}.${frac}B`;
-	}
-	if (n >= 1_000_000n) {
-		const whole = n / 1_000_000n;
-		const frac = (n % 1_000_000n) / 100_000n;
-		return `${whole}.${frac}M`;
-	}
-	if (n >= 1_000n) {
-		const whole = n / 1_000n;
-		const frac = (n % 1_000n) / 100n;
-		return `${whole}.${frac}K`;
-	}
-
-	// Small values — show with decimals
-	if (decPart && decPart !== "0") {
-		return `${intPart}.${decPart.slice(0, 2)}`;
-	}
-	return intPart;
-}
+import { formatSupply, formatUnixDate } from "@/lib/format";
 
 function TokenRow({ token, explorerUrl }: { token: CreatedTokenEvent; explorerUrl: string }) {
 	return (
