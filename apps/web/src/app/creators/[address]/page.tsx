@@ -4,9 +4,9 @@ import { useQuery } from "@tanstack/react-query";
 import { notFound, useParams } from "next/navigation";
 import { getCreatorProfile, getCreatorTokens } from "@/actions/token-hub";
 import { PageContainer } from "@/components/layout/page-container";
-import { Skeleton } from "@/components/ui/skeleton";
 import { CreatorOverview } from "@/components/token-hub/creator-overview";
 import { CreatorTokens } from "@/components/token-hub/creator-tokens";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function CreatorPage() {
 	const { address } = useParams<{ address: string }>();

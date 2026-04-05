@@ -5,11 +5,11 @@ import { notFound, useParams } from "next/navigation";
 import { useCallback, useState } from "react";
 import { getTokenDetail, getTokenHolderDistribution, getTokenTransfers } from "@/actions/token-hub";
 import { PageContainer } from "@/components/layout/page-container";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { HolderDistribution } from "@/components/token-hub/holder-distribution";
 import { TokenActivity } from "@/components/token-hub/token-activity";
 import { TokenOverview } from "@/components/token-hub/token-overview";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const TRANSFER_LIMIT = 10;
 
@@ -32,7 +32,8 @@ export default function TokenDetailPage() {
 
 	const { data: transferData, isLoading: transfersLoading } = useQuery({
 		queryKey: ["token-transfers", address, transferOffset],
-		queryFn: () => getTokenTransfers(address, { offset: 0, limit: transferOffset + TRANSFER_LIMIT }),
+		queryFn: () =>
+			getTokenTransfers(address, { offset: 0, limit: transferOffset + TRANSFER_LIMIT }),
 		staleTime: 30_000,
 		enabled: !!token,
 	});
@@ -76,10 +77,16 @@ export default function TokenDetailPage() {
 
 				<Tabs defaultValue="holders">
 					<TabsList className="border-b border-anvil-gray-light bg-transparent">
-						<TabsTrigger value="holders" className="text-smoke data-[state=active]:text-molten-amber">
+						<TabsTrigger
+							value="holders"
+							className="text-smoke data-[state=active]:text-molten-amber"
+						>
 							Holders
 						</TabsTrigger>
-						<TabsTrigger value="activity" className="text-smoke data-[state=active]:text-molten-amber">
+						<TabsTrigger
+							value="activity"
+							className="text-smoke data-[state=active]:text-molten-amber"
+						>
 							Activity
 						</TabsTrigger>
 					</TabsList>
@@ -95,7 +102,6 @@ export default function TokenDetailPage() {
 							isLoading={transfersLoading}
 							hasMore={transfers.length < transferTotal}
 							onLoadMore={handleLoadMoreTransfers}
-							decimals={token.decimals}
 						/>
 					</TabsContent>
 				</Tabs>

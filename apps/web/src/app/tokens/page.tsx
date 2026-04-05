@@ -2,12 +2,12 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useState } from "react";
-import { getTokenList, getTokenHubStats } from "@/actions/token-hub";
+import { getTokenHubStats, getTokenList } from "@/actions/token-hub";
 import { PageContainer } from "@/components/layout/page-container";
-import { PageHeader } from "@/components/ui/page-header";
 import { TokenFilters } from "@/components/token-hub/token-filters";
 import { TokenGrid } from "@/components/token-hub/token-grid";
 import { TokenSearch } from "@/components/token-hub/token-search";
+import { PageHeader } from "@/components/ui/page-header";
 
 type SortOption = "newest" | "oldest" | "holders" | "transfers";
 
@@ -57,10 +57,7 @@ export default function TokensPage() {
 	return (
 		<PageContainer className="py-8 sm:py-12">
 			<div className="space-y-8">
-				<PageHeader
-					title="Token Hub"
-					description="Discover and explore tokens on Tempo"
-				/>
+				<PageHeader title="Token Hub" description="Discover and explore tokens on Tempo" />
 
 				{stats && (
 					<div className="grid grid-cols-3 gap-4">

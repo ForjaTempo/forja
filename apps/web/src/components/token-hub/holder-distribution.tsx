@@ -1,8 +1,7 @@
 "use client";
 
 import { AlertTriangleIcon } from "lucide-react";
-import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { Badge } from "@/components/ui/badge";
+import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 
 interface HolderData {
 	holderAddress: string;
@@ -95,14 +94,11 @@ export function HolderDistribution({ holders, isForjaCreated }: HolderDistributi
 								labelLine={false}
 							>
 								{chartData.map((_, index) => (
-									<Cell
-										key={`cell-${index.toString()}`}
-										fill={COLORS[index % COLORS.length]}
-									/>
+									<Cell key={`cell-${index.toString()}`} fill={COLORS[index % COLORS.length]} />
 								))}
 							</Pie>
 							<Tooltip
-								formatter={(value: number) => `${value.toFixed(2)}%`}
+								formatter={(value) => `${Number(value).toFixed(2)}%`}
 								contentStyle={{
 									backgroundColor: "#1a1a1a",
 									border: "1px solid #333",
@@ -128,9 +124,7 @@ export function HolderDistribution({ holders, isForjaCreated }: HolderDistributi
 									{shortenAddress(h.holderAddress)}
 								</span>
 							</div>
-							<span className="font-mono text-xs text-smoke-dark">
-								{h.percentage.toFixed(2)}%
-							</span>
+							<span className="font-mono text-xs text-smoke-dark">{h.percentage.toFixed(2)}%</span>
 						</div>
 					))}
 				</div>

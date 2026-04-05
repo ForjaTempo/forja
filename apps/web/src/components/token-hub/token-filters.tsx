@@ -19,7 +19,12 @@ const sortOptions: { value: SortOption; label: string }[] = [
 	{ value: "oldest", label: "Oldest" },
 ];
 
-export function TokenFilters({ sort, onSortChange, forjaOnly, onForjaOnlyChange }: TokenFiltersProps) {
+export function TokenFilters({
+	sort,
+	onSortChange,
+	forjaOnly,
+	onForjaOnlyChange,
+}: TokenFiltersProps) {
 	return (
 		<div className="flex flex-wrap items-center gap-3">
 			<select

@@ -1,12 +1,11 @@
 "use client";
 
-import { ExternalLinkIcon } from "lucide-react";
 import type { TokenTransfer } from "@forja/db";
+import { ExternalLinkIcon } from "lucide-react";
 import { AddressDisplay } from "@/components/ui/address-display";
 import { Button } from "@/components/ui/button";
 import { useExplorerUrl } from "@/hooks/use-explorer-url";
-import { formatDate } from "@/lib/format";
-import { formatSupply } from "@/lib/format";
+import { formatDate, formatSupply } from "@/lib/format";
 
 interface TokenActivityProps {
 	transfers: TokenTransfer[];
@@ -14,10 +13,15 @@ interface TokenActivityProps {
 	isLoading: boolean;
 	hasMore: boolean;
 	onLoadMore: () => void;
-	decimals: number;
 }
 
-export function TokenActivity({ transfers, total, isLoading, hasMore, onLoadMore, decimals }: TokenActivityProps) {
+export function TokenActivity({
+	transfers,
+	total,
+	isLoading,
+	hasMore,
+	onLoadMore,
+}: TokenActivityProps) {
 	const explorerUrl = useExplorerUrl();
 
 	if (transfers.length === 0 && !isLoading) {
@@ -50,12 +54,8 @@ export function TokenActivity({ transfers, total, isLoading, hasMore, onLoadMore
 								<td className="py-2.5 pr-4">
 									<AddressDisplay address={tx.toAddress} />
 								</td>
-								<td className="py-2.5 pr-4 font-mono text-xs">
-									{formatSupply(BigInt(tx.amount))}
-								</td>
-								<td className="py-2.5 pr-4 text-xs text-smoke-dark">
-									{formatDate(tx.createdAt)}
-								</td>
+								<td className="py-2.5 pr-4 font-mono text-xs">{formatSupply(BigInt(tx.amount))}</td>
+								<td className="py-2.5 pr-4 text-xs text-smoke-dark">{formatDate(tx.createdAt)}</td>
 								<td className="py-2.5">
 									<a
 										href={`${explorerUrl}/tx/${tx.txHash}`}

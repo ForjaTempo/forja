@@ -1,6 +1,13 @@
 "use client";
 
-import { CoinsIcon, SendIcon, LockIcon, UsersIcon, ClockIcon, ExternalLinkIcon } from "lucide-react";
+import {
+	ClockIcon,
+	CoinsIcon,
+	ExternalLinkIcon,
+	LockIcon,
+	SendIcon,
+	UsersIcon,
+} from "lucide-react";
 import { AddressDisplay } from "@/components/ui/address-display";
 import { useExplorerUrl } from "@/hooks/use-explorer-url";
 import { formatDate } from "@/lib/format";
@@ -25,8 +32,16 @@ export function CreatorOverview({ profile }: CreatorOverviewProps) {
 		{ icon: CoinsIcon, label: "Tokens Created", value: formatter.format(profile.tokensCreated) },
 		{ icon: SendIcon, label: "Multisends", value: formatter.format(profile.multisendCount) },
 		{ icon: LockIcon, label: "Locks Created", value: formatter.format(profile.lockCount) },
-		{ icon: UsersIcon, label: "Total Recipients", value: formatter.format(profile.totalRecipients) },
-		{ icon: ClockIcon, label: "First Seen", value: profile.firstSeen ? formatDate(profile.firstSeen) : "—" },
+		{
+			icon: UsersIcon,
+			label: "Total Recipients",
+			value: formatter.format(profile.totalRecipients),
+		},
+		{
+			icon: ClockIcon,
+			label: "First Seen",
+			value: profile.firstSeen ? formatDate(profile.firstSeen) : "—",
+		},
 	];
 
 	return (

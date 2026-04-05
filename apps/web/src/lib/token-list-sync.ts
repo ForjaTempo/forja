@@ -1,6 +1,6 @@
 import "server-only";
 import { getDb, schema } from "@forja/db";
-import { count, eq, sql } from "drizzle-orm";
+import { count, sql } from "drizzle-orm";
 
 interface TokenListEntry {
 	chainId: number;
@@ -29,7 +29,10 @@ export async function syncTokenList(): Promise<{ synced: number }> {
 			tokenListTokens = data.tokens?.filter((t) => t.chainId === 4217) ?? [];
 		}
 	} catch (err) {
-		console.warn("[token-sync] Failed to fetch token list, continuing with FORJA tokens only:", err);
+		console.warn(
+			"[token-sync] Failed to fetch token list, continuing with FORJA tokens only:",
+			err,
+		);
 	}
 
 	// 2. Get all FORJA-created tokens
@@ -66,7 +69,9 @@ export async function syncTokenList(): Promise<{ synced: number }> {
 		const addr = t.address.toLowerCase();
 		seenAddresses.add(addr);
 		const isForja = forjaAddressSet.has(addr);
-		const forjaToken = isForja ? forjaTokens.find((ft) => ft.address.toLowerCase() === addr) : undefined;
+		const forjaToken = isForja
+			? forjaTokens.find((ft) => ft.address.toLowerCase() === addr)
+			: undefined;
 
 		rows.push({
 			address: addr,

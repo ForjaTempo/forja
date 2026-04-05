@@ -11,7 +11,7 @@ interface TokenSearchProps {
 
 export function TokenSearch({ value, onChange }: TokenSearchProps) {
 	const [local, setLocal] = useState(value);
-	const timerRef = useRef<ReturnType<typeof setTimeout>>();
+	const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
 	useEffect(() => {
 		setLocal(value);

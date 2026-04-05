@@ -1,6 +1,6 @@
 "use server";
 import { getDb, schema } from "@forja/db";
-import { and, count, desc, eq, asc, sql, or, ilike } from "drizzle-orm";
+import { and, asc, count, desc, eq, ilike, or, sql } from "drizzle-orm";
 import { isAddress } from "viem";
 
 type SortOption = "newest" | "oldest" | "holders" | "transfers";
@@ -13,7 +13,13 @@ interface TokenListParams {
 	limit?: number;
 }
 
-export async function getTokenList({ search, sort = "newest", forjaOnly, offset = 0, limit = 20 }: TokenListParams = {}) {
+export async function getTokenList({
+	search,
+	sort = "newest",
+	forjaOnly,
+	offset = 0,
+	limit = 20,
+}: TokenListParams = {}) {
 	try {
 		const db = getDb();
 		const conditions = [];
@@ -22,14 +28,11 @@ export async function getTokenList({ search, sort = "newest", forjaOnly, offset 
 			conditions.push(eq(schema.tokenHubCache.isForjaCreated, true));
 		}
 
-		if (search && search.trim()) {
+		if (search?.trim()) {
 			const term = `%${search.trim()}%`;
 			const searchCondition = isAddress(search.trim())
 				? eq(schema.tokenHubCache.address, search.trim().toLowerCase())
-				: or(
-						ilike(schema.tokenHubCache.name, term),
-						ilike(schema.tokenHubCache.symbol, term),
-					);
+				: or(ilike(schema.tokenHubCache.name, term), ilike(schema.tokenHubCache.symbol, term));
 			if (searchCondition) conditions.push(searchCondition);
 		}
 
@@ -56,10 +59,7 @@ export async function getTokenList({ search, sort = "newest", forjaOnly, offset 
 				.orderBy(orderBy)
 				.offset(offset)
 				.limit(limit),
-			db
-				.select({ value: count() })
-				.from(schema.tokenHubCache)
-				.where(where),
+			db.select({ value: count() }).from(schema.tokenHubCache).where(where),
 		]);
 
 		return { tokens, total: totalResult?.value ?? 0 };
@@ -189,34 +189,29 @@ export async function getCreatorProfile(address: string) {
 		const db = getDb();
 		const addr = address.toLowerCase();
 
-		const [
-			[tokenResult],
-			[multisendResult],
-			[lockResult],
-			[recipientResult],
-			[firstSeenResult],
-		] = await Promise.all([
-			db
-				.select({ value: count() })
-				.from(schema.tokens)
-				.where(eq(schema.tokens.creatorAddress, addr)),
-			db
-				.select({ value: count() })
-				.from(schema.multisends)
-				.where(eq(schema.multisends.senderAddress, addr)),
-			db
-				.select({ value: count() })
-				.from(schema.locks)
-				.where(eq(schema.locks.creatorAddress, addr)),
-			db
-				.select({ value: sql<number>`COALESCE(SUM(${schema.multisends.recipientCount}), 0)` })
-				.from(schema.multisends)
-				.where(eq(schema.multisends.senderAddress, addr)),
-			db
-				.select({ value: sql<Date>`MIN(${schema.tokens.createdAt})` })
-				.from(schema.tokens)
-				.where(eq(schema.tokens.creatorAddress, addr)),
-		]);
+		const [[tokenResult], [multisendResult], [lockResult], [recipientResult], [firstSeenResult]] =
+			await Promise.all([
+				db
+					.select({ value: count() })
+					.from(schema.tokens)
+					.where(eq(schema.tokens.creatorAddress, addr)),
+				db
+					.select({ value: count() })
+					.from(schema.multisends)
+					.where(eq(schema.multisends.senderAddress, addr)),
+				db
+					.select({ value: count() })
+					.from(schema.locks)
+					.where(eq(schema.locks.creatorAddress, addr)),
+				db
+					.select({ value: sql<number>`COALESCE(SUM(${schema.multisends.recipientCount}), 0)` })
+					.from(schema.multisends)
+					.where(eq(schema.multisends.senderAddress, addr)),
+				db
+					.select({ value: sql<Date>`MIN(${schema.tokens.createdAt})` })
+					.from(schema.tokens)
+					.where(eq(schema.tokens.creatorAddress, addr)),
+			]);
 
 		const tokensCreated = tokenResult?.value ?? 0;
 		if (tokensCreated === 0) return null;

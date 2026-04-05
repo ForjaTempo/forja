@@ -1,13 +1,19 @@
 "use client";
 
-import { CoinsIcon, ExternalLinkIcon, UsersIcon, ArrowRightLeftIcon, ClockIcon } from "lucide-react";
-import Link from "next/link";
 import type { TokenHubCache } from "@forja/db";
+import {
+	ArrowRightLeftIcon,
+	ClockIcon,
+	CoinsIcon,
+	ExternalLinkIcon,
+	UsersIcon,
+} from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
 import { AddressDisplay } from "@/components/ui/address-display";
 import { Badge } from "@/components/ui/badge";
 import { useExplorerUrl } from "@/hooks/use-explorer-url";
-import { formatDate } from "@/lib/format";
-import { formatSupply } from "@/lib/format";
+import { formatDate, formatSupply } from "@/lib/format";
 
 const formatter = new Intl.NumberFormat("en-US");
 
@@ -23,7 +29,13 @@ export function TokenOverview({ token }: TokenOverviewProps) {
 			{/* Header */}
 			<div className="flex items-start gap-4">
 				{token.logoUri ? (
-					<img src={token.logoUri} alt={token.symbol} className="size-14 rounded-full" />
+					<Image
+						src={token.logoUri}
+						alt={token.symbol}
+						width={56}
+						height={56}
+						className="rounded-full"
+					/>
 				) : (
 					<div className="flex size-14 items-center justify-center rounded-full bg-anvil-gray">
 						<CoinsIcon className="size-7 text-smoke-dark" />

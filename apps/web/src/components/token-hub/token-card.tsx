@@ -1,11 +1,12 @@
 "use client";
 
-import { CoinsIcon, UsersIcon, ArrowRightLeftIcon } from "lucide-react";
-import Link from "next/link";
 import type { TokenHubCache } from "@forja/db";
+import { ArrowRightLeftIcon, CoinsIcon, UsersIcon } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { AddressDisplay } from "@/components/ui/address-display";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { AddressDisplay } from "@/components/ui/address-display";
 import { formatDate } from "@/lib/format";
 
 const formatter = new Intl.NumberFormat("en-US");
@@ -22,10 +23,12 @@ export function TokenCard({ token }: TokenCardProps) {
 					<div className="flex items-start justify-between gap-2">
 						<div className="flex items-center gap-3">
 							{token.logoUri ? (
-								<img
+								<Image
 									src={token.logoUri}
 									alt={token.symbol}
-									className="size-10 rounded-full"
+									width={40}
+									height={40}
+									className="rounded-full"
 								/>
 							) : (
 								<div className="flex size-10 items-center justify-center rounded-full bg-anvil-gray">
@@ -59,9 +62,7 @@ export function TokenCard({ token }: TokenCardProps) {
 						</span>
 					</div>
 
-					<p className="mt-2 text-xs text-smoke-dark">
-						{formatDate(token.createdAt)}
-					</p>
+					<p className="mt-2 text-xs text-smoke-dark">{formatDate(token.createdAt)}</p>
 				</CardContent>
 			</Card>
 		</Link>
