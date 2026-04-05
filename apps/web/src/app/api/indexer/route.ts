@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { validateApiAuth } from "@/lib/api-auth";
 import { runIndexer } from "@/lib/indexer/run";
 
 const RATE_LIMIT_WINDOW_MS = 60_000;
@@ -22,19 +23,10 @@ function isRateLimited(): boolean {
 }
 
 export async function POST(request: Request) {
-	const apiKey = process.env.INDEXER_API_KEY;
-	if (!apiKey) {
-		return NextResponse.json({ error: "Indexer not configured" }, { status: 500 });
-	}
-
-	const authHeader = request.headers.get("authorization");
-	if (authHeader !== `Bearer ${apiKey}`) {
-		return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-	}
+	const authError = validateApiAuth(request);
+	if (authError) return authError;
 
 	// Rate limit after auth — only authenticated callers consume quota.
-	// Unauthenticated requests are rejected above without touching the limit,
-	// so an attacker cannot exhaust the quota and starve the real cron job.
 	if (isRateLimited()) {
 		return NextResponse.json({ error: "Too many requests" }, { status: 429 });
 	}

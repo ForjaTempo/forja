@@ -1,18 +1,12 @@
 import { getDb, schema } from "@forja/db";
 import { NextResponse } from "next/server";
+import { validateApiAuth } from "@/lib/api-auth";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
-	const apiKey = process.env.INDEXER_API_KEY;
-	if (!apiKey) {
-		return NextResponse.json({ error: "Indexer not configured" }, { status: 500 });
-	}
-
-	const authHeader = request.headers.get("authorization");
-	if (authHeader !== `Bearer ${apiKey}`) {
-		return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-	}
+	const authError = validateApiAuth(request);
+	if (authError) return authError;
 
 	try {
 		const db = getDb();
