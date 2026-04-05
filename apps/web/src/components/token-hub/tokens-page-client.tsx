@@ -1,0 +1,155 @@
+"use client";
+
+import { useQuery } from "@tanstack/react-query";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useState, useTransition } from "react";
+import type { TokenHubCache } from "@forja/db";
+import { getTokenHubStats, getTokenList } from "@/actions/token-hub";
+import { PageContainer } from "@/components/layout/page-container";
+import { TokenFilters } from "@/components/token-hub/token-filters";
+import { TokenGrid } from "@/components/token-hub/token-grid";
+import { TokenSearch } from "@/components/token-hub/token-search";
+import { PageHeader } from "@/components/ui/page-header";
+
+type SortOption = "newest" | "oldest" | "holders" | "transfers";
+
+const LIMIT = 20;
+const formatter = new Intl.NumberFormat("en-US");
+
+interface TokensPageClientProps {
+	initialData: { tokens: TokenHubCache[]; total: number };
+	initialStats: { totalTokens: number; forjaTokens: number; totalHolders: number };
+	initialSearch: string;
+	initialSort: SortOption;
+	initialForjaOnly: boolean;
+}
+
+export function TokensPageClient({
+	initialData,
+	initialStats,
+	initialSearch,
+	initialSort,
+	initialForjaOnly,
+}: TokensPageClientProps) {
+	const router = useRouter();
+	const currentParams = useSearchParams();
+	const [, startTransition] = useTransition();
+
+	const [search, setSearch] = useState(initialSearch);
+	const [sort, setSort] = useState<SortOption>(initialSort);
+	const [forjaOnly, setForjaOnly] = useState(initialForjaOnly);
+	const [page, setPage] = useState(1);
+
+	const updateUrl = useCallback(
+		(newSearch: string, newSort: SortOption, newForjaOnly: boolean) => {
+			const params = new URLSearchParams();
+			if (newSearch) params.set("q", newSearch);
+			if (newSort !== "newest") params.set("sort", newSort);
+			if (newForjaOnly) params.set("forja", "1");
+			const qs = params.toString();
+			startTransition(() => {
+				router.replace(qs ? `/tokens?${qs}` : "/tokens", { scroll: false });
+			});
+		},
+		[router],
+	);
+
+	const { data: stats } = useQuery({
+		queryKey: ["token-hub-stats"],
+		queryFn: () => getTokenHubStats(),
+		staleTime: 60_000,
+		initialData: initialStats,
+	});
+
+	const { data, isLoading } = useQuery({
+		queryKey: ["token-list", search, sort, forjaOnly, page],
+		queryFn: () => getTokenList({ search, sort, forjaOnly, offset: 0, limit: page * LIMIT }),
+		staleTime: 30_000,
+		initialData: page === 1 ? initialData : undefined,
+	});
+
+	const handleSearchChange = useCallback(
+		(value: string) => {
+			setSearch(value);
+			setPage(1);
+			updateUrl(value, sort, forjaOnly);
+		},
+		[sort, forjaOnly, updateUrl],
+	);
+
+	const handleSortChange = useCallback(
+		(value: SortOption) => {
+			setSort(value);
+			setPage(1);
+			updateUrl(search, value, forjaOnly);
+		},
+		[search, forjaOnly, updateUrl],
+	);
+
+	const handleForjaOnlyChange = useCallback(
+		(value: boolean) => {
+			setForjaOnly(value);
+			setPage(1);
+			updateUrl(search, sort, value);
+		},
+		[search, sort, updateUrl],
+	);
+
+	const handleLoadMore = useCallback(() => {
+		setPage((prev) => prev + 1);
+	}, []);
+
+	const tokens = data?.tokens ?? [];
+	const total = data?.total ?? 0;
+
+	return (
+		<PageContainer className="py-8 sm:py-12">
+			<div className="space-y-8">
+				<PageHeader title="Token Hub" description="Discover and explore tokens on Tempo" />
+
+				{stats && (
+					<div className="grid grid-cols-3 gap-4">
+						<div className="rounded-lg border border-anvil-gray-light bg-deep-charcoal p-4 text-center">
+							<p className="font-mono text-2xl font-bold text-molten-amber">
+								{formatter.format(stats.totalTokens)}
+							</p>
+							<p className="mt-1 text-xs text-smoke-dark">Total Tokens</p>
+						</div>
+						<div className="rounded-lg border border-anvil-gray-light bg-deep-charcoal p-4 text-center">
+							<p className="font-mono text-2xl font-bold text-molten-amber">
+								{formatter.format(stats.forjaTokens)}
+							</p>
+							<p className="mt-1 text-xs text-smoke-dark">FORJA Created</p>
+						</div>
+						<div className="rounded-lg border border-anvil-gray-light bg-deep-charcoal p-4 text-center">
+							<p className="font-mono text-2xl font-bold text-molten-amber">
+								{formatter.format(stats.totalHolders)}
+							</p>
+							<p className="mt-1 text-xs text-smoke-dark">Total Holders</p>
+						</div>
+					</div>
+				)}
+
+				<div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+					<div className="flex-1 sm:max-w-md">
+						<TokenSearch value={search} onChange={handleSearchChange} />
+					</div>
+					<TokenFilters
+						sort={sort}
+						onSortChange={handleSortChange}
+						forjaOnly={forjaOnly}
+						onForjaOnlyChange={handleForjaOnlyChange}
+					/>
+				</div>
+
+				<TokenGrid
+					tokens={tokens}
+					total={total}
+					isLoading={isLoading}
+					hasMore={tokens.length < total}
+					onLoadMore={handleLoadMore}
+				/>
+			</div>
+		</PageContainer>
+	);
+}

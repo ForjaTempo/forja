@@ -6,6 +6,7 @@ import {
 	ExternalLinkIcon,
 	LockIcon,
 	SendIcon,
+	ShieldIcon,
 	UsersIcon,
 } from "lucide-react";
 import { AddressDisplay } from "@/components/ui/address-display";
@@ -21,12 +22,16 @@ interface CreatorOverviewProps {
 		multisendCount: number;
 		lockCount: number;
 		totalRecipients: number;
+		totalValueLocked: string;
 		firstSeen: Date | null;
 	};
 }
 
 export function CreatorOverview({ profile }: CreatorOverviewProps) {
 	const explorerUrl = useExplorerUrl();
+
+	const tvl = BigInt(profile.totalValueLocked || "0");
+	const tvlDisplay = tvl > 0n ? formatter.format(Number(tvl / 10n ** 6n)) : "0";
 
 	const stats = [
 		{ icon: CoinsIcon, label: "Tokens Created", value: formatter.format(profile.tokensCreated) },
@@ -36,6 +41,11 @@ export function CreatorOverview({ profile }: CreatorOverviewProps) {
 			icon: UsersIcon,
 			label: "Total Recipients",
 			value: formatter.format(profile.totalRecipients),
+		},
+		{
+			icon: ShieldIcon,
+			label: "Value Locked",
+			value: tvlDisplay,
 		},
 		{
 			icon: ClockIcon,
@@ -64,7 +74,7 @@ export function CreatorOverview({ profile }: CreatorOverviewProps) {
 				</a>
 			</div>
 
-			<div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+			<div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
 				{stats.map((stat) => (
 					<div
 						key={stat.label}

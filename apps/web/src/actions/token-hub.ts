@@ -124,7 +124,7 @@ export async function getTokenTransfers(address: string, { offset = 0, limit = 1
 				.select()
 				.from(schema.tokenTransfers)
 				.where(eq(schema.tokenTransfers.tokenAddress, addr))
-				.orderBy(desc(schema.tokenTransfers.blockNumber))
+				.orderBy(desc(schema.tokenTransfers.blockNumber), desc(schema.tokenTransfers.logIndex))
 				.offset(offset)
 				.limit(limit),
 			db
@@ -189,29 +189,38 @@ export async function getCreatorProfile(address: string) {
 		const db = getDb();
 		const addr = address.toLowerCase();
 
-		const [[tokenResult], [multisendResult], [lockResult], [recipientResult], [firstSeenResult]] =
-			await Promise.all([
-				db
-					.select({ value: count() })
-					.from(schema.tokens)
-					.where(eq(schema.tokens.creatorAddress, addr)),
-				db
-					.select({ value: count() })
-					.from(schema.multisends)
-					.where(eq(schema.multisends.senderAddress, addr)),
-				db
-					.select({ value: count() })
-					.from(schema.locks)
-					.where(eq(schema.locks.creatorAddress, addr)),
-				db
-					.select({ value: sql<number>`COALESCE(SUM(${schema.multisends.recipientCount}), 0)` })
-					.from(schema.multisends)
-					.where(eq(schema.multisends.senderAddress, addr)),
-				db
-					.select({ value: sql<Date>`MIN(${schema.tokens.createdAt})` })
-					.from(schema.tokens)
-					.where(eq(schema.tokens.creatorAddress, addr)),
-			]);
+		const [
+			[tokenResult],
+			[multisendResult],
+			[lockResult],
+			[recipientResult],
+			[firstSeenResult],
+			[tvlResult],
+		] = await Promise.all([
+			db
+				.select({ value: count() })
+				.from(schema.tokens)
+				.where(eq(schema.tokens.creatorAddress, addr)),
+			db
+				.select({ value: count() })
+				.from(schema.multisends)
+				.where(eq(schema.multisends.senderAddress, addr)),
+			db.select({ value: count() }).from(schema.locks).where(eq(schema.locks.creatorAddress, addr)),
+			db
+				.select({ value: sql<number>`COALESCE(SUM(${schema.multisends.recipientCount}), 0)` })
+				.from(schema.multisends)
+				.where(eq(schema.multisends.senderAddress, addr)),
+			db
+				.select({ value: sql<Date>`MIN(${schema.tokens.createdAt})` })
+				.from(schema.tokens)
+				.where(eq(schema.tokens.creatorAddress, addr)),
+			db
+				.select({
+					value: sql<string>`COALESCE(SUM(CAST(${schema.locks.totalAmount} AS NUMERIC) - CAST(${schema.locks.claimedAmount} AS NUMERIC)), 0)`,
+				})
+				.from(schema.locks)
+				.where(eq(schema.locks.creatorAddress, addr)),
+		]);
 
 		const tokensCreated = tokenResult?.value ?? 0;
 		if (tokensCreated === 0) return null;
@@ -222,6 +231,7 @@ export async function getCreatorProfile(address: string) {
 			multisendCount: multisendResult?.value ?? 0,
 			lockCount: lockResult?.value ?? 0,
 			totalRecipients: Number(recipientResult?.value ?? 0),
+			totalValueLocked: tvlResult?.value ?? "0",
 			firstSeen: firstSeenResult?.value ?? null,
 		};
 	} catch (err) {
@@ -242,6 +252,38 @@ export async function getCreatorTokens(address: string) {
 			.orderBy(desc(schema.tokenHubCache.createdAt));
 	} catch (err) {
 		console.error("[actions] getCreatorTokens failed:", err);
+		return [];
+	}
+}
+
+export async function getCreatorMultisends(address: string) {
+	if (!isAddress(address)) return [];
+
+	try {
+		const db = getDb();
+		return await db
+			.select()
+			.from(schema.multisends)
+			.where(eq(schema.multisends.senderAddress, address.toLowerCase()))
+			.orderBy(desc(schema.multisends.blockNumber));
+	} catch (err) {
+		console.error("[actions] getCreatorMultisends failed:", err);
+		return [];
+	}
+}
+
+export async function getCreatorLocks(address: string) {
+	if (!isAddress(address)) return [];
+
+	try {
+		const db = getDb();
+		return await db
+			.select()
+			.from(schema.locks)
+			.where(eq(schema.locks.creatorAddress, address.toLowerCase()))
+			.orderBy(desc(schema.locks.blockNumber));
+	} catch (err) {
+		console.error("[actions] getCreatorLocks failed:", err);
 		return [];
 	}
 }

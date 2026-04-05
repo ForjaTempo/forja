@@ -1,7 +1,7 @@
 "use client";
 
 import type { TokenHubCache } from "@forja/db";
-import { ArrowRightLeftIcon, CoinsIcon, UsersIcon } from "lucide-react";
+import { AlertTriangleIcon, ArrowRightLeftIcon, CoinsIcon, UsersIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { AddressDisplay } from "@/components/ui/address-display";
@@ -40,11 +40,19 @@ export function TokenCard({ token }: TokenCardProps) {
 								<p className="text-xs text-smoke-dark">{token.symbol}</p>
 							</div>
 						</div>
-						{token.isForjaCreated && (
-							<Badge className="bg-molten-amber/15 text-molten-amber border-molten-amber/30">
-								FORJA
-							</Badge>
-						)}
+						<div className="flex flex-col items-end gap-1">
+							{token.isForjaCreated && (
+								<Badge className="bg-molten-amber/15 text-molten-amber border-molten-amber/30">
+									FORJA
+								</Badge>
+							)}
+							{token.topHolderPct > 50 && (
+								<Badge className="bg-red-500/15 text-red-400 border-red-500/30 inline-flex items-center gap-1">
+									<AlertTriangleIcon className="size-2.5" />
+									{token.topHolderPct}%
+								</Badge>
+							)}
+						</div>
 					</div>
 
 					<div className="mt-3">

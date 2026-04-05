@@ -135,6 +135,7 @@ export const tokenHubCache = pgTable(
 		creatorAddress: text("creator_address"),
 		holderCount: integer("holder_count").notNull().default(0),
 		transferCount: integer("transfer_count").notNull().default(0),
+		topHolderPct: integer("top_holder_pct").notNull().default(0),
 		logoUri: text("logo_uri"),
 		isForjaCreated: boolean("is_forja_created").notNull().default(false),
 		lastSyncedAt: timestamp("last_synced_at", { withTimezone: true }).notNull().defaultNow(),

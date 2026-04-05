@@ -1,6 +1,6 @@
 import "server-only";
 import { getDb, schema } from "@forja/db";
-import { count, sql } from "drizzle-orm";
+import { count, desc, eq, sql } from "drizzle-orm";
 
 interface TokenListEntry {
 	chainId: number;
@@ -59,6 +59,26 @@ export async function syncTokenList(): Promise<{ synced: number }> {
 	const holderMap = new Map(holderCounts.map((h) => [h.tokenAddress, h.value]));
 	const transferMap = new Map(transferCounts.map((t) => [t.tokenAddress, t.value]));
 
+	// 3b. Compute top holder percentage for each FORJA token
+	const topHolderPctMap = new Map<string, number>();
+	for (const ft of forjaTokens) {
+		const addr = ft.address.toLowerCase();
+		const totalSupply = ft.initialSupply ? BigInt(ft.initialSupply) : 0n;
+		if (totalSupply === 0n) continue;
+
+		const [topHolder] = await db
+			.select({ balance: schema.tokenHolderBalances.balance })
+			.from(schema.tokenHolderBalances)
+			.where(eq(schema.tokenHolderBalances.tokenAddress, addr))
+			.orderBy(desc(sql`CAST(${schema.tokenHolderBalances.balance} AS NUMERIC)`))
+			.limit(1);
+
+		if (topHolder) {
+			const pct = Number((BigInt(topHolder.balance) * 100n) / totalSupply);
+			topHolderPctMap.set(addr, pct);
+		}
+	}
+
 	// 4. Build upsert rows: token list + FORJA tokens not in list
 	const now = new Date();
 	const rows: (typeof schema.tokenHubCache.$inferInsert)[] = [];
@@ -82,6 +102,7 @@ export async function syncTokenList(): Promise<{ synced: number }> {
 			creatorAddress: forjaToken?.creatorAddress?.toLowerCase() ?? null,
 			holderCount: holderMap.get(addr) ?? 0,
 			transferCount: transferMap.get(addr) ?? 0,
+			topHolderPct: topHolderPctMap.get(addr) ?? 0,
 			logoUri: t.logoURI ?? null,
 			isForjaCreated: isForja,
 			lastSyncedAt: now,
@@ -104,6 +125,7 @@ export async function syncTokenList(): Promise<{ synced: number }> {
 			creatorAddress: ft.creatorAddress.toLowerCase(),
 			holderCount: holderMap.get(addr) ?? 0,
 			transferCount: transferMap.get(addr) ?? 0,
+			topHolderPct: topHolderPctMap.get(addr) ?? 0,
 			logoUri: null,
 			isForjaCreated: true,
 			lastSyncedAt: now,
@@ -128,6 +150,7 @@ export async function syncTokenList(): Promise<{ synced: number }> {
 					creatorAddress: sql`EXCLUDED.creator_address`,
 					holderCount: sql`EXCLUDED.holder_count`,
 					transferCount: sql`EXCLUDED.transfer_count`,
+					topHolderPct: sql`EXCLUDED.top_holder_pct`,
 					logoUri: sql`EXCLUDED.logo_uri`,
 					isForjaCreated: sql`EXCLUDED.is_forja_created`,
 					lastSyncedAt: sql`EXCLUDED.last_synced_at`,
