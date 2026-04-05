@@ -1,8 +1,8 @@
 "use client";
 
+import type { TokenHubCache, TokenTransfer } from "@forja/db";
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useState } from "react";
-import type { TokenHubCache, TokenTransfer } from "@forja/db";
 import { getTokenDetail, getTokenHolderDistribution, getTokenTransfers } from "@/actions/token-hub";
 import { PageContainer } from "@/components/layout/page-container";
 import { HolderDistribution } from "@/components/token-hub/holder-distribution";

@@ -1,9 +1,9 @@
 "use client";
 
+import type { TokenHubCache } from "@forja/db";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useState, useTransition } from "react";
-import type { TokenHubCache } from "@forja/db";
+import { useCallback, useEffect, useState, useTransition } from "react";
 import { getTokenHubStats, getTokenList } from "@/actions/token-hub";
 import { PageContainer } from "@/components/layout/page-container";
 import { TokenFilters } from "@/components/token-hub/token-filters";
@@ -15,30 +15,36 @@ type SortOption = "newest" | "oldest" | "holders" | "transfers";
 
 const LIMIT = 20;
 const formatter = new Intl.NumberFormat("en-US");
+const VALID_SORTS = new Set<string>(["newest", "oldest", "holders", "transfers"]);
+
+function parseSortParam(value: string | null): SortOption {
+	return VALID_SORTS.has(value ?? "") ? (value as SortOption) : "newest";
+}
 
 interface TokensPageClientProps {
 	initialData: { tokens: TokenHubCache[]; total: number };
 	initialStats: { totalTokens: number; forjaTokens: number; totalHolders: number };
-	initialSearch: string;
-	initialSort: SortOption;
-	initialForjaOnly: boolean;
 }
 
-export function TokensPageClient({
-	initialData,
-	initialStats,
-	initialSearch,
-	initialSort,
-	initialForjaOnly,
-}: TokensPageClientProps) {
+export function TokensPageClient({ initialData, initialStats }: TokensPageClientProps) {
 	const router = useRouter();
-	const currentParams = useSearchParams();
+	const searchParams = useSearchParams();
 	const [, startTransition] = useTransition();
 
-	const [search, setSearch] = useState(initialSearch);
-	const [sort, setSort] = useState<SortOption>(initialSort);
-	const [forjaOnly, setForjaOnly] = useState(initialForjaOnly);
+	// URL is source of truth for sort and forjaOnly
+	const sort = parseSortParam(searchParams.get("sort"));
+	const forjaOnly = searchParams.get("forja") === "1";
+	const urlSearch = searchParams.get("q") ?? "";
+
+	// Search: local state for input responsiveness, synced with URL
+	const [search, setSearch] = useState(urlSearch);
 	const [page, setPage] = useState(1);
+
+	// Sync search from URL on external navigation (back/forward)
+	useEffect(() => {
+		setSearch(urlSearch);
+		setPage(1);
+	}, [urlSearch]);
 
 	const updateUrl = useCallback(
 		(newSearch: string, newSort: SortOption, newForjaOnly: boolean) => {
@@ -79,7 +85,6 @@ export function TokensPageClient({
 
 	const handleSortChange = useCallback(
 		(value: SortOption) => {
-			setSort(value);
 			setPage(1);
 			updateUrl(search, value, forjaOnly);
 		},
@@ -88,7 +93,6 @@ export function TokensPageClient({
 
 	const handleForjaOnlyChange = useCallback(
 		(value: boolean) => {
-			setForjaOnly(value);
 			setPage(1);
 			updateUrl(search, sort, value);
 		},
