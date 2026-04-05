@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowDownIcon, ArrowUpIcon, CoinsIcon, UsersIcon } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import type { TokenWithStats } from "@/actions/dashboard";
 
@@ -42,7 +43,14 @@ export function MyTokens({ tokens, onSelectToken }: MyTokensProps) {
 							<p className="text-xs text-smoke-dark">{token.symbol}</p>
 						</div>
 						{token.logoUri && (
-							<img src={token.logoUri} alt={token.symbol} className="size-8 rounded-full" />
+							<Image
+								src={token.logoUri}
+								alt={token.symbol}
+								width={32}
+								height={32}
+								className="rounded-full"
+								unoptimized
+							/>
 						)}
 					</div>
 

@@ -65,12 +65,9 @@ export async function aggregateAnalytics() {
 			const [transferResult] = await db
 				.select({
 					transferCount: count(),
-					transferVolume:
-						sql<string>`COALESCE(SUM(CAST(${schema.tokenTransfers.amount} AS NUMERIC)), 0)::TEXT`,
-					uniqueSenders:
-						sql<number>`COUNT(DISTINCT ${schema.tokenTransfers.fromAddress})`,
-					uniqueReceivers:
-						sql<number>`COUNT(DISTINCT ${schema.tokenTransfers.toAddress})`,
+					transferVolume: sql<string>`COALESCE(SUM(CAST(${schema.tokenTransfers.amount} AS NUMERIC)), 0)::TEXT`,
+					uniqueSenders: sql<number>`COUNT(DISTINCT ${schema.tokenTransfers.fromAddress})`,
+					uniqueReceivers: sql<number>`COUNT(DISTINCT ${schema.tokenTransfers.toAddress})`,
 				})
 				.from(schema.tokenTransfers)
 				.where(dayCondition);

@@ -4,8 +4,12 @@ import { useQuery } from "@tanstack/react-query";
 import { WalletIcon } from "lucide-react";
 import { useState } from "react";
 import { useAccount } from "wagmi";
-import { getDashboardOverview, getCreatorTokensWithStats, getUnlockCalendar } from "@/actions/dashboard";
-import { getCreatorMultisends, getCreatorLocks } from "@/actions/token-hub";
+import {
+	getCreatorTokensWithStats,
+	getDashboardOverview,
+	getUnlockCalendar,
+} from "@/actions/dashboard";
+import { getCreatorLocks, getCreatorMultisends } from "@/actions/token-hub";
 import { ConnectButton } from "@/components/layout/connect-button";
 import { PageContainer } from "@/components/layout/page-container";
 import { PageHeader } from "@/components/ui/page-header";
@@ -28,35 +32,35 @@ export function DashboardClient() {
 
 	const { data: overview, isLoading: overviewLoading } = useQuery({
 		queryKey: ["dashboard-overview", address],
-		queryFn: () => getDashboardOverview(address!),
+		queryFn: () => getDashboardOverview(address as string),
 		enabled: isConnected && !!address,
 		staleTime: 60_000,
 	});
 
 	const { data: tokens = [], isLoading: tokensLoading } = useQuery({
 		queryKey: ["creator-tokens-stats", address],
-		queryFn: () => getCreatorTokensWithStats(address!),
+		queryFn: () => getCreatorTokensWithStats(address as string),
 		enabled: isConnected && !!address,
 		staleTime: 60_000,
 	});
 
 	const { data: multisends = [] } = useQuery({
 		queryKey: ["dashboard-multisends", address],
-		queryFn: () => getCreatorMultisends(address!),
+		queryFn: () => getCreatorMultisends(address as string),
 		enabled: isConnected && !!address,
 		staleTime: 60_000,
 	});
 
 	const { data: locks = [] } = useQuery({
 		queryKey: ["dashboard-locks", address],
-		queryFn: () => getCreatorLocks(address!),
+		queryFn: () => getCreatorLocks(address as string),
 		enabled: isConnected && !!address,
 		staleTime: 60_000,
 	});
 
 	const { data: unlockEvents = [] } = useQuery({
 		queryKey: ["unlock-calendar", address],
-		queryFn: () => getUnlockCalendar(address!),
+		queryFn: () => getUnlockCalendar(address as string),
 		enabled: isConnected && !!address,
 		staleTime: 60_000,
 	});
@@ -67,7 +71,9 @@ export function DashboardClient() {
 				<div className="flex min-h-[60vh] flex-col items-center justify-center gap-4">
 					<WalletIcon className="size-12 text-smoke-dark" />
 					<h2 className="text-xl font-semibold text-steel-white">Connect Your Wallet</h2>
-					<p className="text-sm text-smoke-dark">Connect your wallet to view your creator dashboard</p>
+					<p className="text-sm text-smoke-dark">
+						Connect your wallet to view your creator dashboard
+					</p>
 					<ConnectButton />
 				</div>
 			</PageContainer>
@@ -108,10 +114,16 @@ export function DashboardClient() {
 
 				<Tabs defaultValue="tokens">
 					<TabsList className="border-b border-anvil-gray-light bg-transparent">
-						<TabsTrigger value="tokens" className="text-smoke data-[state=active]:text-molten-amber">
+						<TabsTrigger
+							value="tokens"
+							className="text-smoke data-[state=active]:text-molten-amber"
+						>
 							My Tokens ({tokens.length})
 						</TabsTrigger>
-						<TabsTrigger value="multisends" className="text-smoke data-[state=active]:text-molten-amber">
+						<TabsTrigger
+							value="multisends"
+							className="text-smoke data-[state=active]:text-molten-amber"
+						>
 							Multisends ({multisends.length})
 						</TabsTrigger>
 						<TabsTrigger value="locks" className="text-smoke data-[state=active]:text-molten-amber">

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { validateApiAuth } from "@/lib/api-auth";
 import { aggregateAnalytics } from "@/lib/analytics-aggregator";
+import { validateApiAuth } from "@/lib/api-auth";
 
 export async function POST(request: Request) {
 	const authError = validateApiAuth(request);
@@ -16,7 +16,10 @@ export async function POST(request: Request) {
 	} catch (err) {
 		console.error("[analytics-aggregate] Failed:", err);
 		return NextResponse.json(
-			{ error: "Analytics aggregation failed", message: err instanceof Error ? err.message : "Unknown error" },
+			{
+				error: "Analytics aggregation failed",
+				message: err instanceof Error ? err.message : "Unknown error",
+			},
 			{ status: 500 },
 		);
 	}

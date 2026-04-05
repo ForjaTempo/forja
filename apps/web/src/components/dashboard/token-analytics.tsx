@@ -5,8 +5,14 @@ import { ArrowLeftIcon } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useState } from "react";
 import { getTokenAnalytics } from "@/actions/dashboard";
-import { ChartWrapper, CHART_TOOLTIP_STYLE } from "@/components/dashboard/chart-wrapper";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { CHART_TOOLTIP_STYLE, ChartWrapper } from "@/components/dashboard/chart-wrapper";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
 import { formatDate } from "@/lib/format";
 
 const AreaChart = dynamic(() => import("recharts").then((m) => m.AreaChart), { ssr: false });
@@ -17,9 +23,13 @@ const Bar = dynamic(() => import("recharts").then((m) => m.Bar), { ssr: false })
 const Line = dynamic(() => import("recharts").then((m) => m.Line), { ssr: false });
 const XAxis = dynamic(() => import("recharts").then((m) => m.XAxis), { ssr: false });
 const YAxis = dynamic(() => import("recharts").then((m) => m.YAxis), { ssr: false });
-const CartesianGrid = dynamic(() => import("recharts").then((m) => m.CartesianGrid), { ssr: false });
+const CartesianGrid = dynamic(() => import("recharts").then((m) => m.CartesianGrid), {
+	ssr: false,
+});
 const Tooltip = dynamic(() => import("recharts").then((m) => m.Tooltip), { ssr: false });
-const ResponsiveContainer = dynamic(() => import("recharts").then((m) => m.ResponsiveContainer), { ssr: false });
+const ResponsiveContainer = dynamic(() => import("recharts").then((m) => m.ResponsiveContainer), {
+	ssr: false,
+});
 
 const formatter = new Intl.NumberFormat("en-US");
 
@@ -32,7 +42,12 @@ interface TokenAnalyticsProps {
 	onBack: () => void;
 }
 
-export function TokenAnalytics({ tokenAddress, tokenName, tokenSymbol, onBack }: TokenAnalyticsProps) {
+export function TokenAnalytics({
+	tokenAddress,
+	tokenName,
+	tokenSymbol,
+	onBack,
+}: TokenAnalyticsProps) {
 	const [range, setRange] = useState<TimeRange>("7d");
 
 	const { data: stats = [], isLoading } = useQuery({
@@ -50,9 +65,12 @@ export function TokenAnalytics({ tokenAddress, tokenName, tokenSymbol, onBack }:
 		receivers: s.uniqueReceivers,
 	}));
 
-	const currentHolders = stats.length > 0 ? stats[stats.length - 1].holderCount : 0;
-	const firstHolders = stats.length > 0 ? stats[0].holderCount : 0;
-	const holderChange = firstHolders > 0 ? (((currentHolders - firstHolders) / firstHolders) * 100).toFixed(1) : "0";
+	const lastStat = stats.length > 0 ? stats[stats.length - 1] : undefined;
+	const firstStat = stats.length > 0 ? stats[0] : undefined;
+	const currentHolders = lastStat?.holderCount ?? 0;
+	const firstHolders = firstStat?.holderCount ?? 0;
+	const holderChange =
+		firstHolders > 0 ? (((currentHolders - firstHolders) / firstHolders) * 100).toFixed(1) : "0";
 	const totalTransfers = stats.reduce((sum, s) => sum + s.transferCount, 0);
 	const totalVolume = stats.reduce((sum, s) => sum + BigInt(s.transferVolume), 0n);
 
@@ -86,7 +104,10 @@ export function TokenAnalytics({ tokenAddress, tokenName, tokenSymbol, onBack }:
 
 			<div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
 				<StatCard label="Current Holders" value={formatter.format(currentHolders)} />
-				<StatCard label={`${range} Change`} value={`${Number(holderChange) >= 0 ? "+" : ""}${holderChange}%`} />
+				<StatCard
+					label={`${range} Change`}
+					value={`${Number(holderChange) >= 0 ? "+" : ""}${holderChange}%`}
+				/>
 				<StatCard label="Total Transfers" value={formatter.format(totalTransfers)} />
 				<StatCard label="Total Volume" value={formatter.format(Number(totalVolume / 10n ** 6n))} />
 			</div>
@@ -105,7 +126,12 @@ export function TokenAnalytics({ tokenAddress, tokenName, tokenSymbol, onBack }:
 							<XAxis dataKey="date" tick={{ fill: "#6B7280", fontSize: 11 }} />
 							<YAxis tick={{ fill: "#6B7280", fontSize: 11 }} />
 							<Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
-							<Area type="monotone" dataKey="holders" stroke="#E8A317" fill="url(#holderGradient)" />
+							<Area
+								type="monotone"
+								dataKey="holders"
+								stroke="#E8A317"
+								fill="url(#holderGradient)"
+							/>
 						</AreaChart>
 					</ResponsiveContainer>
 				</ChartWrapper>
@@ -130,7 +156,13 @@ export function TokenAnalytics({ tokenAddress, tokenName, tokenSymbol, onBack }:
 							<YAxis tick={{ fill: "#6B7280", fontSize: 11 }} />
 							<Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
 							<Line type="monotone" dataKey="senders" stroke="#6B7280" name="Senders" dot={false} />
-							<Line type="monotone" dataKey="receivers" stroke="#E8A317" name="Receivers" dot={false} />
+							<Line
+								type="monotone"
+								dataKey="receivers"
+								stroke="#E8A317"
+								name="Receivers"
+								dot={false}
+							/>
 						</LineChart>
 					</ResponsiveContainer>
 				</ChartWrapper>

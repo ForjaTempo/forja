@@ -17,9 +17,17 @@ export function DashboardOverview({ overview }: DashboardOverviewProps) {
 
 	const stats = [
 		{ icon: CoinsIcon, label: "Tokens Created", value: formatter.format(overview.tokensCreated) },
-		{ icon: UsersIcon, label: "Recipients Reached", value: formatter.format(overview.totalRecipients) },
+		{
+			icon: UsersIcon,
+			label: "Recipients Reached",
+			value: formatter.format(overview.totalRecipients),
+		},
 		{ icon: ShieldIcon, label: "Value Locked", value: tvlDisplay },
-		{ icon: DollarSignIcon, label: "Fees Paid (USDC)", value: formatter.format(overview.totalFeesPaid) },
+		{
+			icon: DollarSignIcon,
+			label: "Fees Paid (USDC)",
+			value: formatter.format(overview.totalFeesPaid),
+		},
 	];
 
 	const actions = [

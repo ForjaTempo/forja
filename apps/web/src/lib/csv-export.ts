@@ -1,7 +1,10 @@
 export function exportToCsv(data: Record<string, unknown>[], filename: string): void {
 	if (data.length === 0) return;
 
-	const headers = Object.keys(data[0]);
+	const firstRow = data[0];
+	if (!firstRow) return;
+
+	const headers = Object.keys(firstRow);
 	const csvRows = [
 		headers.join(","),
 		...data.map((row) =>

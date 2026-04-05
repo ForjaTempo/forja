@@ -87,9 +87,7 @@ export function LockHistory({ locks }: LockHistoryProps) {
 									<td className="py-2.5 pr-4">
 										<AddressDisplay address={lock.beneficiaryAddress} />
 									</td>
-									<td className="py-2.5 pr-4 font-mono text-xs">
-										{formatSupply(total)}
-									</td>
+									<td className="py-2.5 pr-4 font-mono text-xs">{formatSupply(total)}</td>
 									<td className="py-2.5 pr-4">
 										<div className="flex items-center gap-2">
 											<Progress

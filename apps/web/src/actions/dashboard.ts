@@ -216,9 +216,7 @@ export async function getUnlockCalendar(creatorAddress: string): Promise<UnlockE
 		return activeLocks.map((lock) => {
 			const tokenInfo = tokenMap.get(lock.tokenAddress);
 			const remaining = BigInt(lock.totalAmount) - BigInt(lock.claimedAmount);
-			const cliffEnd = new Date(
-				new Date(lock.startTime).getTime() + lock.cliffDuration * 1000,
-			);
+			const cliffEnd = new Date(new Date(lock.startTime).getTime() + lock.cliffDuration * 1000);
 
 			return {
 				lockId: lock.lockId,
