@@ -1,4 +1,6 @@
+import { formatUnits } from "viem";
 import type { TransactionState } from "@/components/ui/transaction-status";
+import { TIP20_DECIMALS } from "@/lib/constants";
 
 /** Format a unix timestamp (seconds) to a locale date string. */
 export function formatUnixDate(timestamp: number | null): string {
@@ -17,6 +19,36 @@ export function formatDate(date: Date): string {
 		day: "numeric",
 		year: "numeric",
 	});
+}
+
+/** Format a raw token supply (bigint) to a human-readable string. */
+export function formatSupply(raw: bigint): string {
+	const str = formatUnits(raw, TIP20_DECIMALS);
+	const dotIdx = str.indexOf(".");
+	const intPart = dotIdx === -1 ? str : str.slice(0, dotIdx);
+	const decPart = dotIdx === -1 ? "" : str.slice(dotIdx + 1);
+	const n = BigInt(intPart);
+
+	if (n >= 1_000_000_000n) {
+		const whole = n / 1_000_000_000n;
+		const frac = (n % 1_000_000_000n) / 100_000_000n;
+		return `${whole}.${frac}B`;
+	}
+	if (n >= 1_000_000n) {
+		const whole = n / 1_000_000n;
+		const frac = (n % 1_000_000n) / 100_000n;
+		return `${whole}.${frac}M`;
+	}
+	if (n >= 1_000n) {
+		const whole = n / 1_000n;
+		const frac = (n % 1_000n) / 100n;
+		return `${whole}.${frac}K`;
+	}
+
+	if (decPart && decPart !== "0") {
+		return `${intPart}.${decPart.slice(0, 2)}`;
+	}
+	return intPart;
 }
 
 /** Normalize an error to a user-facing message. */

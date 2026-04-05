@@ -123,6 +123,31 @@ export const tokenHolderBalances = pgTable(
 	],
 );
 
+export const tokenHubCache = pgTable(
+	"token_hub_cache",
+	{
+		id: serial("id").primaryKey(),
+		address: text("address").notNull().unique(),
+		name: text("name").notNull(),
+		symbol: text("symbol").notNull(),
+		decimals: integer("decimals").notNull().default(6),
+		totalSupply: text("total_supply"),
+		creatorAddress: text("creator_address"),
+		holderCount: integer("holder_count").notNull().default(0),
+		transferCount: integer("transfer_count").notNull().default(0),
+		topHolderPct: integer("top_holder_pct").notNull().default(0),
+		logoUri: text("logo_uri"),
+		isForjaCreated: boolean("is_forja_created").notNull().default(false),
+		lastSyncedAt: timestamp("last_synced_at", { withTimezone: true }).notNull().defaultNow(),
+		createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+	},
+	(table) => [
+		index("token_hub_cache_symbol_idx").on(table.symbol),
+		index("token_hub_cache_creator_address_idx").on(table.creatorAddress),
+		index("token_hub_cache_is_forja_created_idx").on(table.isForjaCreated),
+	],
+);
+
 export const indexerState = pgTable("indexer_state", {
 	id: serial("id").primaryKey(),
 	contractName: text("contract_name").notNull().unique(),
