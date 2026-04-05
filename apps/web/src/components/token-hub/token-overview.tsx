@@ -89,7 +89,7 @@ export function TokenOverview({ token }: TokenOverviewProps) {
 				<div className="rounded-lg border border-anvil-gray-light bg-obsidian-black/50 p-3">
 					<div className="flex items-center gap-1.5 text-xs text-smoke-dark">
 						<ClockIcon className="size-3" />
-						Created
+						{token.isForjaCreated ? "Created" : "Listed"}
 					</div>
 					<p className="mt-1 text-sm font-semibold text-steel-white">
 						{formatDate(token.createdAt)}

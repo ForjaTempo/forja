@@ -62,7 +62,9 @@ export function TokenCard({ token }: TokenCardProps) {
 						</span>
 					</div>
 
-					<p className="mt-2 text-xs text-smoke-dark">{formatDate(token.createdAt)}</p>
+					<p className="mt-2 text-xs text-smoke-dark">
+						{token.isForjaCreated ? "Created" : "Listed"} {formatDate(token.createdAt)}
+					</p>
 				</CardContent>
 			</Card>
 		</Link>

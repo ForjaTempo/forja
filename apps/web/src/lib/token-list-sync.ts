@@ -85,6 +85,7 @@ export async function syncTokenList(): Promise<{ synced: number }> {
 			logoUri: t.logoURI ?? null,
 			isForjaCreated: isForja,
 			lastSyncedAt: now,
+			createdAt: forjaToken?.createdAt ?? now,
 		});
 	}
 
@@ -106,6 +107,7 @@ export async function syncTokenList(): Promise<{ synced: number }> {
 			logoUri: null,
 			isForjaCreated: true,
 			lastSyncedAt: now,
+			createdAt: ft.createdAt,
 		});
 	}
 

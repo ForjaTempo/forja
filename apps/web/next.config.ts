@@ -10,7 +10,7 @@ const nextConfig: NextConfig = {
 		remotePatterns: [
 			{
 				protocol: "https",
-				hostname: "tokenlist.tempo.xyz",
+				hostname: "esm.sh",
 			},
 		],
 	},

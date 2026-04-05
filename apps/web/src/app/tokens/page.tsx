@@ -18,7 +18,7 @@ export default function TokensPage() {
 	const [search, setSearch] = useState("");
 	const [sort, setSort] = useState<SortOption>("newest");
 	const [forjaOnly, setForjaOnly] = useState(false);
-	const [offset, setOffset] = useState(0);
+	const [page, setPage] = useState(1);
 
 	const { data: stats } = useQuery({
 		queryKey: ["token-hub-stats"],
@@ -27,28 +27,28 @@ export default function TokensPage() {
 	});
 
 	const { data, isLoading } = useQuery({
-		queryKey: ["token-list", search, sort, forjaOnly, offset],
-		queryFn: () => getTokenList({ search, sort, forjaOnly, offset, limit: offset + LIMIT }),
+		queryKey: ["token-list", search, sort, forjaOnly, page],
+		queryFn: () => getTokenList({ search, sort, forjaOnly, offset: 0, limit: page * LIMIT }),
 		staleTime: 30_000,
 	});
 
 	const handleSearchChange = useCallback((value: string) => {
 		setSearch(value);
-		setOffset(0);
+		setPage(1);
 	}, []);
 
 	const handleSortChange = useCallback((value: SortOption) => {
 		setSort(value);
-		setOffset(0);
+		setPage(1);
 	}, []);
 
 	const handleForjaOnlyChange = useCallback((value: boolean) => {
 		setForjaOnly(value);
-		setOffset(0);
+		setPage(1);
 	}, []);
 
 	const handleLoadMore = useCallback(() => {
-		setOffset((prev) => prev + LIMIT);
+		setPage((prev) => prev + 1);
 	}, []);
 
 	const tokens = data?.tokens ?? [];
