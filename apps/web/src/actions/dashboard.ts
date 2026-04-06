@@ -216,6 +216,9 @@ export interface UnlockEvent {
 	remainingAmount: string;
 	endTime: Date;
 	cliffEnd: Date;
+	vestingEnabled: boolean;
+	/** The next meaningful unlock date: cliffEnd if cliff pending, otherwise endTime */
+	nextUnlockDate: Date;
 }
 
 export async function getUnlockCalendar(creatorAddress: string): Promise<UnlockEvent[]> {
@@ -236,6 +239,7 @@ export async function getUnlockCalendar(creatorAddress: string): Promise<UnlockE
 				startTime: schema.locks.startTime,
 				endTime: schema.locks.endTime,
 				cliffDuration: schema.locks.cliffDuration,
+				vestingEnabled: schema.locks.vestingEnabled,
 			})
 			.from(schema.locks)
 			.where(
@@ -267,10 +271,12 @@ export async function getUnlockCalendar(creatorAddress: string): Promise<UnlockE
 
 		const tokenMap = new Map(tokenInfos.map((t) => [t.address, t]));
 
-		return activeLocks.map((lock) => {
+		const events = activeLocks.map((lock) => {
 			const tokenInfo = tokenMap.get(lock.tokenAddress);
 			const remaining = BigInt(lock.totalAmount) - BigInt(lock.claimedAmount);
 			const cliffEnd = new Date(new Date(lock.startTime).getTime() + lock.cliffDuration * 1000);
+			// Next meaningful unlock: if cliff hasn't passed yet, cliffEnd; otherwise endTime
+			const nextUnlockDate = cliffEnd > now ? cliffEnd : lock.endTime;
 
 			return {
 				lockId: lock.lockId,
@@ -281,8 +287,13 @@ export async function getUnlockCalendar(creatorAddress: string): Promise<UnlockE
 				remainingAmount: remaining.toString(),
 				endTime: lock.endTime,
 				cliffEnd,
+				vestingEnabled: lock.vestingEnabled,
+				nextUnlockDate,
 			};
 		});
+
+		// Sort by next unlock date (soonest first)
+		return events.sort((a, b) => a.nextUnlockDate.getTime() - b.nextUnlockDate.getTime());
 	} catch (err) {
 		console.error("[dashboard] getUnlockCalendar failed:", err);
 		return [];

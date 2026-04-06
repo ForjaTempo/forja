@@ -91,7 +91,7 @@ export function LockHistory({ locks }: LockHistoryProps) {
 
 							const total = BigInt(lock.totalAmount);
 
-							// Vesting progress: time-based (mirrors contract _getVestedAmount logic)
+							// Vesting progress: mirrors contract _getVestedAmount logic exactly
 							const now = Date.now();
 							const start = new Date(lock.startTime).getTime();
 							const end = new Date(lock.endTime).getTime();
@@ -99,11 +99,15 @@ export function LockHistory({ locks }: LockHistoryProps) {
 							let progressPct = 0;
 							if (lock.revoked) {
 								progressPct = 0;
-							} else if (now >= end) {
-								progressPct = 100;
 							} else if (now < cliffEnd) {
 								progressPct = 0;
+							} else if (!lock.vestingEnabled) {
+								// All-or-nothing: 0% until endTime, then 100%
+								progressPct = now >= end ? 100 : 0;
+							} else if (now >= end) {
+								progressPct = 100;
 							} else {
+								// Linear vesting from startTime to endTime
 								progressPct = Math.min(100, Math.floor(((now - start) / (end - start)) * 100));
 							}
 

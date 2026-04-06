@@ -28,6 +28,7 @@ export function DashboardClient() {
 		address: string;
 		name: string;
 		symbol: string;
+		decimals: number;
 	} | null>(null);
 
 	const { data: overview, isLoading: overviewLoading } = useQuery({
@@ -87,6 +88,7 @@ export function DashboardClient() {
 					tokenAddress={selectedToken.address}
 					tokenName={selectedToken.name}
 					tokenSymbol={selectedToken.symbol}
+					tokenDecimals={selectedToken.decimals}
 					onBack={() => setSelectedToken(null)}
 				/>
 			</PageContainer>
@@ -148,6 +150,7 @@ export function DashboardClient() {
 											address: addr,
 											name: token.name,
 											symbol: token.symbol,
+											decimals: token.decimals,
 										});
 									}
 								}}

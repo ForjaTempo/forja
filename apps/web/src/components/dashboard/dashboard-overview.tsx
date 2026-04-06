@@ -25,8 +25,8 @@ export function DashboardOverview({ overview }: DashboardOverviewProps) {
 		{ icon: ShieldIcon, label: "Value Locked", value: tvlDisplay },
 		{
 			icon: DollarSignIcon,
-			label: "Fees Paid (USDC)",
-			value: formatter.format(overview.totalFeesPaid),
+			label: "Est. Fees Paid (USDC)",
+			value: `~${formatter.format(overview.totalFeesPaid)}`,
 		},
 	];
 

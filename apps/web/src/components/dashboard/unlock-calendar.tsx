@@ -29,10 +29,14 @@ export function UnlockCalendar({ events }: UnlockCalendarProps) {
 			</h3>
 			<div className="space-y-3">
 				{events.map((event) => {
-					const endTimestamp = BigInt(Math.floor(new Date(event.endTime).getTime() / 1000));
-					const cliffTimestamp = BigInt(Math.floor(new Date(event.cliffEnd).getTime() / 1000));
-					const isCliffPending = cliffTimestamp > now;
-					const timeRemaining = endTimestamp > now ? formatDuration(endTimestamp - now) : "Ended";
+					const nextTimestamp = BigInt(Math.floor(new Date(event.nextUnlockDate).getTime() / 1000));
+					const isCliffPending = new Date(event.cliffEnd) > new Date();
+					const timeRemaining = nextTimestamp > now ? formatDuration(nextTimestamp - now) : "Ready";
+					const eventLabel = isCliffPending
+						? "Cliff ends"
+						: event.vestingEnabled
+							? "Fully vested"
+							: "Unlocks";
 
 					return (
 						<div
@@ -49,6 +53,11 @@ export function UnlockCalendar({ events }: UnlockCalendarProps) {
 												Cliff
 											</span>
 										)}
+										{!event.vestingEnabled && !isCliffPending && (
+											<span className="rounded bg-blue-600/20 px-1.5 py-0.5 text-[10px] text-blue-400">
+												All-or-nothing
+											</span>
+										)}
 									</div>
 									<div className="mt-1 flex items-center gap-3 text-xs text-smoke-dark">
 										<span>
@@ -60,7 +69,9 @@ export function UnlockCalendar({ events }: UnlockCalendarProps) {
 									<p className="font-mono text-sm text-steel-white">
 										{formatSupply(BigInt(event.remainingAmount))}
 									</p>
-									<p className="mt-0.5 text-xs text-smoke-dark">{formatDate(event.endTime)}</p>
+									<p className="mt-0.5 text-xs text-smoke-dark">
+										{eventLabel}: {formatDate(event.nextUnlockDate)}
+									</p>
 								</div>
 							</div>
 							<div className="mt-2 flex items-center gap-1 text-xs text-smoke">

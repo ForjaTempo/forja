@@ -41,6 +41,7 @@ interface TokenAnalyticsProps {
 	tokenAddress: string;
 	tokenName: string;
 	tokenSymbol: string;
+	tokenDecimals: number;
 	onBack: () => void;
 }
 
@@ -48,6 +49,7 @@ export function TokenAnalytics({
 	tokenAddress,
 	tokenName,
 	tokenSymbol,
+	tokenDecimals,
 	onBack,
 }: TokenAnalyticsProps) {
 	const [range, setRange] = useState<TimeRange>("7d");
@@ -64,11 +66,12 @@ export function TokenAnalytics({
 		staleTime: 60_000,
 	});
 
+	const divisor = 10 ** tokenDecimals;
 	const chartData = stats.map((s) => ({
 		date: formatDate(new Date(s.date)),
 		holders: s.holderCount,
 		transfers: s.transferCount,
-		volume: Number(BigInt(s.transferVolume) / 10n ** 6n),
+		volume: Number(BigInt(s.transferVolume)) / divisor,
 	}));
 
 	const lastStat = stats.length > 0 ? stats[stats.length - 1] : undefined;
@@ -116,10 +119,7 @@ export function TokenAnalytics({
 					value={`${Number(holderChange) >= 0 ? "+" : ""}${holderChange}%`}
 				/>
 				<StatCard label="Total Transfers" value={numFormatter.format(totalTransfers)} />
-				<StatCard
-					label="Total Volume"
-					value={numFormatter.format(Number(totalVolume / 10n ** 6n))}
-				/>
+				<StatCard label="Total Volume" value={numFormatter.format(Number(totalVolume) / divisor)} />
 			</div>
 
 			<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
