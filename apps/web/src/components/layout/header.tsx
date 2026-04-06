@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useAccount } from "wagmi";
 import { cn } from "@/lib/utils";
 import { ConnectButton } from "./connect-button";
 import { MobileNav } from "./mobile-nav";
 
-const navLinks = [
+const baseNavLinks = [
 	{ href: "/create", label: "Create" },
 	{ href: "/multisend", label: "Multisend" },
 	{ href: "/lock", label: "Lock" },
@@ -15,6 +16,11 @@ const navLinks = [
 
 export function Header() {
 	const pathname = usePathname();
+	const { isConnected } = useAccount();
+
+	const navLinks = isConnected
+		? [...baseNavLinks, { href: "/dashboard", label: "Dashboard" }]
+		: baseNavLinks;
 
 	return (
 		<header className="sticky top-0 z-50 border-b border-anvil-gray-light bg-forge-black/80 backdrop-blur-md">
@@ -31,7 +37,8 @@ export function Header() {
 								href={link.href}
 								className={cn(
 									"rounded-md px-3 py-2 text-sm font-medium transition-colors",
-									pathname === link.href
+									pathname === link.href ||
+										(link.href === "/dashboard" && pathname.startsWith("/dashboard"))
 										? "bg-anvil-gray-light text-molten-amber"
 										: "text-smoke hover:text-steel-white",
 								)}

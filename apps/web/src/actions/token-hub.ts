@@ -165,7 +165,7 @@ export async function getTokenHolderDistribution(address: string) {
 			.from(schema.tokenHolderBalances)
 			.where(eq(schema.tokenHolderBalances.tokenAddress, addr))
 			.orderBy(desc(sql`CAST(${schema.tokenHolderBalances.balance} AS NUMERIC)`))
-			.limit(10);
+			.limit(20);
 
 		return holders.map((h) => {
 			const balance = BigInt(h.balance);

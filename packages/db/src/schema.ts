@@ -148,6 +148,26 @@ export const tokenHubCache = pgTable(
 	],
 );
 
+export const tokenDailyStats = pgTable(
+	"token_daily_stats",
+	{
+		id: serial("id").primaryKey(),
+		tokenAddress: text("token_address").notNull(),
+		date: timestamp("date", { withTimezone: true }).notNull(),
+		holderCount: integer("holder_count").notNull().default(0),
+		transferCount: integer("transfer_count").notNull().default(0),
+		transferVolume: text("transfer_volume").notNull().default("0"),
+		uniqueSenders: integer("unique_senders").notNull().default(0),
+		uniqueReceivers: integer("unique_receivers").notNull().default(0),
+		createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+	},
+	(table) => [
+		unique("token_daily_stats_token_date_idx").on(table.tokenAddress, table.date),
+		index("token_daily_stats_token_address_idx").on(table.tokenAddress),
+		index("token_daily_stats_date_idx").on(table.date),
+	],
+);
+
 export const indexerState = pgTable("indexer_state", {
 	id: serial("id").primaryKey(),
 	contractName: text("contract_name").notNull().unique(),
