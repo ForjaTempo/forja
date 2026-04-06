@@ -43,6 +43,8 @@ export async function aggregateAnalytics() {
 		while (current < today) {
 			const dayStart = new Date(current);
 			const dayEnd = new Date(current.getTime() + 86_400_000);
+			// ISO string for raw SQL parameterized queries (Date objects don't serialize correctly in raw sql``)
+			const dayEndIso = dayEnd.toISOString();
 
 			// Compute holder count by replaying all transfers up to end of this day.
 			// A holder is any address whose net received - net sent > 0 as of dayEnd.
@@ -60,13 +62,13 @@ export async function aggregateAnalytics() {
 										CAST(${schema.tokenTransfers.amount} AS NUMERIC) AS amount
 									FROM ${schema.tokenTransfers}
 									WHERE ${schema.tokenTransfers.tokenAddress} = ${token.address}
-										AND ${schema.tokenTransfers.createdAt} < ${dayEnd}
+										AND ${schema.tokenTransfers.createdAt} < ${dayEndIso}::timestamptz
 									UNION ALL
 									SELECT ${schema.tokenTransfers.fromAddress} AS addr,
 										-CAST(${schema.tokenTransfers.amount} AS NUMERIC) AS amount
 									FROM ${schema.tokenTransfers}
 									WHERE ${schema.tokenTransfers.tokenAddress} = ${token.address}
-										AND ${schema.tokenTransfers.createdAt} < ${dayEnd}
+										AND ${schema.tokenTransfers.createdAt} < ${dayEndIso}::timestamptz
 								) AS movements
 								GROUP BY addr
 								HAVING SUM(amount) > 0
