@@ -32,11 +32,16 @@ export function UnlockCalendar({ events }: UnlockCalendarProps) {
 					const nextTimestamp = BigInt(Math.floor(new Date(event.nextUnlockDate).getTime() / 1000));
 					const isCliffPending = new Date(event.cliffEnd) > new Date();
 					const timeRemaining = nextTimestamp > now ? formatDuration(nextTimestamp - now) : "Ready";
-					const eventLabel = isCliffPending
-						? "Cliff ends"
-						: event.vestingEnabled
-							? "Fully vested"
-							: "Unlocks";
+					// Label reflects the next meaningful event:
+					// - vesting + cliff pending → "Cliff ends" (vesting starts)
+					// - vesting + cliff passed → "Fully vested"
+					// - all-or-nothing → always "Unlocks" (cliff is not an unlock moment)
+					const eventLabel =
+						event.vestingEnabled && isCliffPending
+							? "Cliff ends"
+							: event.vestingEnabled
+								? "Fully vested"
+								: "Unlocks";
 
 					return (
 						<div
@@ -48,12 +53,12 @@ export function UnlockCalendar({ events }: UnlockCalendarProps) {
 									<div className="flex items-center gap-2">
 										<span className="font-medium text-steel-white">{event.tokenName}</span>
 										<span className="text-xs text-smoke-dark">{event.tokenSymbol}</span>
-										{isCliffPending && (
+										{event.vestingEnabled && isCliffPending && (
 											<span className="rounded bg-yellow-600/20 px-1.5 py-0.5 text-[10px] text-yellow-500">
 												Cliff
 											</span>
 										)}
-										{!event.vestingEnabled && !isCliffPending && (
+										{!event.vestingEnabled && (
 											<span className="rounded bg-blue-600/20 px-1.5 py-0.5 text-[10px] text-blue-400">
 												All-or-nothing
 											</span>

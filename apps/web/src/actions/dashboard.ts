@@ -275,8 +275,11 @@ export async function getUnlockCalendar(creatorAddress: string): Promise<UnlockE
 			const tokenInfo = tokenMap.get(lock.tokenAddress);
 			const remaining = BigInt(lock.totalAmount) - BigInt(lock.claimedAmount);
 			const cliffEnd = new Date(new Date(lock.startTime).getTime() + lock.cliffDuration * 1000);
-			// Next meaningful unlock: if cliff hasn't passed yet, cliffEnd; otherwise endTime
-			const nextUnlockDate = cliffEnd > now ? cliffEnd : lock.endTime;
+			// Next meaningful unlock date:
+			// - vestingEnabled=true + cliff pending → cliffEnd (vesting starts after cliff)
+			// - vestingEnabled=false → always endTime (all-or-nothing, cliff is not an unlock moment)
+			// - cliff already passed → endTime
+			const nextUnlockDate = lock.vestingEnabled && cliffEnd > now ? cliffEnd : lock.endTime;
 
 			return {
 				lockId: lock.lockId,
