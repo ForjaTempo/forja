@@ -1,8 +1,7 @@
 "use server";
 import { getDb, schema } from "@forja/db";
-import { and, asc, desc, eq, gt, gte, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, gt, gte, sql } from "drizzle-orm";
 import { isAddress } from "viem";
-import { getCreatorProfile } from "@/actions/token-hub";
 import { FEES } from "@/lib/constants";
 
 export interface DashboardOverviewData {
@@ -14,25 +13,69 @@ export interface DashboardOverviewData {
 	lockCount: number;
 }
 
+/**
+ * Get dashboard overview stats for a wallet address.
+ * Works for any address that has created tokens, sent multisends, or created locks.
+ * Fee calculation uses current contract fee rates — accurate as long as fees haven't changed.
+ */
 export async function getDashboardOverview(address: string): Promise<DashboardOverviewData | null> {
 	if (!isAddress(address)) return null;
 
 	try {
-		const profile = await getCreatorProfile(address);
-		if (!profile) return null;
+		const db = getDb();
+		const addr = address.toLowerCase();
 
+		const [[tokenResult], [multisendResult], [lockResult], [recipientResult], [tvlResult]] =
+			await Promise.all([
+				db
+					.select({ value: count() })
+					.from(schema.tokens)
+					.where(eq(schema.tokens.creatorAddress, addr)),
+				db
+					.select({ value: count() })
+					.from(schema.multisends)
+					.where(eq(schema.multisends.senderAddress, addr)),
+				db
+					.select({ value: count() })
+					.from(schema.locks)
+					.where(eq(schema.locks.creatorAddress, addr)),
+				db
+					.select({
+						value: sql<number>`COALESCE(SUM(${schema.multisends.recipientCount}), 0)`,
+					})
+					.from(schema.multisends)
+					.where(eq(schema.multisends.senderAddress, addr)),
+				db
+					.select({
+						value: sql<string>`COALESCE(SUM(CAST(${schema.locks.totalAmount} AS NUMERIC) - CAST(${schema.locks.claimedAmount} AS NUMERIC)), 0)`,
+					})
+					.from(schema.locks)
+					.where(eq(schema.locks.creatorAddress, addr)),
+			]);
+
+		const tokensCreated = tokenResult?.value ?? 0;
+		const multisendCount = multisendResult?.value ?? 0;
+		const lockCount = lockResult?.value ?? 0;
+
+		// No activity at all
+		if (tokensCreated === 0 && multisendCount === 0 && lockCount === 0) {
+			return null;
+		}
+
+		// Fee calculation uses current contract rates.
+		// FORJA contract fees are immutable, so this is accurate for all historical actions.
 		const feesPaid =
-			profile.tokensCreated * FEES.tokenCreate +
-			profile.multisendCount * FEES.multisend +
-			profile.lockCount * FEES.tokenLock;
+			tokensCreated * FEES.tokenCreate +
+			multisendCount * FEES.multisend +
+			lockCount * FEES.tokenLock;
 
 		return {
-			tokensCreated: profile.tokensCreated,
-			totalRecipients: profile.totalRecipients,
-			totalValueLocked: profile.totalValueLocked,
+			tokensCreated,
+			totalRecipients: Number(recipientResult?.value ?? 0),
+			totalValueLocked: tvlResult?.value ?? "0",
 			totalFeesPaid: feesPaid,
-			multisendCount: profile.multisendCount,
-			lockCount: profile.lockCount,
+			multisendCount,
+			lockCount,
 		};
 	} catch (err) {
 		console.error("[dashboard] getDashboardOverview failed:", err);
@@ -40,9 +83,19 @@ export async function getDashboardOverview(address: string): Promise<DashboardOv
 	}
 }
 
-export async function getTokenAnalytics(tokenAddress: string, range: "7d" | "30d" | "90d") {
+export async function getTokenAnalytics(tokenAddress: string, range: "7d" | "30d" | "90d" | "all") {
 	try {
 		const db = getDb();
+		const addr = tokenAddress.toLowerCase();
+
+		if (range === "all") {
+			return await db
+				.select()
+				.from(schema.tokenDailyStats)
+				.where(eq(schema.tokenDailyStats.tokenAddress, addr))
+				.orderBy(asc(schema.tokenDailyStats.date));
+		}
+
 		const days = range === "7d" ? 7 : range === "30d" ? 30 : 90;
 		const cutoff = new Date();
 		cutoff.setDate(cutoff.getDate() - days);
@@ -53,7 +106,7 @@ export async function getTokenAnalytics(tokenAddress: string, range: "7d" | "30d
 			.from(schema.tokenDailyStats)
 			.where(
 				and(
-					eq(schema.tokenDailyStats.tokenAddress, tokenAddress.toLowerCase()),
+					eq(schema.tokenDailyStats.tokenAddress, addr),
 					gte(schema.tokenDailyStats.date, cutoff),
 				),
 			)

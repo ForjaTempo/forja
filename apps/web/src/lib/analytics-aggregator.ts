@@ -38,24 +38,44 @@ export async function aggregateAnalytics() {
 
 		if (startDate >= today) continue;
 
-		// Get current holder count (snapshot — same for all backfill days)
-		const [holderResult] = await db
-			.select({ value: count() })
-			.from(schema.tokenHolderBalances)
-			.where(
-				and(
-					eq(schema.tokenHolderBalances.tokenAddress, token.address),
-					sql`CAST(${schema.tokenHolderBalances.balance} AS NUMERIC) > 0`,
-				),
-			);
-		const currentHolderCount = holderResult?.value ?? 0;
-
 		// Aggregate each missing day
 		const current = new Date(startDate);
 		while (current < today) {
 			const dayStart = new Date(current);
 			const dayEnd = new Date(current.getTime() + 86_400_000);
 
+			// Compute holder count by replaying all transfers up to end of this day.
+			// A holder is any address whose net received - net sent > 0 as of dayEnd.
+			// We also count the initial supply recipient (creator gets minted tokens).
+			const [holderResult] = await db.select({ value: count() }).from(
+				db
+					.select({
+						addr: sql<string>`addr`.as("addr"),
+						netBalance: sql<string>`net_balance`.as("net_balance"),
+					})
+					.from(
+						sql`(
+								SELECT addr, SUM(amount) AS net_balance FROM (
+									SELECT ${schema.tokenTransfers.toAddress} AS addr,
+										CAST(${schema.tokenTransfers.amount} AS NUMERIC) AS amount
+									FROM ${schema.tokenTransfers}
+									WHERE ${schema.tokenTransfers.tokenAddress} = ${token.address}
+										AND ${schema.tokenTransfers.createdAt} < ${dayEnd}
+									UNION ALL
+									SELECT ${schema.tokenTransfers.fromAddress} AS addr,
+										-CAST(${schema.tokenTransfers.amount} AS NUMERIC) AS amount
+									FROM ${schema.tokenTransfers}
+									WHERE ${schema.tokenTransfers.tokenAddress} = ${token.address}
+										AND ${schema.tokenTransfers.createdAt} < ${dayEnd}
+								) AS movements
+								GROUP BY addr
+								HAVING SUM(amount) > 0
+							) AS holders`,
+					)
+					.as("holder_count_sq"),
+			);
+
+			// Transfer stats for this specific day
 			const dayCondition = and(
 				eq(schema.tokenTransfers.tokenAddress, token.address),
 				gte(schema.tokenTransfers.createdAt, dayStart),
@@ -72,12 +92,14 @@ export async function aggregateAnalytics() {
 				.from(schema.tokenTransfers)
 				.where(dayCondition);
 
+			const holderCount = holderResult?.value ?? 0;
+
 			await db
 				.insert(schema.tokenDailyStats)
 				.values({
 					tokenAddress: token.address,
 					date: dayStart,
-					holderCount: currentHolderCount,
+					holderCount,
 					transferCount: transferResult?.transferCount ?? 0,
 					transferVolume: transferResult?.transferVolume ?? "0",
 					uniqueSenders: Number(transferResult?.uniqueSenders ?? 0),
@@ -86,7 +108,7 @@ export async function aggregateAnalytics() {
 				.onConflictDoUpdate({
 					target: [schema.tokenDailyStats.tokenAddress, schema.tokenDailyStats.date],
 					set: {
-						holderCount: currentHolderCount,
+						holderCount,
 						transferCount: transferResult?.transferCount ?? 0,
 						transferVolume: transferResult?.transferVolume ?? "0",
 						uniqueSenders: Number(transferResult?.uniqueSenders ?? 0),

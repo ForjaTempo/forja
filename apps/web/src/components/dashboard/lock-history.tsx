@@ -7,6 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { useExplorerUrl } from "@/hooks/use-explorer-url";
 import { exportToCsv } from "@/lib/csv-export";
 import { formatDate, formatSupply } from "@/lib/format";
+import { formatDuration } from "@/lib/lock-utils";
 
 interface LockHistoryProps {
 	locks: Lock[];
@@ -25,16 +26,27 @@ export function LockHistory({ locks }: LockHistoryProps) {
 
 	function handleExport() {
 		exportToCsv(
-			locks.map((lock) => ({
-				lockId: lock.lockId,
-				token: lock.tokenAddress,
-				beneficiary: lock.beneficiaryAddress,
-				totalAmount: lock.totalAmount,
-				claimedAmount: lock.claimedAmount,
-				status: lock.revoked ? "Revoked" : new Date(lock.endTime) < new Date() ? "Ended" : "Active",
-				endDate: formatDate(lock.endTime),
-				txHash: lock.txHash,
-			})),
+			locks.map((lock) => {
+				const durationSec = Math.floor(
+					(new Date(lock.endTime).getTime() - new Date(lock.startTime).getTime()) / 1000,
+				);
+				return {
+					lockId: lock.lockId,
+					token: lock.tokenAddress,
+					beneficiary: lock.beneficiaryAddress,
+					totalAmount: lock.totalAmount,
+					claimedAmount: lock.claimedAmount,
+					cliff: lock.cliffDuration > 0 ? formatDuration(BigInt(lock.cliffDuration)) : "None",
+					duration: formatDuration(BigInt(durationSec)),
+					status: lock.revoked
+						? "Revoked"
+						: new Date(lock.endTime) < new Date()
+							? "Ended"
+							: "Active",
+					endDate: formatDate(lock.endTime),
+					txHash: lock.txHash,
+				};
+			}),
 			"forja-locks",
 		);
 	}
@@ -58,6 +70,8 @@ export function LockHistory({ locks }: LockHistoryProps) {
 							<th className="pb-2 pr-4 font-medium">Token</th>
 							<th className="pb-2 pr-4 font-medium">Beneficiary</th>
 							<th className="pb-2 pr-4 font-medium">Amount</th>
+							<th className="pb-2 pr-4 font-medium">Cliff</th>
+							<th className="pb-2 pr-4 font-medium">Duration</th>
 							<th className="pb-2 pr-4 font-medium">Progress</th>
 							<th className="pb-2 pr-4 font-medium">Status</th>
 							<th className="pb-2 pr-4 font-medium">End Date</th>
@@ -79,6 +93,10 @@ export function LockHistory({ locks }: LockHistoryProps) {
 							const claimed = BigInt(lock.claimedAmount);
 							const progressPct = total > 0n ? Number((claimed * 100n) / total) : 0;
 
+							const durationSec = Math.floor(
+								(new Date(lock.endTime).getTime() - new Date(lock.startTime).getTime()) / 1000,
+							);
+
 							return (
 								<tr key={lock.txHash} className="text-smoke">
 									<td className="py-2.5 pr-4">
@@ -88,6 +106,12 @@ export function LockHistory({ locks }: LockHistoryProps) {
 										<AddressDisplay address={lock.beneficiaryAddress} />
 									</td>
 									<td className="py-2.5 pr-4 font-mono text-xs">{formatSupply(total)}</td>
+									<td className="py-2.5 pr-4 text-xs text-smoke-dark">
+										{lock.cliffDuration > 0 ? formatDuration(BigInt(lock.cliffDuration)) : "None"}
+									</td>
+									<td className="py-2.5 pr-4 text-xs text-smoke-dark">
+										{formatDuration(BigInt(durationSec))}
+									</td>
 									<td className="py-2.5 pr-4">
 										<div className="flex items-center gap-2">
 											<Progress

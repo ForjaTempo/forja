@@ -5,7 +5,9 @@ import { ArrowLeftIcon } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useState } from "react";
 import { getTokenAnalytics } from "@/actions/dashboard";
+import { getTokenHolderDistribution } from "@/actions/token-hub";
 import { CHART_TOOLTIP_STYLE, ChartWrapper } from "@/components/dashboard/chart-wrapper";
+import { AddressDisplay } from "@/components/ui/address-display";
 import {
 	Select,
 	SelectContent,
@@ -13,7 +15,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-import { formatDate } from "@/lib/format";
+import { formatDate, formatSupply } from "@/lib/format";
 
 const AreaChart = dynamic(() => import("recharts").then((m) => m.AreaChart), { ssr: false });
 const BarChart = dynamic(() => import("recharts").then((m) => m.BarChart), { ssr: false });
@@ -31,9 +33,9 @@ const ResponsiveContainer = dynamic(() => import("recharts").then((m) => m.Respo
 	ssr: false,
 });
 
-const formatter = new Intl.NumberFormat("en-US");
+const numFormatter = new Intl.NumberFormat("en-US");
 
-type TimeRange = "7d" | "30d" | "90d";
+type TimeRange = "7d" | "30d" | "90d" | "all";
 
 interface TokenAnalyticsProps {
 	tokenAddress: string;
@@ -56,13 +58,17 @@ export function TokenAnalytics({
 		staleTime: 60_000,
 	});
 
+	const { data: holders = [] } = useQuery({
+		queryKey: ["token-top-holders", tokenAddress],
+		queryFn: () => getTokenHolderDistribution(tokenAddress),
+		staleTime: 60_000,
+	});
+
 	const chartData = stats.map((s) => ({
 		date: formatDate(new Date(s.date)),
 		holders: s.holderCount,
 		transfers: s.transferCount,
 		volume: Number(BigInt(s.transferVolume) / 10n ** 6n),
-		senders: s.uniqueSenders,
-		receivers: s.uniqueReceivers,
 	}));
 
 	const lastStat = stats.length > 0 ? stats[stats.length - 1] : undefined;
@@ -98,18 +104,22 @@ export function TokenAnalytics({
 						<SelectItem value="7d">7 days</SelectItem>
 						<SelectItem value="30d">30 days</SelectItem>
 						<SelectItem value="90d">90 days</SelectItem>
+						<SelectItem value="all">All</SelectItem>
 					</SelectContent>
 				</Select>
 			</div>
 
 			<div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-				<StatCard label="Current Holders" value={formatter.format(currentHolders)} />
+				<StatCard label="Current Holders" value={numFormatter.format(currentHolders)} />
 				<StatCard
-					label={`${range} Change`}
+					label={`${range === "all" ? "Total" : range} Change`}
 					value={`${Number(holderChange) >= 0 ? "+" : ""}${holderChange}%`}
 				/>
-				<StatCard label="Total Transfers" value={formatter.format(totalTransfers)} />
-				<StatCard label="Total Volume" value={formatter.format(Number(totalVolume / 10n ** 6n))} />
+				<StatCard label="Total Transfers" value={numFormatter.format(totalTransfers)} />
+				<StatCard
+					label="Total Volume"
+					value={numFormatter.format(Number(totalVolume / 10n ** 6n))}
+				/>
 			</div>
 
 			<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -148,25 +158,58 @@ export function TokenAnalytics({
 					</ResponsiveContainer>
 				</ChartWrapper>
 
-				<ChartWrapper title="Daily Activity" loading={isLoading}>
+				<ChartWrapper title="Daily Transfers" loading={isLoading}>
 					<ResponsiveContainer width="100%" height={256}>
 						<LineChart data={chartData}>
 							<CartesianGrid strokeDasharray="3 3" stroke="#333" />
 							<XAxis dataKey="date" tick={{ fill: "#6B7280", fontSize: 11 }} />
 							<YAxis tick={{ fill: "#6B7280", fontSize: 11 }} />
 							<Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
-							<Line type="monotone" dataKey="senders" stroke="#6B7280" name="Senders" dot={false} />
 							<Line
 								type="monotone"
-								dataKey="receivers"
+								dataKey="transfers"
 								stroke="#E8A317"
-								name="Receivers"
+								name="Transfers"
 								dot={false}
 							/>
 						</LineChart>
 					</ResponsiveContainer>
 				</ChartWrapper>
 			</div>
+
+			{holders.length > 0 && (
+				<div className="rounded-lg border border-anvil-gray-light bg-obsidian-black/50 p-4">
+					<h3 className="mb-4 text-sm font-medium text-smoke-dark">Top Holders</h3>
+					<div className="overflow-x-auto">
+						<table className="w-full text-sm">
+							<thead>
+								<tr className="border-b border-anvil-gray-light text-left text-xs text-smoke-dark">
+									<th className="pb-2 pr-4 font-medium">#</th>
+									<th className="pb-2 pr-4 font-medium">Address</th>
+									<th className="pb-2 pr-4 font-medium text-right">Balance</th>
+									<th className="pb-2 font-medium text-right">Share</th>
+								</tr>
+							</thead>
+							<tbody className="divide-y divide-anvil-gray-light/50">
+								{holders.map((h, i) => (
+									<tr key={h.holderAddress} className="text-smoke">
+										<td className="py-2 pr-4 text-xs text-smoke-dark">{i + 1}</td>
+										<td className="py-2 pr-4">
+											<AddressDisplay address={h.holderAddress} />
+										</td>
+										<td className="py-2 pr-4 text-right font-mono text-xs">
+											{formatSupply(BigInt(h.balance))}
+										</td>
+										<td className="py-2 text-right font-mono text-xs">
+											{h.percentage.toFixed(2)}%
+										</td>
+									</tr>
+								))}
+							</tbody>
+						</table>
+					</div>
+				</div>
+			)}
 		</div>
 	);
 }
