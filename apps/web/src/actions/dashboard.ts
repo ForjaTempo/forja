@@ -50,7 +50,7 @@ export async function getDashboardOverview(address: string): Promise<DashboardOv
 						value: sql<string>`COALESCE(SUM(CAST(${schema.locks.totalAmount} AS NUMERIC) - CAST(${schema.locks.claimedAmount} AS NUMERIC)), 0)`,
 					})
 					.from(schema.locks)
-					.where(eq(schema.locks.creatorAddress, addr)),
+					.where(and(eq(schema.locks.creatorAddress, addr), eq(schema.locks.revoked, false))),
 			]);
 
 		const tokensCreated = tokenResult?.value ?? 0;
@@ -63,7 +63,8 @@ export async function getDashboardOverview(address: string): Promise<DashboardOv
 		}
 
 		// Fee calculation uses current contract rates.
-		// FORJA contract fees are immutable, so this is accurate for all historical actions.
+		// Note: contracts have fee setter functions (setCreateFee, setFee), so if fees
+		// have been changed historically, this total is approximate.
 		const feesPaid =
 			tokensCreated * FEES.tokenCreate +
 			multisendCount * FEES.multisend +

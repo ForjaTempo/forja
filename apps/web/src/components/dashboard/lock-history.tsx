@@ -90,12 +90,24 @@ export function LockHistory({ locks }: LockHistoryProps) {
 									: "text-emerald-400";
 
 							const total = BigInt(lock.totalAmount);
-							const claimed = BigInt(lock.claimedAmount);
-							const progressPct = total > 0n ? Number((claimed * 100n) / total) : 0;
 
-							const durationSec = Math.floor(
-								(new Date(lock.endTime).getTime() - new Date(lock.startTime).getTime()) / 1000,
-							);
+							// Vesting progress: time-based (mirrors contract _getVestedAmount logic)
+							const now = Date.now();
+							const start = new Date(lock.startTime).getTime();
+							const end = new Date(lock.endTime).getTime();
+							const cliffEnd = start + lock.cliffDuration * 1000;
+							let progressPct = 0;
+							if (lock.revoked) {
+								progressPct = 0;
+							} else if (now >= end) {
+								progressPct = 100;
+							} else if (now < cliffEnd) {
+								progressPct = 0;
+							} else {
+								progressPct = Math.min(100, Math.floor(((now - start) / (end - start)) * 100));
+							}
+
+							const durationSec = Math.floor((end - start) / 1000);
 
 							return (
 								<tr key={lock.txHash} className="text-smoke">
