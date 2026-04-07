@@ -62,8 +62,9 @@ CREATE TABLE IF NOT EXISTS "token_transfers" (
 --> statement-breakpoint
 
 -- Drop legacy constraints on locks.lock_id and claims.lock_id FK (pre-V2 schema)
-ALTER TABLE "locks" DROP CONSTRAINT IF EXISTS "locks_lock_id_unique";--> statement-breakpoint
+-- NOTE: claims FK must be dropped BEFORE the locks UNIQUE constraint it depends on.
 ALTER TABLE "claims" DROP CONSTRAINT IF EXISTS "claims_lock_id_locks_lock_id_fk";--> statement-breakpoint
+ALTER TABLE "locks" DROP CONSTRAINT IF EXISTS "locks_lock_id_unique";--> statement-breakpoint
 DROP INDEX IF EXISTS "claims_lock_id_idx";--> statement-breakpoint
 
 -- Add contract_address columns with V1 address as default so existing rows pass NOT NULL check
