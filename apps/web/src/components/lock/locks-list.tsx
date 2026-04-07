@@ -14,7 +14,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { useClaim, useRevokeLock } from "@/hooks/use-lock-actions";
 import { useTransactionEffects } from "@/hooks/use-transaction-effects";
-import type { LockData } from "@/lib/lock-utils";
+import type { LockData, LockSource } from "@/lib/lock-utils";
 import { LockCard } from "./lock-card";
 
 interface LocksListProps {
@@ -25,15 +25,17 @@ interface LocksListProps {
 }
 
 export function LocksList({ locks, viewRole, isLoading, onActionComplete }: LocksListProps) {
-	const [revokeTarget, setRevokeTarget] = useState<bigint | null>(null);
+	const [revokeTarget, setRevokeTarget] = useState<{ lockId: bigint; source: LockSource } | null>(
+		null,
+	);
 
 	const claim = useClaim();
 	const revoke = useRevokeLock();
 
 	const handleClaim = useCallback(
-		(lockId: bigint) => {
+		(lockId: bigint, source: LockSource) => {
 			claim.reset();
-			claim.execute(lockId);
+			claim.execute(lockId, source);
 		},
 		[claim],
 	);
@@ -41,7 +43,7 @@ export function LocksList({ locks, viewRole, isLoading, onActionComplete }: Lock
 	const handleRevokeConfirm = useCallback(() => {
 		if (revokeTarget === null) return;
 		revoke.reset();
-		revoke.execute(revokeTarget);
+		revoke.execute(revokeTarget.lockId, revokeTarget.source);
 		setRevokeTarget(null);
 	}, [revokeTarget, revoke]);
 
@@ -92,11 +94,11 @@ export function LocksList({ locks, viewRole, isLoading, onActionComplete }: Lock
 			<div className="space-y-4">
 				{locks.map((lock) => (
 					<LockCard
-						key={lock.lockId.toString()}
+						key={`${lock.source}-${lock.lockId.toString()}`}
 						lock={lock}
 						role={viewRole}
 						onClaim={handleClaim}
-						onRevoke={(id) => setRevokeTarget(id)}
+						onRevoke={(id, source) => setRevokeTarget({ lockId: id, source })}
 						isActionPending={isActionPending}
 					/>
 				))}

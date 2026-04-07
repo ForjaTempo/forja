@@ -1,15 +1,16 @@
 "use client";
 
 import { useMemo } from "react";
-import { decodeEventLog, type Hex } from "viem";
+import type { Hex } from "viem";
+import { decodeEventLog } from "viem";
 import { useWaitForTransactionReceipt, useWriteContract } from "wagmi";
-import { activeLockerConfig } from "@/lib/contracts";
+import { lockerV2Config } from "@/lib/contracts";
 
-interface UseCreateLockReturn {
-	createLock: (
+interface UseCreateBatchLockReturn {
+	createBatchLock: (
 		token: Hex,
-		beneficiary: Hex,
-		amount: bigint,
+		beneficiaries: Hex[],
+		amounts: bigint[],
 		lockDuration: bigint,
 		cliffDuration: bigint,
 		vestingEnabled: boolean,
@@ -19,12 +20,12 @@ interface UseCreateLockReturn {
 	isConfirming: boolean;
 	isSuccess: boolean;
 	txHash: Hex | undefined;
-	lockId: bigint | undefined;
+	lockIds: bigint[];
 	error: Error | null;
 	reset: () => void;
 }
 
-export function useCreateLock(): UseCreateLockReturn {
+export function useCreateBatchLock(): UseCreateBatchLockReturn {
 	const {
 		writeContract,
 		data: txHash,
@@ -42,50 +43,50 @@ export function useCreateLock(): UseCreateLockReturn {
 		hash: txHash,
 	});
 
-	const lockId = useMemo<bigint | undefined>(() => {
-		if (!receipt) return undefined;
+	const lockIds = useMemo<bigint[]>(() => {
+		if (!receipt) return [];
 		for (const log of receipt.logs) {
 			try {
 				const decoded = decodeEventLog({
-					abi: activeLockerConfig.abi,
+					abi: lockerV2Config.abi,
 					data: log.data,
 					topics: log.topics,
 				});
-				if (decoded.eventName === "LockCreated") {
-					return decoded.args.lockId;
+				if (decoded.eventName === "BatchLockCreated") {
+					return [...(decoded.args as { lockIds: readonly bigint[] }).lockIds];
 				}
 			} catch {
 				// Not our event, skip
 			}
 		}
-		return undefined;
+		return [];
 	}, [receipt]);
 
-	const createLock = (
+	const createBatchLock = (
 		token: Hex,
-		beneficiary: Hex,
-		amount: bigint,
+		beneficiaries: Hex[],
+		amounts: bigint[],
 		lockDuration: bigint,
 		cliffDuration: bigint,
 		vestingEnabled: boolean,
 		revocable: boolean,
 	) => {
 		writeContract({
-			...activeLockerConfig,
-			functionName: "createLock",
-			args: [token, beneficiary, amount, lockDuration, cliffDuration, vestingEnabled, revocable],
+			...lockerV2Config,
+			functionName: "createBatchLock",
+			args: [token, beneficiaries, amounts, lockDuration, cliffDuration, vestingEnabled, revocable],
 		});
 	};
 
 	const error = writeError || receiptError || null;
 
 	return {
-		createLock,
+		createBatchLock,
 		isCreating,
 		isConfirming,
 		isSuccess,
 		txHash,
-		lockId,
+		lockIds,
 		error,
 		reset,
 	};

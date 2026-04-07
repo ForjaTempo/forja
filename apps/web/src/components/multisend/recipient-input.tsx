@@ -1,12 +1,13 @@
 "use client";
 
-import { PlusIcon, TrashIcon, UploadIcon, XIcon } from "lucide-react";
+import { DownloadIcon, PlusIcon, TrashIcon, UploadIcon, XIcon } from "lucide-react";
 import { type ChangeEvent, useCallback, useMemo, useRef } from "react";
 import type { Hex } from "viem";
 import { formatUnits, parseUnits } from "viem";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { TIP20_DECIMALS } from "@/lib/constants";
+import { detectDelimiter, downloadCsvTemplate, stripBom } from "@/lib/csv-utils";
 
 const MAX_RECIPIENTS = 500;
 const ADDRESS_RE = /^0x[0-9a-fA-F]{40}$/;
@@ -41,7 +42,11 @@ function isHeaderRow(line: string): boolean {
  * When addressOnly=true (equal distribution), only address is required per line.
  */
 function parseLines(text: string, addressOnly = false): ParseResult {
-	const rawLines = text
+	const cleaned = stripBom(text);
+	const delimiter = detectDelimiter(cleaned);
+	const delimiterRe = delimiter === "\t" ? /\t+/ : new RegExp(`[${delimiter}]+`);
+
+	const rawLines = cleaned
 		.split("\n")
 		.map((l) => l.trim())
 		.filter((l) => l.length > 0);
@@ -65,7 +70,7 @@ function parseLines(text: string, addressOnly = false): ParseResult {
 		const line = lines[i] as string;
 		const lineNum = rawLines.length !== lines.length ? i + 2 : i + 1;
 
-		const parts = line.split(/[,\t]+/).map((p) => p.trim());
+		const parts = line.split(delimiterRe).map((p) => p.trim());
 		const addr = parts[0] ?? "";
 		const amt = parts[1] ?? "";
 
@@ -217,7 +222,7 @@ export function RecipientInput({
 			reader.onload = (ev) => {
 				const text = ev.target?.result;
 				if (typeof text === "string") {
-					onChange(text.trim());
+					onChange(stripBom(text).trim());
 				}
 			};
 			reader.readAsText(file);
@@ -225,6 +230,28 @@ export function RecipientInput({
 		},
 		[onChange],
 	);
+
+	const handleDownloadTemplate = useCallback(() => {
+		if (addressOnly) {
+			downloadCsvTemplate(
+				"recipients-template.csv",
+				["address"],
+				[
+					["0x1234567890abcdef1234567890abcdef12345678"],
+					["0xabcdefabcdefabcdefabcdefabcdefabcdefabcd"],
+				],
+			);
+		} else {
+			downloadCsvTemplate(
+				"recipients-template.csv",
+				["address", "amount"],
+				[
+					["0x1234567890abcdef1234567890abcdef12345678", "100"],
+					["0xabcdefabcdefabcdefabcdefabcdefabcdefabcd", "250.5"],
+				],
+			);
+		}
+	}, [addressOnly]);
 
 	const handleClear = useCallback(() => {
 		onChange("");
@@ -280,6 +307,16 @@ export function RecipientInput({
 					)}
 					{inputMode === "paste" && (
 						<>
+							<Button
+								type="button"
+								variant="ghost"
+								size="sm"
+								className="h-7 px-2 text-xs"
+								onClick={handleDownloadTemplate}
+							>
+								<DownloadIcon className="size-3" />
+								Template
+							</Button>
 							<Button
 								type="button"
 								variant="ghost"

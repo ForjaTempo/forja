@@ -1,5 +1,6 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
 import { useCallback, useState } from "react";
 import { PageContainer } from "@/components/layout/page-container";
 import { MultisendForm } from "@/components/multisend/multisend-form";
@@ -18,6 +19,9 @@ interface MultisendSuccess {
 }
 
 export default function MultisendPage() {
+	const searchParams = useSearchParams();
+	const initialToken = searchParams.get("token") ?? undefined;
+
 	const [successData, setSuccessData] = useState<MultisendSuccess | null>(null);
 	const [formKey, setFormKey] = useState(0);
 	const [listKey, setListKey] = useState(0);
@@ -48,7 +52,7 @@ export default function MultisendPage() {
 		<PageContainer className="py-8 sm:py-12">
 			<div className="mx-auto max-w-lg space-y-8">
 				<PageHeader title="Multisend" description="Send tokens to multiple recipients at once" />
-				<MultisendForm key={formKey} onSuccess={handleSuccess} />
+				<MultisendForm key={formKey} onSuccess={handleSuccess} initialToken={initialToken} />
 				<Separator className="bg-anvil-gray-light" />
 				<SendsList key={listKey} />
 			</div>

@@ -5,10 +5,13 @@ import { useQuery } from "@tanstack/react-query";
 import { useCallback, useState } from "react";
 import { getTokenDetail, getTokenHolderDistribution, getTokenTransfers } from "@/actions/token-hub";
 import { PageContainer } from "@/components/layout/page-container";
+import { ShareButtons } from "@/components/shared/share-buttons";
+import { LiquidityGuidance } from "@/components/token-detail/liquidity-guidance";
 import { HolderDistribution } from "@/components/token-hub/holder-distribution";
 import { TokenActivity } from "@/components/token-hub/token-activity";
 import { TokenOverview } from "@/components/token-hub/token-overview";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { APP_URL } from "@/lib/constants";
 
 const TRANSFER_LIMIT = 10;
 
@@ -100,6 +103,19 @@ export function TokenDetailClient({
 						/>
 					</TabsContent>
 				</Tabs>
+
+				{/* Share */}
+				<div className="space-y-2">
+					<h3 className="text-sm font-medium text-smoke">Share</h3>
+					<ShareButtons
+						url={`${APP_URL}/tokens/${token.address}`}
+						title={`${token.name} ($${token.symbol}) on Tempo`}
+						description="Discover tokens on FORJA — forja.fun"
+					/>
+				</div>
+
+				{/* Liquidity guidance */}
+				{token.isForjaCreated && <LiquidityGuidance />}
 			</div>
 		</PageContainer>
 	);
