@@ -12,9 +12,12 @@ export function formatUnixDate(timestamp: number | null): string {
 	});
 }
 
-/** Format a Date to a locale date string. */
-export function formatDate(date: Date): string {
-	return date.toLocaleDateString("en-US", {
+/** Format a Date (or ISO string / unix-ms number) to a locale date string. */
+export function formatDate(date: Date | string | number | null | undefined): string {
+	if (date == null) return "\u2014";
+	const d = date instanceof Date ? date : new Date(date);
+	if (Number.isNaN(d.getTime())) return "\u2014";
+	return d.toLocaleDateString("en-US", {
 		month: "short",
 		day: "numeric",
 		year: "numeric",
