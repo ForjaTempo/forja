@@ -4,7 +4,7 @@ import { formatUnits } from "viem";
 import { useNow } from "@/hooks/use-now";
 import { useTokenInfo } from "@/hooks/use-token-info";
 import { TIP20_DECIMALS } from "@/lib/constants";
-import type { LockData } from "@/lib/lock-utils";
+import type { LockData, LockSource } from "@/lib/lock-utils";
 import {
 	getClaimableAmount,
 	getLockStatus,
@@ -16,8 +16,8 @@ import { LockStatusBadge } from "./lock-status-badge";
 interface LockCardProps {
 	lock: LockData;
 	role: "creator" | "beneficiary";
-	onClaim?: (lockId: bigint) => void;
-	onRevoke?: (lockId: bigint) => void;
+	onClaim?: (lockId: bigint, source: LockSource) => void;
+	onRevoke?: (lockId: bigint, source: LockSource) => void;
 	isActionPending?: boolean;
 }
 
@@ -124,7 +124,7 @@ export function LockCard({ lock, role, onClaim, onRevoke, isActionPending }: Loc
 					{canClaim && (
 						<button
 							type="button"
-							onClick={() => onClaim?.(lock.lockId)}
+							onClick={() => onClaim?.(lock.lockId, lock.source)}
 							disabled={isActionPending}
 							className="flex-1 rounded-md bg-molten-amber px-3 py-2 text-sm font-medium text-obsidian-black transition-colors hover:bg-molten-amber/90 disabled:opacity-50"
 						>
@@ -138,7 +138,7 @@ export function LockCard({ lock, role, onClaim, onRevoke, isActionPending }: Loc
 					{canRevoke && (
 						<button
 							type="button"
-							onClick={() => onRevoke?.(lock.lockId)}
+							onClick={() => onRevoke?.(lock.lockId, lock.source)}
 							disabled={isActionPending}
 							className="flex-1 rounded-md border border-ember-red/50 px-3 py-2 text-sm font-medium text-ember-red transition-colors hover:bg-ember-red/10 disabled:opacity-50"
 						>

@@ -5,6 +5,7 @@ import {Script, console} from "forge-std/Script.sol";
 import {ForjaTokenFactory} from "../src/ForjaTokenFactory.sol";
 import {ForjaMultisend} from "../src/ForjaMultisend.sol";
 import {ForjaLocker} from "../src/ForjaLocker.sol";
+import {ForjaLockerV2} from "../src/ForjaLockerV2.sol";
 
 contract Deploy is Script {
     // Tempo protocol addresses (same on mainnet and Moderato)
@@ -39,5 +40,8 @@ contract Deploy is Script {
 
         ForjaLocker locker = new ForjaLocker(usdc, treasury, lockFee);
         console.log("ForjaLocker:", address(locker));
+
+        ForjaLockerV2 lockerV2 = new ForjaLockerV2(usdc, treasury, lockFee);
+        console.log("ForjaLockerV2:", address(lockerV2));
     }
 }

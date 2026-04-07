@@ -1,7 +1,10 @@
 import type { Hex } from "viem";
 
+export type LockSource = "v1" | "v2";
+
 export interface LockData {
 	lockId: bigint;
+	source: LockSource;
 	token: Hex;
 	creator: Hex;
 	beneficiary: Hex;

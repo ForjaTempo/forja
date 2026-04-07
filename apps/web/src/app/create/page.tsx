@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { SuccessModal } from "@/components/create/success-modal";
+import { PostCreationWizard } from "@/components/create/post-creation-wizard";
 import { TokenForm } from "@/components/create/token-form";
 import { TokensList } from "@/components/create/tokens-list";
 import { PageContainer } from "@/components/layout/page-container";
@@ -54,7 +54,7 @@ export default function CreatePage() {
 			</div>
 
 			{successData && (
-				<SuccessModal
+				<PostCreationWizard
 					open={!!successData}
 					onOpenChange={(open) => {
 						if (!open) setSuccessData(null);

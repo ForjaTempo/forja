@@ -16,7 +16,7 @@ import { useTransactionEffects } from "@/hooks/use-transaction-effects";
 import { useUsdcApproval } from "@/hooks/use-usdc-approval";
 import { useUsdcBalance } from "@/hooks/use-usdc-balance";
 import { TIP20_DECIMALS } from "@/lib/constants";
-import { lockerConfig } from "@/lib/contracts";
+import { activeLockerConfig } from "@/lib/contracts";
 import { deriveTxState, formatErrorMessage } from "@/lib/format";
 import { CLIFF_PRESETS, DURATION_PRESETS } from "@/lib/lock-utils";
 import { LockButton } from "./lock-button";
@@ -34,12 +34,13 @@ interface LockFormProps {
 		txHash: string;
 		endTime: Date;
 	}) => void;
+	initialToken?: string;
 }
 
-export function LockForm({ onSuccess }: LockFormProps) {
+export function LockForm({ onSuccess, initialToken }: LockFormProps) {
 	const { address, isConnected } = useAccount();
 
-	const [tokenAddress, setTokenAddress] = useState("");
+	const [tokenAddress, setTokenAddress] = useState(initialToken ?? "");
 	const [beneficiary, setBeneficiary] = useState(address ?? "");
 	const [amount, setAmount] = useState("");
 	const [durationDays, setDurationDays] = useState("");
@@ -99,7 +100,7 @@ export function LockForm({ onSuccess }: LockFormProps) {
 		isApproving: isUsdcApproving,
 		isApprovalConfirming: isUsdcApprovalConfirming,
 	} = useUsdcApproval({
-		spender: lockerConfig.address,
+		spender: activeLockerConfig.address,
 		amount: feeAmount,
 	});
 
@@ -111,7 +112,7 @@ export function LockForm({ onSuccess }: LockFormProps) {
 		isApprovalConfirming: isTokenApprovalConfirming,
 	} = useTokenApproval({
 		tokenAddress: validTokenAddress,
-		spender: lockerConfig.address,
+		spender: activeLockerConfig.address,
 		amount: parsedAmount,
 	});
 

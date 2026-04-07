@@ -1,5 +1,6 @@
 import {
 	FORJA_LOCKER_ADDRESS,
+	FORJA_LOCKER_V2_ADDRESS,
 	FORJA_MULTISEND_ADDRESS,
 	FORJA_TOKEN_FACTORY_ADDRESS,
 	PATHUSDC_ADDRESS,
@@ -297,4 +298,62 @@ export const lockerConfig = {
 			outputs: [{ name: "", type: "uint256" }],
 		},
 	],
+} as const;
+
+export const lockerV2Config = {
+	address: FORJA_LOCKER_V2_ADDRESS,
+	abi: [
+		...lockerConfig.abi,
+		{
+			name: "createBatchLock",
+			type: "function",
+			stateMutability: "nonpayable",
+			inputs: [
+				{ name: "token", type: "address" },
+				{ name: "beneficiaries", type: "address[]" },
+				{ name: "amounts", type: "uint256[]" },
+				{ name: "lockDuration", type: "uint64" },
+				{ name: "cliffDuration", type: "uint64" },
+				{ name: "vestingEnabled", type: "bool" },
+				{ name: "revocable", type: "bool" },
+			],
+			outputs: [{ name: "", type: "uint256[]" }],
+		},
+		{
+			type: "event",
+			name: "BatchLockCreated",
+			inputs: [
+				{ name: "batchId", type: "uint256", indexed: true },
+				{ name: "creator", type: "address", indexed: true },
+				{ name: "token", type: "address", indexed: true },
+				{ name: "lockIds", type: "uint256[]", indexed: false },
+				{ name: "totalAmount", type: "uint256", indexed: false },
+			],
+		},
+		{
+			name: "MAX_BATCH_SIZE",
+			type: "function",
+			stateMutability: "view",
+			inputs: [],
+			outputs: [{ name: "", type: "uint256" }],
+		},
+	],
+} as const;
+
+/**
+ * True when ForjaLockerV2 is configured. Single-lock create/read flows fall back
+ * to V1 when V2 is absent; batch-lock UI is gated behind this flag entirely.
+ */
+export const hasLockerV2 = FORJA_LOCKER_V2_ADDRESS !== "0x";
+
+/**
+ * The locker contract that new single-lock writes (create/fee) target.
+ * - V2 when NEXT_PUBLIC_FORJA_LOCKER_V2 is set
+ * - V1 otherwise (safe fallback so the lock page keeps working without V2 env)
+ *
+ * Uses the V1 ABI subset — both contracts share identical createLock/claim/revoke/locks/lockFee signatures.
+ */
+export const activeLockerConfig = {
+	address: (hasLockerV2 ? FORJA_LOCKER_V2_ADDRESS : FORJA_LOCKER_ADDRESS) as `0x${string}`,
+	abi: lockerConfig.abi,
 } as const;

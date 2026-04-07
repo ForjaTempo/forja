@@ -39,11 +39,12 @@ interface MultisendFormProps {
 		totalAmount: bigint;
 		txHash: string;
 	}) => void;
+	initialToken?: string;
 }
 
-export function MultisendForm({ onSuccess }: MultisendFormProps) {
+export function MultisendForm({ onSuccess, initialToken }: MultisendFormProps) {
 	const { isConnected } = useAccount();
-	const [tokenAddress, setTokenAddress] = useState("");
+	const [tokenAddress, setTokenAddress] = useState(initialToken ?? "");
 	const [recipientText, setRecipientText] = useState("");
 	const [manualRows, setManualRows] = useState<ManualRow[]>([{ address: "", amount: "" }]);
 	const [inputMode, setInputMode] = useState<InputMode>("paste");

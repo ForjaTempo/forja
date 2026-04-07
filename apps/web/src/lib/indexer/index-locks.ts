@@ -1,10 +1,15 @@
 import "server-only";
 import { type getDb, schema } from "@forja/db";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import type { PublicClient } from "viem";
 import { parseAbiItem } from "viem";
-import { FORJA_LOCKER_ADDRESS } from "../constants";
+import { FORJA_LOCKER_ADDRESS, FORJA_LOCKER_V2_ADDRESS } from "../constants";
 import { fetchBlockTimestamps } from "./utils";
+
+const lockerAddresses = [
+	FORJA_LOCKER_ADDRESS,
+	...(FORJA_LOCKER_V2_ADDRESS !== "0x" ? [FORJA_LOCKER_V2_ADDRESS] : []),
+] as const;
 
 const lockCreatedEvent = parseAbiItem(
 	"event LockCreated(uint256 indexed lockId, address indexed creator, address indexed token, address beneficiary, uint256 amount, uint64 startTime, uint64 endTime, bool vestingEnabled)",
@@ -41,9 +46,13 @@ const lockerViewAbi = [
 	},
 ] as const;
 
-async function readOnChainLock(client: PublicClient, lockId: bigint) {
+async function readOnChainLock(
+	client: PublicClient,
+	contractAddress: `0x${string}`,
+	lockId: bigint,
+) {
 	return client.readContract({
-		address: FORJA_LOCKER_ADDRESS,
+		address: contractAddress,
 		abi: lockerViewAbi,
 		functionName: "locks",
 		args: [lockId],
@@ -53,23 +62,38 @@ async function readOnChainLock(client: PublicClient, lockId: bigint) {
 /** Max concurrent RPC reads to avoid overwhelming the node. */
 const RPC_BATCH_SIZE = 10;
 
+interface LockEntry {
+	lockId: bigint;
+	contractAddress: `0x${string}`;
+}
+
 /** Batch-read multiple locks with bounded concurrency. */
 async function readOnChainLocks(
 	client: PublicClient,
-	lockIds: bigint[],
-): Promise<Map<bigint, Awaited<ReturnType<typeof readOnChainLock>>>> {
+	entries: LockEntry[],
+): Promise<Map<string, Awaited<ReturnType<typeof readOnChainLock>>>> {
 	type OnChainLock = Awaited<ReturnType<typeof readOnChainLock>>;
-	const map = new Map<bigint, OnChainLock>();
+	const map = new Map<string, OnChainLock>();
 
-	for (let i = 0; i < lockIds.length; i += RPC_BATCH_SIZE) {
-		const batch = lockIds.slice(i, i + RPC_BATCH_SIZE);
-		const results = await Promise.all(batch.map((id) => readOnChainLock(client, id)));
-		batch.forEach((id, j) => {
-			map.set(id, results[j] as OnChainLock);
+	for (let i = 0; i < entries.length; i += RPC_BATCH_SIZE) {
+		const batch = entries.slice(i, i + RPC_BATCH_SIZE);
+		const results = await Promise.all(
+			batch.map((e) => readOnChainLock(client, e.contractAddress, e.lockId)),
+		);
+		batch.forEach((e, j) => {
+			map.set(`${e.contractAddress}:${e.lockId}`, results[j] as OnChainLock);
 		});
 	}
 
 	return map;
+}
+
+/** Helper to build WHERE clause matching (contractAddress, lockId) composite. */
+function lockWhere(contractAddr: string, lockId: number) {
+	return and(
+		eq(schema.locks.contractAddress, contractAddr.toLowerCase()),
+		eq(schema.locks.lockId, lockId),
+	);
 }
 
 export async function indexLockEvents(
@@ -80,27 +104,26 @@ export async function indexLockEvents(
 ) {
 	let count = 0;
 
-	// Fetch all event types in parallel
-	const [createLogs, claimLogs, revokeLogs] = await Promise.all([
-		client.getLogs({
-			address: FORJA_LOCKER_ADDRESS,
-			event: lockCreatedEvent,
-			fromBlock,
-			toBlock,
-		}),
-		client.getLogs({
-			address: FORJA_LOCKER_ADDRESS,
-			event: tokensClaimedEvent,
-			fromBlock,
-			toBlock,
-		}),
-		client.getLogs({
-			address: FORJA_LOCKER_ADDRESS,
-			event: lockRevokedEvent,
-			fromBlock,
-			toBlock,
-		}),
+	// Fetch all event types from all locker contracts in parallel (typed separately)
+	const createPromises = lockerAddresses.map((addr) =>
+		client.getLogs({ address: addr, event: lockCreatedEvent, fromBlock, toBlock }),
+	);
+	const claimPromises = lockerAddresses.map((addr) =>
+		client.getLogs({ address: addr, event: tokensClaimedEvent, fromBlock, toBlock }),
+	);
+	const revokePromises = lockerAddresses.map((addr) =>
+		client.getLogs({ address: addr, event: lockRevokedEvent, fromBlock, toBlock }),
+	);
+
+	const [createResults, claimResults, revokeResults] = await Promise.all([
+		Promise.all(createPromises),
+		Promise.all(claimPromises),
+		Promise.all(revokePromises),
 	]);
+
+	const createLogs = createResults.flat();
+	const claimLogs = claimResults.flat();
+	const revokeLogs = revokeResults.flat();
 
 	const totalLogs = createLogs.length + claimLogs.length + revokeLogs.length;
 	if (totalLogs === 0) return 0;
@@ -112,20 +135,30 @@ export async function indexLockEvents(
 		...revokeLogs.map((l) => l.blockNumber),
 	]);
 
-	// Collect all unique lockIds across all event types for batch RPC read
-	const allLockIds = new Set<bigint>();
+	// Collect all unique lockId+address entries for batch RPC read
+	const allEntries: LockEntry[] = [];
+	const entrySeen = new Set<string>();
+
+	function addEntry(lockId: bigint, contractAddress: `0x${string}`) {
+		const key = `${contractAddress}:${lockId}`;
+		if (!entrySeen.has(key)) {
+			entrySeen.add(key);
+			allEntries.push({ lockId, contractAddress });
+		}
+	}
+
 	for (const log of createLogs) {
-		allLockIds.add(log.args.lockId ?? 0n);
+		addEntry(log.args.lockId ?? 0n, log.address as `0x${string}`);
 	}
 	for (const log of claimLogs) {
-		allLockIds.add(log.args.lockId ?? 0n);
+		addEntry(log.args.lockId ?? 0n, log.address as `0x${string}`);
 	}
 	for (const log of revokeLogs) {
-		allLockIds.add(log.args.lockId ?? 0n);
+		addEntry(log.args.lockId ?? 0n, log.address as `0x${string}`);
 	}
 
 	// Batch-read all lock states from chain in parallel
-	const onChainStates = await readOnChainLocks(client, [...allLockIds]);
+	const onChainStates = await readOnChainLocks(client, allEntries);
 
 	// Process LockCreated events
 	for (const log of createLogs) {
@@ -140,13 +173,15 @@ export async function indexLockEvents(
 			vestingEnabled,
 		} = log.args;
 		const lockId = Number(rawLockId ?? 0n);
+		const contractAddr = (log.address as string).toLowerCase();
 		const blockTs = blockTimestamps.get(log.blockNumber) ?? new Date();
 
-		// Insert from event data (idempotent via onConflictDoNothing)
+		// Insert from event data (idempotent via composite unique)
 		await db
 			.insert(schema.locks)
 			.values({
 				lockId,
+				contractAddress: contractAddr,
 				tokenAddress: (token ?? "").toLowerCase(),
 				creatorAddress: (creator ?? "").toLowerCase(),
 				beneficiaryAddress: (beneficiary ?? "").toLowerCase(),
@@ -158,10 +193,12 @@ export async function indexLockEvents(
 				blockNumber: Number(log.blockNumber),
 				createdAt: blockTs,
 			})
-			.onConflictDoNothing({ target: schema.locks.lockId });
+			.onConflictDoNothing({
+				target: [schema.locks.contractAddress, schema.locks.lockId],
+			});
 
 		// Use batch-fetched on-chain state for fields missing from event
-		const onChain = onChainStates.get(rawLockId ?? 0n);
+		const onChain = onChainStates.get(`${log.address}:${rawLockId ?? 0n}`);
 		if (onChain) {
 			const [, , , , claimedAmount, , , cliffDuration, , revocable, revoked] = onChain;
 			await db
@@ -173,7 +210,7 @@ export async function indexLockEvents(
 					revoked,
 					updatedAt: new Date(),
 				})
-				.where(eq(schema.locks.lockId, lockId));
+				.where(lockWhere(contractAddr, lockId));
 		}
 
 		count++;
@@ -183,6 +220,7 @@ export async function indexLockEvents(
 	for (const log of claimLogs) {
 		const { lockId: rawLockId, beneficiary, amount } = log.args;
 		const lockId = Number(rawLockId ?? 0n);
+		const contractAddr = (log.address as string).toLowerCase();
 		const blockTs = blockTimestamps.get(log.blockNumber) ?? new Date();
 
 		// Insert claim row (idempotent via onConflictDoNothing on txHash)
@@ -190,6 +228,7 @@ export async function indexLockEvents(
 			.insert(schema.claims)
 			.values({
 				lockId,
+				contractAddress: contractAddr,
 				beneficiaryAddress: (beneficiary ?? "").toLowerCase(),
 				amount: (amount ?? 0n).toString(),
 				txHash: log.transactionHash ?? "",
@@ -199,7 +238,7 @@ export async function indexLockEvents(
 			.onConflictDoNothing({ target: schema.claims.txHash });
 
 		// Overwrite claimedAmount from on-chain state (idempotent — no increment)
-		const onChain = onChainStates.get(rawLockId ?? 0n);
+		const onChain = onChainStates.get(`${log.address}:${rawLockId ?? 0n}`);
 		if (onChain) {
 			const [, , , , claimedAmount] = onChain;
 			await db
@@ -208,7 +247,7 @@ export async function indexLockEvents(
 					claimedAmount: claimedAmount.toString(),
 					updatedAt: new Date(),
 				})
-				.where(eq(schema.locks.lockId, lockId));
+				.where(lockWhere(contractAddr, lockId));
 		}
 
 		count++;
@@ -217,9 +256,10 @@ export async function indexLockEvents(
 	// Process LockRevoked events
 	for (const log of revokeLogs) {
 		const lockId = Number(log.args.lockId ?? 0n);
+		const contractAddr = (log.address as string).toLowerCase();
 
 		// Use batch-fetched on-chain state for final claimedAmount
-		const onChain = onChainStates.get(log.args.lockId ?? 0n);
+		const onChain = onChainStates.get(`${log.address}:${log.args.lockId ?? 0n}`);
 		if (onChain) {
 			const [, , , , claimedAmount] = onChain;
 			await db
@@ -229,7 +269,7 @@ export async function indexLockEvents(
 					claimedAmount: claimedAmount.toString(),
 					updatedAt: new Date(),
 				})
-				.where(eq(schema.locks.lockId, lockId));
+				.where(lockWhere(contractAddr, lockId));
 		}
 
 		count++;
