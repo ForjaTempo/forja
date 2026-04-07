@@ -45,7 +45,8 @@ export const locks = pgTable(
 	"locks",
 	{
 		id: serial("id").primaryKey(),
-		lockId: integer("lock_id").notNull().unique(),
+		lockId: integer("lock_id").notNull(),
+		contractAddress: text("contract_address").notNull(),
 		tokenAddress: text("token_address").notNull(),
 		creatorAddress: text("creator_address").notNull(),
 		beneficiaryAddress: text("beneficiary_address").notNull(),
@@ -63,6 +64,7 @@ export const locks = pgTable(
 		updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 	},
 	(table) => [
+		unique("locks_contract_lockid_idx").on(table.contractAddress, table.lockId),
 		index("locks_creator_address_idx").on(table.creatorAddress),
 		index("locks_beneficiary_address_idx").on(table.beneficiaryAddress),
 		index("locks_token_address_idx").on(table.tokenAddress),
@@ -73,16 +75,15 @@ export const claims = pgTable(
 	"claims",
 	{
 		id: serial("id").primaryKey(),
-		lockId: integer("lock_id")
-			.notNull()
-			.references(() => locks.lockId),
+		lockId: integer("lock_id").notNull(),
+		contractAddress: text("contract_address").notNull(),
 		beneficiaryAddress: text("beneficiary_address").notNull(),
 		amount: text("amount").notNull(),
 		txHash: text("tx_hash").notNull().unique(),
 		blockNumber: integer("block_number").notNull(),
 		createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 	},
-	(table) => [index("claims_lock_id_idx").on(table.lockId)],
+	(table) => [index("claims_lock_id_idx").on(table.contractAddress, table.lockId)],
 );
 
 export const tokenTransfers = pgTable(

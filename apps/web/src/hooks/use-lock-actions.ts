@@ -2,10 +2,15 @@
 
 import type { Hex } from "viem";
 import { useWaitForTransactionReceipt, useWriteContract } from "wagmi";
-import { lockerConfig } from "@/lib/contracts";
+import { lockerConfig, lockerV2Config } from "@/lib/contracts";
+import type { LockSource } from "@/lib/lock-utils";
+
+function getAddress(source: LockSource) {
+	return source === "v2" ? lockerV2Config.address : lockerConfig.address;
+}
 
 interface UseLockActionReturn {
-	execute: (lockId: bigint) => void;
+	execute: (lockId: bigint, source: LockSource) => void;
 	isPending: boolean;
 	isConfirming: boolean;
 	isSuccess: boolean;
@@ -25,9 +30,10 @@ export function useClaim(): UseLockActionReturn {
 		hash: txHash,
 	});
 
-	const execute = (lockId: bigint) => {
+	const execute = (lockId: bigint, source: LockSource) => {
 		writeContract({
-			...lockerConfig,
+			abi: lockerConfig.abi,
+			address: getAddress(source),
 			functionName: "claim",
 			args: [lockId],
 		});
@@ -55,9 +61,10 @@ export function useRevokeLock(): UseLockActionReturn {
 		hash: txHash,
 	});
 
-	const execute = (lockId: bigint) => {
+	const execute = (lockId: bigint, source: LockSource) => {
 		writeContract({
-			...lockerConfig,
+			abi: lockerConfig.abi,
+			address: getAddress(source),
 			functionName: "revokeLock",
 			args: [lockId],
 		});

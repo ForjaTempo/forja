@@ -22,6 +22,8 @@ export const FORJA_TOKEN_FACTORY_ADDRESS = (process.env.NEXT_PUBLIC_FORJA_TOKEN_
 export const FORJA_MULTISEND_ADDRESS = (process.env.NEXT_PUBLIC_FORJA_MULTISEND ??
 	"0x") as `0x${string}`;
 export const FORJA_LOCKER_ADDRESS = (process.env.NEXT_PUBLIC_FORJA_LOCKER ?? "0x") as `0x${string}`;
+export const FORJA_LOCKER_V2_ADDRESS = (process.env.NEXT_PUBLIC_FORJA_LOCKER_V2 ??
+	"0x") as `0x${string}`;
 
 export const TIP20_DECIMALS = 6;
 
@@ -29,6 +31,7 @@ export const FEES = {
 	tokenCreate: 2,
 	multisend: 0.5,
 	tokenLock: 1,
+	batchLock: 1,
 } as const;
 
 export const APP_NAME = "FORJA";
@@ -40,6 +43,7 @@ if (typeof window === "undefined") {
 	if (FORJA_TOKEN_FACTORY_ADDRESS === "0x") missing.push("NEXT_PUBLIC_FORJA_TOKEN_FACTORY");
 	if (FORJA_MULTISEND_ADDRESS === "0x") missing.push("NEXT_PUBLIC_FORJA_MULTISEND");
 	if (FORJA_LOCKER_ADDRESS === "0x") missing.push("NEXT_PUBLIC_FORJA_LOCKER");
+	if (FORJA_LOCKER_V2_ADDRESS === "0x") missing.push("NEXT_PUBLIC_FORJA_LOCKER_V2");
 	if (missing.length > 0) {
 		console.warn(`[config] Missing env vars: ${missing.join(", ")}`);
 	}

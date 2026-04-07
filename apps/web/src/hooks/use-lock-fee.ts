@@ -2,11 +2,11 @@
 
 import { useReadContract } from "wagmi";
 import { FEES, TIP20_DECIMALS } from "@/lib/constants";
-import { lockerConfig } from "@/lib/contracts";
+import { activeLockerConfig } from "@/lib/contracts";
 
 export function useLockFee() {
 	const { data: fee, isLoading } = useReadContract({
-		...lockerConfig,
+		...activeLockerConfig,
 		functionName: "lockFee",
 	});
 
