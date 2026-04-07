@@ -153,7 +153,7 @@ export default async function TokenOgImage({ params }: { params: Promise<{ addre
 							color: "#9CA3AF",
 						}}
 					>
-						${token.symbol}
+						{`$${token.symbol}`}
 					</div>
 				</div>
 			</div>
