@@ -2,6 +2,7 @@ import "server-only";
 import { getDb, schema } from "@forja/db";
 import { eq } from "drizzle-orm";
 import { indexerClient } from "./client";
+import { generateAlerts } from "./generate-alerts";
 import { indexClaimEvents } from "./index-claims";
 import { indexLockEvents } from "./index-locks";
 import { indexMultisendEvents } from "./index-multisends";
@@ -127,6 +128,13 @@ export async function runIndexer(): Promise<{
 			console.error(`[indexer] ${contract.name} failed: ${message}`);
 			results[contract.name] = { error: message };
 		}
+	}
+
+	// Generate alerts for watchlist subscribers
+	try {
+		await generateAlerts();
+	} catch (err) {
+		console.warn("[indexer] Alert generation failed:", err);
 	}
 
 	const duration = Date.now() - startTime;

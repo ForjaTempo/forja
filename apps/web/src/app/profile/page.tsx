@@ -1,0 +1,58 @@
+"use client";
+
+import { useQuery } from "@tanstack/react-query";
+import { WalletIcon } from "lucide-react";
+import { useAccount } from "wagmi";
+import { getCreatorProfileData } from "@/actions/profile";
+import { ConnectButton } from "@/components/layout/connect-button";
+import { PageContainer } from "@/components/layout/page-container";
+import { ProfileForm } from "@/components/profile/profile-form";
+import { PageHeader } from "@/components/ui/page-header";
+import { Skeleton } from "@/components/ui/skeleton";
+
+export default function ProfilePage() {
+	const { address, isConnected } = useAccount();
+
+	const { data: existing, isLoading } = useQuery({
+		queryKey: ["creator-profile-data", address],
+		queryFn: () => getCreatorProfileData(address as string),
+		enabled: isConnected && !!address,
+		staleTime: 30_000,
+	});
+
+	if (!isConnected) {
+		return (
+			<PageContainer className="py-8 sm:py-12">
+				<div className="flex min-h-[60vh] flex-col items-center justify-center gap-4">
+					<WalletIcon className="size-12 text-smoke-dark" />
+					<h2 className="text-xl font-semibold text-steel-white">Connect Your Wallet</h2>
+					<p className="text-sm text-smoke-dark">
+						Connect your wallet to edit your creator profile
+					</p>
+					<ConnectButton />
+				</div>
+			</PageContainer>
+		);
+	}
+
+	return (
+		<PageContainer className="py-8 sm:py-12">
+			<div className="mx-auto max-w-2xl space-y-8">
+				<PageHeader
+					title="Edit Profile"
+					description="Customize how you appear on your creator page"
+				/>
+
+				{isLoading ? (
+					<div className="space-y-4">
+						<Skeleton className="h-10 rounded-md" />
+						<Skeleton className="h-10 rounded-md" />
+						<Skeleton className="h-24 rounded-md" />
+					</div>
+				) : (
+					<ProfileForm address={address as string} existing={existing ?? null} />
+				)}
+			</div>
+		</PageContainer>
+	);
+}

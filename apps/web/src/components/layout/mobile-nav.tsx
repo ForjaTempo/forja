@@ -24,7 +24,11 @@ export function MobileNav() {
 	const { isConnected } = useAccount();
 
 	const navLinks = isConnected
-		? [...baseNavLinks, { href: "/dashboard", label: "Dashboard" }]
+		? [
+				...baseNavLinks,
+				{ href: "/dashboard", label: "Dashboard" },
+				{ href: "/profile", label: "Profile" },
+			]
 		: baseNavLinks;
 
 	return (

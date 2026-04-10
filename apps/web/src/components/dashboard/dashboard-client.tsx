@@ -11,6 +11,7 @@ import {
 	getUnlockCalendar,
 } from "@/actions/dashboard";
 import { getCreatorLocks, getCreatorMultisends } from "@/actions/token-hub";
+import { getWatchlist } from "@/actions/watchlist";
 import { ConnectButton } from "@/components/layout/connect-button";
 import { PageContainer } from "@/components/layout/page-container";
 import { PageHeader } from "@/components/ui/page-header";
@@ -23,6 +24,7 @@ import { MultisendHistory } from "./multisend-history";
 import { MyTokens } from "./my-tokens";
 import { TokenAnalytics } from "./token-analytics";
 import { UnlockCalendar } from "./unlock-calendar";
+import { WatchlistTab } from "./watchlist-tab";
 
 export function DashboardClient() {
 	const { address, isConnected } = useAccount();
@@ -71,6 +73,13 @@ export function DashboardClient() {
 	const { data: claims = [] } = useQuery({
 		queryKey: ["dashboard-claims", address],
 		queryFn: () => getCampaignsByCreator(address as string),
+		enabled: isConnected && !!address,
+		staleTime: 60_000,
+	});
+
+	const { data: watchlistTokens = [] } = useQuery({
+		queryKey: ["watchlist", address],
+		queryFn: () => getWatchlist(address as string),
 		enabled: isConnected && !!address,
 		staleTime: 60_000,
 	});
@@ -146,6 +155,12 @@ export function DashboardClient() {
 						>
 							Claims ({claims.length})
 						</TabsTrigger>
+						<TabsTrigger
+							value="watchlist"
+							className="text-smoke data-[state=active]:text-molten-amber"
+						>
+							Watchlist ({watchlistTokens.length})
+						</TabsTrigger>
 					</TabsList>
 
 					<TabsContent value="tokens" className="mt-6">
@@ -188,6 +203,10 @@ export function DashboardClient() {
 
 					<TabsContent value="claims" className="mt-6">
 						<ClaimsHistory campaigns={claims} />
+					</TabsContent>
+
+					<TabsContent value="watchlist" className="mt-6">
+						<WatchlistTab tokens={watchlistTokens} />
 					</TabsContent>
 				</Tabs>
 			</div>

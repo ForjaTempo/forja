@@ -4,12 +4,18 @@ import {
 	ClockIcon,
 	CoinsIcon,
 	ExternalLinkIcon,
+	GlobeIcon,
 	LockIcon,
 	SendIcon,
 	ShieldIcon,
 	UsersIcon,
+	XIcon,
 } from "lucide-react";
+import Link from "next/link";
+import { useAccount } from "wagmi";
 import { AddressDisplay } from "@/components/ui/address-display";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { useExplorerUrl } from "@/hooks/use-explorer-url";
 import { formatDate } from "@/lib/format";
 
@@ -24,11 +30,21 @@ interface CreatorOverviewProps {
 		totalRecipients: number;
 		totalValueLocked: string;
 		firstSeen: Date | null;
+		displayName?: string | null;
+		bio?: string | null;
+		avatarUrl?: string | null;
+		website?: string | null;
+		twitterHandle?: string | null;
+		telegramHandle?: string | null;
+		verified?: boolean;
+		profileClaimed?: boolean;
 	};
 }
 
 export function CreatorOverview({ profile }: CreatorOverviewProps) {
 	const explorerUrl = useExplorerUrl();
+	const { address: connectedAddress } = useAccount();
+	const isOwner = connectedAddress?.toLowerCase() === profile.address.toLowerCase();
 
 	const tvl = BigInt(profile.totalValueLocked || "0");
 	const tvlDisplay = tvl > 0n ? formatter.format(Number(tvl / 10n ** 6n)) : "0";
@@ -56,22 +72,97 @@ export function CreatorOverview({ profile }: CreatorOverviewProps) {
 
 	return (
 		<div className="space-y-6">
-			<div className="flex items-center justify-between">
-				<div>
-					<h1 className="text-2xl font-bold text-steel-white">Creator Profile</h1>
-					<div className="mt-1">
-						<AddressDisplay address={profile.address} showExplorer />
+			<div className="flex items-start justify-between gap-4">
+				<div className="flex items-center gap-4">
+					{profile.avatarUrl ? (
+						<img
+							src={profile.avatarUrl}
+							alt={profile.displayName ?? "Creator avatar"}
+							className="size-16 rounded-full object-cover"
+						/>
+					) : (
+						<div className="flex size-16 items-center justify-center rounded-full bg-anvil-gray text-xl font-bold text-molten-amber">
+							{(profile.displayName ?? profile.address).slice(0, 2).toUpperCase()}
+						</div>
+					)}
+					<div>
+						<div className="flex items-center gap-2">
+							<h1 className="text-2xl font-bold text-steel-white">
+								{profile.displayName ?? "Creator Profile"}
+							</h1>
+							{profile.verified && (
+								<Badge className="bg-emerald-500/15 text-emerald-400 border-emerald-500/30">
+									Verified
+								</Badge>
+							)}
+							{profile.profileClaimed && !profile.verified && (
+								<Badge className="bg-emerald-500/15 text-emerald-400 border-emerald-500/30">
+									Claimed
+								</Badge>
+							)}
+						</div>
+						<div className="mt-1">
+							<AddressDisplay address={profile.address} showExplorer />
+						</div>
+						{profile.bio && <p className="mt-2 max-w-lg text-sm text-smoke">{profile.bio}</p>}
+						{/* Social links */}
+						<div className="mt-2 flex flex-wrap items-center gap-3">
+							{profile.website && (
+								<a
+									href={profile.website}
+									target="_blank"
+									rel="noopener noreferrer"
+									className="inline-flex items-center gap-1 text-xs text-smoke transition-colors hover:text-molten-amber"
+								>
+									<GlobeIcon className="size-3" />
+									Website
+								</a>
+							)}
+							{profile.twitterHandle && (
+								<a
+									href={`https://x.com/${profile.twitterHandle}`}
+									target="_blank"
+									rel="noopener noreferrer"
+									className="inline-flex items-center gap-1 text-xs text-smoke transition-colors hover:text-molten-amber"
+								>
+									<XIcon className="size-3" />@{profile.twitterHandle}
+								</a>
+							)}
+							{profile.telegramHandle && (
+								<a
+									href={`https://t.me/${profile.telegramHandle}`}
+									target="_blank"
+									rel="noopener noreferrer"
+									className="inline-flex items-center gap-1 text-xs text-smoke transition-colors hover:text-molten-amber"
+								>
+									@{profile.telegramHandle}
+								</a>
+							)}
+						</div>
 					</div>
 				</div>
-				<a
-					href={`${explorerUrl}/address/${profile.address}`}
-					target="_blank"
-					rel="noopener noreferrer"
-					className="inline-flex items-center gap-1 text-sm text-smoke transition-colors hover:text-molten-amber"
-				>
-					Explorer
-					<ExternalLinkIcon className="size-3" />
-				</a>
+				<div className="flex items-center gap-2">
+					{isOwner && (
+						<Link href="/profile">
+							<Button
+								variant="outline"
+								size="sm"
+								className="border-anvil-gray-light text-smoke hover:text-steel-white"
+							>
+								{profile.profileClaimed ? "Edit Profile" : "Claim Profile"}
+							</Button>
+						</Link>
+					)}
+					<a
+						href={`${explorerUrl}/address/${profile.address}`}
+						target="_blank"
+						rel="noopener noreferrer"
+						className="inline-flex items-center gap-1 text-sm text-smoke transition-colors hover:text-molten-amber"
+					>
+						Explorer
+						<ExternalLinkIcon className="size-3" />
+					</a>
+				</div>
 			</div>
 
 			<div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
