@@ -175,3 +175,58 @@ export const indexerState = pgTable("indexer_state", {
 	lastIndexedBlock: integer("last_indexed_block").notNull().default(0),
 	updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+// Phase 12A: Merkle Claim Pages — multi-campaign airdrop via ForjaClaimer
+
+export const claimCampaigns = pgTable(
+	"claim_campaigns",
+	{
+		id: serial("id").primaryKey(),
+		contractAddress: text("contract_address").notNull(),
+		campaignId: text("campaign_id").notNull(), // bigint as string
+		slug: text("slug").notNull(),
+		creatorAddress: text("creator_address").notNull(),
+		tokenAddress: text("token_address").notNull(),
+		merkleRoot: text("merkle_root").notNull(),
+		totalDeposited: text("total_deposited").notNull(),
+		totalClaimed: text("total_claimed").notNull().default("0"),
+		recipientCount: integer("recipient_count").notNull(),
+		claimedCount: integer("claimed_count").notNull().default(0),
+		title: text("title").notNull(),
+		description: text("description"),
+		bannerUrl: text("banner_url"),
+		startTime: timestamp("start_time", { withTimezone: true }).notNull(),
+		endTime: timestamp("end_time", { withTimezone: true }),
+		sweepEnabled: boolean("sweep_enabled").notNull().default(false),
+		swept: boolean("swept").notNull().default(false),
+		createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+		createdBlock: integer("created_block").notNull(),
+		createdTxHash: text("created_tx_hash").notNull(),
+	},
+	(table) => [
+		unique("claim_campaigns_contract_cid_idx").on(table.contractAddress, table.campaignId),
+		unique("claim_campaigns_slug_idx").on(table.slug),
+		index("claim_campaigns_creator_idx").on(table.creatorAddress),
+		index("claim_campaigns_token_idx").on(table.tokenAddress),
+	],
+);
+
+export const claimProofs = pgTable(
+	"claim_proofs",
+	{
+		id: serial("id").primaryKey(),
+		campaignDbId: integer("campaign_db_id")
+			.notNull()
+			.references(() => claimCampaigns.id, { onDelete: "cascade" }),
+		recipientAddress: text("recipient_address").notNull(),
+		amount: text("amount").notNull(),
+		proof: text("proof").notNull(), // JSON stringified bytes32[]
+		leafIndex: integer("leaf_index").notNull(),
+		claimedAt: timestamp("claimed_at", { withTimezone: true }),
+		claimedTxHash: text("claimed_tx_hash"),
+	},
+	(table) => [
+		unique("claim_proofs_campaign_recipient_idx").on(table.campaignDbId, table.recipientAddress),
+		index("claim_proofs_recipient_idx").on(table.recipientAddress),
+	],
+);
