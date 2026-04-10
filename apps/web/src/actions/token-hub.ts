@@ -220,7 +220,7 @@ export async function getCreatorProfile(address: string) {
 					value: sql<string>`COALESCE(SUM(CAST(${schema.locks.totalAmount} AS NUMERIC) - CAST(${schema.locks.claimedAmount} AS NUMERIC)), 0)`,
 				})
 				.from(schema.locks)
-				.where(eq(schema.locks.creatorAddress, addr)),
+				.where(and(eq(schema.locks.creatorAddress, addr), eq(schema.locks.revoked, false))),
 			db
 				.select()
 				.from(schema.creatorProfiles)

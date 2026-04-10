@@ -2,6 +2,7 @@
 import { getDb, schema } from "@forja/db";
 import { eq } from "drizzle-orm";
 import { isAddress } from "viem";
+import { getAuthenticatedAddress, requireAuth } from "@/lib/session";
 
 const MAX_DISPLAY_NAME = 60;
 const MAX_BIO = 280;
@@ -16,8 +17,12 @@ interface ProfileData {
 	telegramHandle?: string;
 }
 
+/** Private read — returns own profile data for editing. Requires auth. */
 export async function getCreatorProfileData(address: string) {
 	if (!isAddress(address)) return null;
+
+	const authed = await getAuthenticatedAddress();
+	if (authed !== address.toLowerCase()) return null;
 
 	try {
 		const db = getDb();
@@ -34,6 +39,7 @@ export async function getCreatorProfileData(address: string) {
 	}
 }
 
+/** Public read — used by trust signals. No auth needed. */
 export async function isProfileClaimed(address: string): Promise<boolean> {
 	if (!isAddress(address)) return false;
 
@@ -52,6 +58,7 @@ export async function isProfileClaimed(address: string): Promise<boolean> {
 	}
 }
 
+/** Write — requires wallet auth session. */
 export async function upsertCreatorProfile(
 	address: string,
 	data: ProfileData,
@@ -59,6 +66,9 @@ export async function upsertCreatorProfile(
 	if (!isAddress(address)) {
 		return { ok: false, error: "Invalid address" };
 	}
+
+	const auth = await requireAuth(address);
+	if (!auth.ok) return auth;
 
 	const displayName = data.displayName?.trim() || null;
 	const bio = data.bio?.trim() || null;
@@ -82,7 +92,7 @@ export async function upsertCreatorProfile(
 
 	try {
 		const db = getDb();
-		const walletAddress = address.toLowerCase();
+		const walletAddress = auth.address;
 
 		await db
 			.insert(schema.creatorProfiles)

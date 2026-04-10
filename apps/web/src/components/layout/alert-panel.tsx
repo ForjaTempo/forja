@@ -15,6 +15,7 @@ import Link from "next/link";
 import { useAccount } from "wagmi";
 import { markAlertAsRead, markAllAlertsAsRead } from "@/actions/alerts";
 import { Button } from "@/components/ui/button";
+import { useWalletAuth } from "@/hooks/use-wallet-auth";
 import { cn } from "@/lib/utils";
 
 const TYPE_ICONS: Record<string, React.ReactNode> = {
@@ -58,9 +59,10 @@ interface AlertPanelProps {
 export function AlertPanel({ alerts, onClose }: AlertPanelProps) {
 	const { address } = useAccount();
 	const queryClient = useQueryClient();
+	const { withAuth } = useWalletAuth();
 
 	const markAllMutation = useMutation({
-		mutationFn: () => markAllAlertsAsRead(address as string),
+		mutationFn: () => withAuth(() => markAllAlertsAsRead(address as string)),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["alerts", address] });
 			queryClient.invalidateQueries({ queryKey: ["unread-alert-count", address] });
@@ -68,7 +70,7 @@ export function AlertPanel({ alerts, onClose }: AlertPanelProps) {
 	});
 
 	const markOneMutation = useMutation({
-		mutationFn: (alertId: number) => markAlertAsRead(alertId, address as string),
+		mutationFn: (alertId: number) => withAuth(() => markAlertAsRead(alertId, address as string)),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["alerts", address] });
 			queryClient.invalidateQueries({ queryKey: ["unread-alert-count", address] });

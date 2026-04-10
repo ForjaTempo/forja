@@ -7,6 +7,8 @@ type AlertType = "holder_spike" | "large_transfer" | "unlock_soon" | "milestone"
 
 const DEDUP_HOURS = 24;
 const MILESTONES = [10, 50, 100, 500, 1000];
+const ALERT_STATE_KEY = "alert-generator";
+const MAX_LOOKBACK_HOURS = 24;
 
 async function isDuplicate(
 	db: ReturnType<typeof getDb>,
@@ -54,11 +56,42 @@ async function insertAlert(
 	});
 }
 
+async function getLastRunTime(db: ReturnType<typeof getDb>): Promise<Date> {
+	const [state] = await db
+		.select()
+		.from(schema.indexerState)
+		.where(eq(schema.indexerState.contractName, ALERT_STATE_KEY))
+		.limit(1);
+
+	if (state?.updatedAt) return new Date(state.updatedAt);
+
+	// Fallback: max lookback
+	const fallback = new Date();
+	fallback.setHours(fallback.getHours() - MAX_LOOKBACK_HOURS);
+	return fallback;
+}
+
+async function updateLastRunTime(db: ReturnType<typeof getDb>): Promise<void> {
+	await db
+		.insert(schema.indexerState)
+		.values({
+			contractName: ALERT_STATE_KEY,
+			lastIndexedBlock: 0,
+			updatedAt: new Date(),
+		})
+		.onConflictDoUpdate({
+			target: schema.indexerState.contractName,
+			set: { updatedAt: new Date() },
+		});
+}
+
 export async function generateAlerts(): Promise<number> {
 	const db = getDb();
 	let alertCount = 0;
 
 	try {
+		const lastRun = await getLastRunTime(db);
+
 		// Get all watchlist entries grouped by token
 		const watchEntries = await db
 			.select({
@@ -68,6 +101,7 @@ export async function generateAlerts(): Promise<number> {
 			.from(schema.watchlist);
 
 		if (watchEntries.length === 0) {
+			await updateLastRunTime(db);
 			const cleaned = await deleteOldAlerts();
 			if (cleaned > 0) console.log(`[alerts] Cleaned ${cleaned} old alerts`);
 			return 0;
@@ -165,10 +199,7 @@ export async function generateAlerts(): Promise<number> {
 				const totalSupply = BigInt(tokenInfo.totalSupply);
 				const threshold = totalSupply / 20n; // 5%
 
-				// Check recent transfers (last hour)
-				const oneHourAgo = new Date();
-				oneHourAgo.setHours(oneHourAgo.getHours() - 1);
-
+				// Check transfers since last alert run (watermark-based)
 				const largeTransfers = await db
 					.select({
 						amount: schema.tokenTransfers.amount,
@@ -180,10 +211,10 @@ export async function generateAlerts(): Promise<number> {
 					.where(
 						and(
 							eq(schema.tokenTransfers.tokenAddress, tokenAddr),
-							gte(schema.tokenTransfers.createdAt, oneHourAgo),
+							gte(schema.tokenTransfers.createdAt, lastRun),
 						),
 					)
-					.limit(10);
+					.limit(50);
 
 				for (const tx of largeTransfers) {
 					if (BigInt(tx.amount) >= threshold) {
@@ -253,11 +284,8 @@ export async function generateAlerts(): Promise<number> {
 			console.warn("[alerts] unlock soon check failed:", err);
 		}
 
-		// 4. Campaign Live — claim campaigns that recently started
+		// 4. Campaign Live — claim campaigns that started since last run
 		try {
-			const oneHourAgo = new Date();
-			oneHourAgo.setHours(oneHourAgo.getHours() - 1);
-
 			const liveCampaigns = await db
 				.select({
 					tokenAddress: schema.claimCampaigns.tokenAddress,
@@ -267,7 +295,7 @@ export async function generateAlerts(): Promise<number> {
 				.from(schema.claimCampaigns)
 				.where(
 					and(
-						gte(schema.claimCampaigns.startTime, oneHourAgo),
+						gte(schema.claimCampaigns.startTime, lastRun),
 						sql`${schema.claimCampaigns.startTime} <= ${now.toISOString()}::timestamptz`,
 					),
 				);
@@ -292,6 +320,9 @@ export async function generateAlerts(): Promise<number> {
 		} catch (err) {
 			console.warn("[alerts] campaign live check failed:", err);
 		}
+
+		// Update watermark before cleanup
+		await updateLastRunTime(db);
 
 		// Cleanup old alerts
 		const cleaned = await deleteOldAlerts();

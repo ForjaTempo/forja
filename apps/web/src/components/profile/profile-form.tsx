@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { upsertCreatorProfile } from "@/actions/profile";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useWalletAuth } from "@/hooks/use-wallet-auth";
 import { cn } from "@/lib/utils";
 
 const MAX_BIO = 280;
@@ -24,19 +25,22 @@ export function ProfileForm({ address, existing }: ProfileFormProps) {
 	const [twitterHandle, setTwitterHandle] = useState(existing?.twitterHandle ?? "");
 	const [telegramHandle, setTelegramHandle] = useState(existing?.telegramHandle ?? "");
 	const [saving, setSaving] = useState(false);
+	const { withAuth } = useWalletAuth();
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 		setSaving(true);
 
-		const result = await upsertCreatorProfile(address, {
-			displayName,
-			bio,
-			avatarUrl,
-			website,
-			twitterHandle,
-			telegramHandle,
-		});
+		const result = await withAuth(() =>
+			upsertCreatorProfile(address, {
+				displayName,
+				bio,
+				avatarUrl,
+				website,
+				twitterHandle,
+				telegramHandle,
+			}),
+		);
 
 		setSaving(false);
 

@@ -2,11 +2,16 @@
 import { getDb, schema } from "@forja/db";
 import { and, count, desc, eq, inArray } from "drizzle-orm";
 import { isAddress } from "viem";
+import { getAuthenticatedAddress, requireAuth } from "@/lib/session";
 
 const MAX_WATCHLIST = 50;
 
+/** Private read — requires auth. */
 export async function getWatchlist(walletAddress: string) {
 	if (!isAddress(walletAddress)) return [];
+
+	const authed = await getAuthenticatedAddress();
+	if (authed !== walletAddress.toLowerCase()) return [];
 
 	try {
 		const db = getDb();
@@ -27,7 +32,6 @@ export async function getWatchlist(walletAddress: string) {
 			.from(schema.tokenHubCache)
 			.where(inArray(schema.tokenHubCache.address, tokenAddresses));
 
-		// Preserve watchlist order
 		const tokenMap = new Map(tokens.map((t) => [t.address, t]));
 		return tokenAddresses
 			.map((a) => tokenMap.get(a))
@@ -38,8 +42,12 @@ export async function getWatchlist(walletAddress: string) {
 	}
 }
 
+/** Private read — requires auth. */
 export async function getWatchedTokenAddresses(walletAddress: string): Promise<string[]> {
 	if (!isAddress(walletAddress)) return [];
+
+	const authed = await getAuthenticatedAddress();
+	if (authed !== walletAddress.toLowerCase()) return [];
 
 	try {
 		const db = getDb();
@@ -55,6 +63,7 @@ export async function getWatchedTokenAddresses(walletAddress: string): Promise<s
 	}
 }
 
+/** Write — requires auth. */
 export async function addToWatchlist(
 	walletAddress: string,
 	tokenAddress: string,
@@ -63,12 +72,14 @@ export async function addToWatchlist(
 		return { ok: false, error: "Invalid address" };
 	}
 
+	const auth = await requireAuth(walletAddress);
+	if (!auth.ok) return auth;
+
 	try {
 		const db = getDb();
-		const wallet = walletAddress.toLowerCase();
+		const wallet = auth.address;
 		const token = tokenAddress.toLowerCase();
 
-		// Check limit
 		const [result] = await db
 			.select({ value: count() })
 			.from(schema.watchlist)
@@ -90,13 +101,17 @@ export async function addToWatchlist(
 	}
 }
 
+/** Write — requires auth. */
 export async function removeFromWatchlist(
 	walletAddress: string,
 	tokenAddress: string,
-): Promise<{ ok: boolean }> {
+): Promise<{ ok: boolean; error?: string }> {
 	if (!isAddress(walletAddress) || !isAddress(tokenAddress)) {
-		return { ok: false };
+		return { ok: false, error: "Invalid address" };
 	}
+
+	const auth = await requireAuth(walletAddress);
+	if (!auth.ok) return auth;
 
 	try {
 		const db = getDb();
@@ -104,7 +119,7 @@ export async function removeFromWatchlist(
 			.delete(schema.watchlist)
 			.where(
 				and(
-					eq(schema.watchlist.walletAddress, walletAddress.toLowerCase()),
+					eq(schema.watchlist.walletAddress, auth.address),
 					eq(schema.watchlist.tokenAddress, tokenAddress.toLowerCase()),
 				),
 			);
@@ -112,6 +127,6 @@ export async function removeFromWatchlist(
 		return { ok: true };
 	} catch (err) {
 		console.error("[actions] removeFromWatchlist failed:", err);
-		return { ok: false };
+		return { ok: false, error: "Failed to remove from watchlist" };
 	}
 }

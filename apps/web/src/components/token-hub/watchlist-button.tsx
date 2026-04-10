@@ -5,6 +5,7 @@ import { StarIcon } from "lucide-react";
 import { toast } from "sonner";
 import { useAccount } from "wagmi";
 import { addToWatchlist, getWatchedTokenAddresses, removeFromWatchlist } from "@/actions/watchlist";
+import { useWalletAuth } from "@/hooks/use-wallet-auth";
 import { cn } from "@/lib/utils";
 
 interface WatchlistButtonProps {
@@ -15,6 +16,7 @@ interface WatchlistButtonProps {
 export function WatchlistButton({ tokenAddress, className }: WatchlistButtonProps) {
 	const { address, isConnected } = useAccount();
 	const queryClient = useQueryClient();
+	const { withAuth } = useWalletAuth();
 
 	const { data: watchedAddresses = [] } = useQuery({
 		queryKey: ["watched-addresses", address],
@@ -29,9 +31,9 @@ export function WatchlistButton({ tokenAddress, className }: WatchlistButtonProp
 		mutationFn: async () => {
 			if (!address) throw new Error("Not connected");
 			if (isWatched) {
-				return removeFromWatchlist(address, tokenAddress);
+				return withAuth(() => removeFromWatchlist(address, tokenAddress));
 			}
-			return addToWatchlist(address, tokenAddress);
+			return withAuth(() => addToWatchlist(address, tokenAddress));
 		},
 		onSuccess: (result) => {
 			if ("error" in result && typeof result.error === "string") {
