@@ -196,6 +196,7 @@ export async function getCreatorProfile(address: string) {
 			[recipientResult],
 			[firstSeenResult],
 			[tvlResult],
+			[profileRow],
 		] = await Promise.all([
 			db
 				.select({ value: count() })
@@ -220,6 +221,11 @@ export async function getCreatorProfile(address: string) {
 				})
 				.from(schema.locks)
 				.where(eq(schema.locks.creatorAddress, addr)),
+			db
+				.select()
+				.from(schema.creatorProfiles)
+				.where(eq(schema.creatorProfiles.walletAddress, addr))
+				.limit(1),
 		]);
 
 		const tokensCreated = tokenResult?.value ?? 0;
@@ -233,6 +239,14 @@ export async function getCreatorProfile(address: string) {
 			totalRecipients: Number(recipientResult?.value ?? 0),
 			totalValueLocked: tvlResult?.value ?? "0",
 			firstSeen: firstSeenResult?.value ?? null,
+			displayName: profileRow?.displayName ?? null,
+			bio: profileRow?.bio ?? null,
+			avatarUrl: profileRow?.avatarUrl ?? null,
+			website: profileRow?.website ?? null,
+			twitterHandle: profileRow?.twitterHandle ?? null,
+			telegramHandle: profileRow?.telegramHandle ?? null,
+			verified: profileRow?.verified ?? false,
+			profileClaimed: !!profileRow,
 		};
 	} catch (err) {
 		console.error("[actions] getCreatorProfile failed:", err);
