@@ -7,6 +7,7 @@ import { hasClaimer } from "@/lib/contracts";
 import { cn } from "@/lib/utils";
 import { ConnectButton } from "./connect-button";
 import { MobileNav } from "./mobile-nav";
+import { NotificationBell } from "./notification-bell";
 
 const baseNavLinks = [
 	{ href: "/create", label: "Create" },
@@ -41,7 +42,8 @@ export function Header() {
 									"rounded-md px-3 py-2 text-sm font-medium transition-colors",
 									pathname === link.href ||
 										(link.href === "/dashboard" && pathname.startsWith("/dashboard")) ||
-										(link.href === "/claim/create" && pathname.startsWith("/claim"))
+										(link.href === "/claim/create" && pathname.startsWith("/claim")) ||
+										(link.href === "/tokens" && pathname.startsWith("/tokens"))
 										? "bg-anvil-gray-light text-molten-amber"
 										: "text-smoke hover:text-steel-white",
 								)}
@@ -51,7 +53,10 @@ export function Header() {
 						))}
 					</nav>
 				</div>
-				<ConnectButton />
+				<div className="flex items-center gap-2">
+					<NotificationBell />
+					<ConnectButton />
+				</div>
 			</div>
 		</header>
 	);
