@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAccount } from "wagmi";
+import { hasClaimer } from "@/lib/contracts";
 import { cn } from "@/lib/utils";
 import { ConnectButton } from "./connect-button";
 import { MobileNav } from "./mobile-nav";
@@ -11,6 +12,7 @@ const baseNavLinks = [
 	{ href: "/create", label: "Create" },
 	{ href: "/multisend", label: "Multisend" },
 	{ href: "/lock", label: "Lock" },
+	...(hasClaimer ? [{ href: "/claim/create", label: "Claim" }] : []),
 	{ href: "/tokens", label: "Tokens" },
 ];
 
@@ -38,7 +40,8 @@ export function Header() {
 								className={cn(
 									"rounded-md px-3 py-2 text-sm font-medium transition-colors",
 									pathname === link.href ||
-										(link.href === "/dashboard" && pathname.startsWith("/dashboard"))
+										(link.href === "/dashboard" && pathname.startsWith("/dashboard")) ||
+										(link.href === "/claim/create" && pathname.startsWith("/claim"))
 										? "bg-anvil-gray-light text-molten-amber"
 										: "text-smoke hover:text-steel-white",
 								)}

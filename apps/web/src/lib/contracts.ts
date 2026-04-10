@@ -1,4 +1,5 @@
 import {
+	FORJA_CLAIMER_ADDRESS,
 	FORJA_LOCKER_ADDRESS,
 	FORJA_LOCKER_V2_ADDRESS,
 	FORJA_MULTISEND_ADDRESS,
@@ -357,3 +358,136 @@ export const activeLockerConfig = {
 	address: (hasLockerV2 ? FORJA_LOCKER_V2_ADDRESS : FORJA_LOCKER_ADDRESS) as `0x${string}`,
 	abi: lockerConfig.abi,
 } as const;
+
+export const claimerConfig = {
+	address: FORJA_CLAIMER_ADDRESS,
+	abi: [
+		{
+			name: "createCampaign",
+			type: "function",
+			stateMutability: "nonpayable",
+			inputs: [
+				{ name: "token", type: "address" },
+				{ name: "merkleRoot", type: "bytes32" },
+				{ name: "totalDeposit", type: "uint256" },
+				{ name: "startTime", type: "uint64" },
+				{ name: "endTime", type: "uint64" },
+				{ name: "sweepEnabled", type: "bool" },
+			],
+			outputs: [{ name: "campaignId", type: "uint256" }],
+		},
+		{
+			name: "claim",
+			type: "function",
+			stateMutability: "nonpayable",
+			inputs: [
+				{ name: "campaignId", type: "uint256" },
+				{ name: "amount", type: "uint256" },
+				{ name: "proof", type: "bytes32[]" },
+			],
+			outputs: [],
+		},
+		{
+			name: "claimMultiple",
+			type: "function",
+			stateMutability: "nonpayable",
+			inputs: [
+				{ name: "campaignIds", type: "uint256[]" },
+				{ name: "amounts", type: "uint256[]" },
+				{ name: "proofs", type: "bytes32[][]" },
+			],
+			outputs: [],
+		},
+		{
+			name: "sweep",
+			type: "function",
+			stateMutability: "nonpayable",
+			inputs: [{ name: "campaignId", type: "uint256" }],
+			outputs: [],
+		},
+		{
+			name: "claimFee",
+			type: "function",
+			stateMutability: "view",
+			inputs: [],
+			outputs: [{ name: "", type: "uint256" }],
+		},
+		{
+			name: "nextCampaignId",
+			type: "function",
+			stateMutability: "view",
+			inputs: [],
+			outputs: [{ name: "", type: "uint256" }],
+		},
+		{
+			name: "campaigns",
+			type: "function",
+			stateMutability: "view",
+			inputs: [{ name: "", type: "uint256" }],
+			outputs: [
+				{ name: "creator", type: "address" },
+				{ name: "token", type: "address" },
+				{ name: "merkleRoot", type: "bytes32" },
+				{ name: "totalDeposited", type: "uint256" },
+				{ name: "totalClaimed", type: "uint256" },
+				{ name: "startTime", type: "uint64" },
+				{ name: "endTime", type: "uint64" },
+				{ name: "sweepEnabled", type: "bool" },
+				{ name: "swept", type: "bool" },
+			],
+		},
+		{
+			name: "isClaimed",
+			type: "function",
+			stateMutability: "view",
+			inputs: [
+				{ name: "campaignId", type: "uint256" },
+				{ name: "recipient", type: "address" },
+				{ name: "amount", type: "uint256" },
+			],
+			outputs: [{ name: "", type: "bool" }],
+		},
+		{
+			name: "MAX_BATCH_CLAIMS",
+			type: "function",
+			stateMutability: "view",
+			inputs: [],
+			outputs: [{ name: "", type: "uint256" }],
+		},
+		{
+			type: "event",
+			name: "CampaignCreated",
+			inputs: [
+				{ name: "campaignId", type: "uint256", indexed: true },
+				{ name: "creator", type: "address", indexed: true },
+				{ name: "token", type: "address", indexed: true },
+				{ name: "merkleRoot", type: "bytes32", indexed: false },
+				{ name: "totalDeposited", type: "uint256", indexed: false },
+				{ name: "startTime", type: "uint64", indexed: false },
+				{ name: "endTime", type: "uint64", indexed: false },
+				{ name: "sweepEnabled", type: "bool", indexed: false },
+			],
+		},
+		{
+			type: "event",
+			name: "Claimed",
+			inputs: [
+				{ name: "campaignId", type: "uint256", indexed: true },
+				{ name: "recipient", type: "address", indexed: true },
+				{ name: "amount", type: "uint256", indexed: false },
+				{ name: "leaf", type: "bytes32", indexed: false },
+			],
+		},
+		{
+			type: "event",
+			name: "CampaignSwept",
+			inputs: [
+				{ name: "campaignId", type: "uint256", indexed: true },
+				{ name: "creator", type: "address", indexed: true },
+				{ name: "amount", type: "uint256", indexed: false },
+			],
+		},
+	],
+} as const;
+
+export const hasClaimer = FORJA_CLAIMER_ADDRESS !== "0x";

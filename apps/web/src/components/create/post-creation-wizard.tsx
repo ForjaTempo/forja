@@ -1,6 +1,13 @@
 "use client";
 
-import { ArrowRightIcon, CoinsIcon, ExternalLinkIcon, LockIcon, SendIcon } from "lucide-react";
+import {
+	ArrowRightIcon,
+	CoinsIcon,
+	ExternalLinkIcon,
+	GiftIcon,
+	LockIcon,
+	SendIcon,
+} from "lucide-react";
 import Link from "next/link";
 import { ShareButtons } from "@/components/shared/share-buttons";
 import { AddressDisplay } from "@/components/ui/address-display";
@@ -14,6 +21,7 @@ import {
 } from "@/components/ui/dialog";
 import { useExplorerUrl } from "@/hooks/use-explorer-url";
 import { APP_URL } from "@/lib/constants";
+import { hasClaimer } from "@/lib/contracts";
 
 interface PostCreationWizardProps {
 	open: boolean;
@@ -99,6 +107,22 @@ export function PostCreationWizard({
 							</div>
 							<ArrowRightIcon className="size-4 text-smoke-dark" />
 						</Link>
+
+						{hasClaimer && (
+							<Link
+								href={`/claim/create?token=${tokenAddress}`}
+								className="flex items-center gap-3 rounded-lg border border-anvil-gray-light p-3 transition-colors hover:border-molten-amber/50 hover:bg-molten-amber/5"
+							>
+								<GiftIcon className="size-5 shrink-0 text-molten-amber" />
+								<div className="flex-1">
+									<p className="text-sm font-medium text-smoke">Create Claim Page</p>
+									<p className="text-xs text-smoke-dark">
+										Run a merkle airdrop with self-service claims
+									</p>
+								</div>
+								<ArrowRightIcon className="size-4 text-smoke-dark" />
+							</Link>
+						)}
 
 						<a
 							href={`${explorerUrl}/address/${tokenAddress}`}
