@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { WalletIcon } from "lucide-react";
 import { useState } from "react";
 import { useAccount } from "wagmi";
+import { getCampaignsByCreator } from "@/actions/claims";
 import {
 	getCreatorTokensWithStats,
 	getDashboardOverview,
@@ -15,6 +16,7 @@ import { PageContainer } from "@/components/layout/page-container";
 import { PageHeader } from "@/components/ui/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ClaimsHistory } from "./claims-history";
 import { DashboardOverview } from "./dashboard-overview";
 import { LockHistory } from "./lock-history";
 import { MultisendHistory } from "./multisend-history";
@@ -62,6 +64,13 @@ export function DashboardClient() {
 	const { data: unlockEvents = [] } = useQuery({
 		queryKey: ["unlock-calendar", address],
 		queryFn: () => getUnlockCalendar(address as string),
+		enabled: isConnected && !!address,
+		staleTime: 60_000,
+	});
+
+	const { data: claims = [] } = useQuery({
+		queryKey: ["dashboard-claims", address],
+		queryFn: () => getCampaignsByCreator(address as string),
 		enabled: isConnected && !!address,
 		staleTime: 60_000,
 	});
@@ -131,6 +140,12 @@ export function DashboardClient() {
 						<TabsTrigger value="locks" className="text-smoke data-[state=active]:text-molten-amber">
 							Locks ({locks.length})
 						</TabsTrigger>
+						<TabsTrigger
+							value="claims"
+							className="text-smoke data-[state=active]:text-molten-amber"
+						>
+							Claims ({claims.length})
+						</TabsTrigger>
 					</TabsList>
 
 					<TabsContent value="tokens" className="mt-6">
@@ -169,6 +184,10 @@ export function DashboardClient() {
 								<UnlockCalendar events={unlockEvents} />
 							</div>
 						)}
+					</TabsContent>
+
+					<TabsContent value="claims" className="mt-6">
+						<ClaimsHistory campaigns={claims} />
 					</TabsContent>
 				</Tabs>
 			</div>
