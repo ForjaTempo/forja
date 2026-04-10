@@ -34,3 +34,6 @@ export type TokenHolderBalance = typeof schema.tokenHolderBalances.$inferSelect;
 export type TokenHubCache = typeof schema.tokenHubCache.$inferSelect;
 export type TokenDailyStats = typeof schema.tokenDailyStats.$inferSelect;
 export type IndexerState = typeof schema.indexerState.$inferSelect;
+export type CreatorProfile = typeof schema.creatorProfiles.$inferSelect;
+export type Watchlist = typeof schema.watchlist.$inferSelect;
+export type Alert = typeof schema.alerts.$inferSelect;

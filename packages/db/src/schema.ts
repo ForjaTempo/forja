@@ -211,6 +211,56 @@ export const claimCampaigns = pgTable(
 	],
 );
 
+// Phase 13: Utility & Engagement
+
+export const creatorProfiles = pgTable("creator_profiles", {
+	id: serial("id").primaryKey(),
+	walletAddress: text("wallet_address").notNull().unique(),
+	displayName: text("display_name"),
+	bio: text("bio"),
+	avatarUrl: text("avatar_url"),
+	website: text("website"),
+	twitterHandle: text("twitter_handle"),
+	telegramHandle: text("telegram_handle"),
+	verified: boolean("verified").notNull().default(false),
+	createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+	updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const watchlist = pgTable(
+	"watchlist",
+	{
+		id: serial("id").primaryKey(),
+		walletAddress: text("wallet_address").notNull(),
+		tokenAddress: text("token_address").notNull(),
+		createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+	},
+	(table) => [
+		unique("watchlist_wallet_token_idx").on(table.walletAddress, table.tokenAddress),
+		index("watchlist_wallet_address_idx").on(table.walletAddress),
+	],
+);
+
+export const alerts = pgTable(
+	"alerts",
+	{
+		id: serial("id").primaryKey(),
+		walletAddress: text("wallet_address").notNull(),
+		type: text("type").notNull(),
+		tokenAddress: text("token_address").notNull(),
+		title: text("title").notNull(),
+		message: text("message").notNull(),
+		metadata: text("metadata"),
+		isRead: boolean("is_read").notNull().default(false),
+		createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+	},
+	(table) => [
+		index("alerts_wallet_read_idx").on(table.walletAddress, table.isRead),
+		index("alerts_wallet_created_idx").on(table.walletAddress, table.createdAt),
+		index("alerts_token_address_idx").on(table.tokenAddress),
+	],
+);
+
 export const claimProofs = pgTable(
 	"claim_proofs",
 	{
