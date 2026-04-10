@@ -2,6 +2,7 @@ import "server-only";
 import { getDb, schema } from "@forja/db";
 import { eq } from "drizzle-orm";
 import { indexerClient } from "./client";
+import { indexClaimEvents } from "./index-claims";
 import { indexLockEvents } from "./index-locks";
 import { indexMultisendEvents } from "./index-multisends";
 import { indexTokenEvents } from "./index-tokens";
@@ -30,6 +31,7 @@ const contracts: ContractIndexer[] = [
 	{ name: "token-factory", index: indexTokenEvents },
 	{ name: "multisend", index: indexMultisendEvents },
 	{ name: "locker", index: indexLockEvents },
+	{ name: "claimer", index: indexClaimEvents },
 	{ name: "transfers", chunkSize: TRANSFER_CHUNK_SIZE, index: indexTransferEvents },
 ];
 
