@@ -6,7 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { TokenCard } from "./token-card";
 
 interface TokenGridProps {
-	tokens: TokenHubCache[];
+	tokens: (TokenHubCache & { creatorDisplayName?: string | null })[];
 	total: number;
 	isLoading: boolean;
 	hasMore: boolean;
