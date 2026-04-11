@@ -4,12 +4,14 @@ import type { TokenHubCache, TokenTransfer } from "@forja/db";
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useState } from "react";
 import { getTokenDetail, getTokenHolderDistribution, getTokenTransfers } from "@/actions/token-hub";
+import { getTokenTrustSignals } from "@/actions/trust-signals";
 import { PageContainer } from "@/components/layout/page-container";
 import { ShareButtons } from "@/components/shared/share-buttons";
 import { LiquidityGuidance } from "@/components/token-detail/liquidity-guidance";
 import { HolderDistribution } from "@/components/token-hub/holder-distribution";
 import { TokenActivity } from "@/components/token-hub/token-activity";
 import { TokenOverview } from "@/components/token-hub/token-overview";
+import { WatchlistButton } from "@/components/token-hub/watchlist-button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { APP_URL } from "@/lib/constants";
 
@@ -48,6 +50,12 @@ export function TokenDetailClient({
 		initialData: initialHolders,
 	});
 
+	const { data: trustSignals } = useQuery({
+		queryKey: ["token-trust-signals", initialToken.address],
+		queryFn: () => getTokenTrustSignals(initialToken.address),
+		staleTime: 60_000,
+	});
+
 	const { data: transferData, isLoading: transfersLoading } = useQuery({
 		queryKey: ["token-transfers", initialToken.address, transferPage],
 		queryFn: () =>
@@ -71,7 +79,12 @@ export function TokenDetailClient({
 	return (
 		<PageContainer className="py-8 sm:py-12">
 			<div className="space-y-8">
-				<TokenOverview token={token} />
+				<div className="flex items-start justify-between gap-4">
+					<div className="flex-1">
+						<TokenOverview token={token} trustSignals={trustSignals} />
+					</div>
+					<WatchlistButton tokenAddress={token.address} className="mt-1" />
+				</div>
 
 				<Tabs defaultValue="holders">
 					<TabsList className="border-b border-anvil-gray-light bg-transparent">

@@ -1,21 +1,22 @@
 "use client";
 
 import type { TokenHubCache } from "@forja/db";
-import { AlertTriangleIcon, ArrowRightLeftIcon, CoinsIcon, UsersIcon } from "lucide-react";
+import { ArrowRightLeftIcon, CoinsIcon, UsersIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { AddressDisplay } from "@/components/ui/address-display";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatDate } from "@/lib/format";
+import { TokenCardBadges } from "./trust-badges";
 
 const formatter = new Intl.NumberFormat("en-US");
 
 interface TokenCardProps {
-	token: TokenHubCache;
+	token: TokenHubCache & { creatorDisplayName?: string | null };
+	action?: React.ReactNode;
 }
 
-export function TokenCard({ token }: TokenCardProps) {
+export function TokenCard({ token, action }: TokenCardProps) {
 	return (
 		<Link href={`/tokens/${token.address}`}>
 			<Card className="border-anvil-gray-light bg-deep-charcoal transition-colors hover:border-molten-amber/50">
@@ -37,21 +38,20 @@ export function TokenCard({ token }: TokenCardProps) {
 							)}
 							<div>
 								<h3 className="text-sm font-semibold text-steel-white">{token.name}</h3>
-								<p className="text-xs text-smoke-dark">{token.symbol}</p>
+								<p className="text-xs text-smoke-dark">
+									{token.symbol}
+									{token.creatorDisplayName && (
+										<span className="text-smoke-dark/60"> by {token.creatorDisplayName}</span>
+									)}
+								</p>
 							</div>
 						</div>
-						<div className="flex flex-col items-end gap-1">
-							{token.isForjaCreated && (
-								<Badge className="bg-molten-amber/15 text-molten-amber border-molten-amber/30">
-									FORJA
-								</Badge>
-							)}
-							{token.topHolderPct > 50 && (
-								<Badge className="bg-red-500/15 text-red-400 border-red-500/30 inline-flex items-center gap-1">
-									<AlertTriangleIcon className="size-2.5" />
-									{token.topHolderPct}%
-								</Badge>
-							)}
+						<div className="flex items-start gap-2">
+							<TokenCardBadges
+								isForjaCreated={token.isForjaCreated}
+								topHolderPct={token.topHolderPct}
+							/>
+							{action}
 						</div>
 					</div>
 

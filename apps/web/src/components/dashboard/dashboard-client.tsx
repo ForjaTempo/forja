@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { WalletIcon } from "lucide-react";
+import { KeyRoundIcon, WalletIcon } from "lucide-react";
 import { useState } from "react";
 import { useAccount } from "wagmi";
 import { getCampaignsByCreator } from "@/actions/claims";
@@ -11,11 +11,14 @@ import {
 	getUnlockCalendar,
 } from "@/actions/dashboard";
 import { getCreatorLocks, getCreatorMultisends } from "@/actions/token-hub";
+import { getWatchlist } from "@/actions/watchlist";
 import { ConnectButton } from "@/components/layout/connect-button";
 import { PageContainer } from "@/components/layout/page-container";
+import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAuthGate } from "@/contexts/auth-context";
 import { ClaimsHistory } from "./claims-history";
 import { DashboardOverview } from "./dashboard-overview";
 import { LockHistory } from "./lock-history";
@@ -23,9 +26,11 @@ import { MultisendHistory } from "./multisend-history";
 import { MyTokens } from "./my-tokens";
 import { TokenAnalytics } from "./token-analytics";
 import { UnlockCalendar } from "./unlock-calendar";
+import { WatchlistTab } from "./watchlist-tab";
 
 export function DashboardClient() {
 	const { address, isConnected } = useAccount();
+	const { isAuthed, needsAuth, requestAuth } = useAuthGate();
 	const [selectedToken, setSelectedToken] = useState<{
 		address: string;
 		name: string;
@@ -72,6 +77,13 @@ export function DashboardClient() {
 		queryKey: ["dashboard-claims", address],
 		queryFn: () => getCampaignsByCreator(address as string),
 		enabled: isConnected && !!address,
+		staleTime: 60_000,
+	});
+
+	const { data: watchlistTokens = [] } = useQuery({
+		queryKey: ["watchlist", address],
+		queryFn: () => getWatchlist(address as string),
+		enabled: isConnected && !!address && isAuthed,
 		staleTime: 60_000,
 	});
 
@@ -146,6 +158,12 @@ export function DashboardClient() {
 						>
 							Claims ({claims.length})
 						</TabsTrigger>
+						<TabsTrigger
+							value="watchlist"
+							className="text-smoke data-[state=active]:text-molten-amber"
+						>
+							Watchlist ({watchlistTokens.length})
+						</TabsTrigger>
 					</TabsList>
 
 					<TabsContent value="tokens" className="mt-6">
@@ -188,6 +206,25 @@ export function DashboardClient() {
 
 					<TabsContent value="claims" className="mt-6">
 						<ClaimsHistory campaigns={claims} />
+					</TabsContent>
+
+					<TabsContent value="watchlist" className="mt-6">
+						{needsAuth ? (
+							<div className="flex flex-col items-center justify-center gap-4 rounded-lg border border-anvil-gray-light bg-obsidian-black/50 py-12">
+								<KeyRoundIcon className="size-8 text-smoke-dark" />
+								<p className="text-sm text-smoke-dark">
+									Sign a message to verify your wallet and view your watchlist
+								</p>
+								<Button
+									onClick={() => requestAuth()}
+									className="bg-molten-amber text-forge-black hover:bg-molten-amber/90"
+								>
+									Sign to Verify
+								</Button>
+							</div>
+						) : (
+							<WatchlistTab tokens={watchlistTokens} />
+						)}
 					</TabsContent>
 				</Tabs>
 			</div>

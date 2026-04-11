@@ -25,6 +25,14 @@ interface CreatorProfile {
 	totalRecipients: number;
 	totalValueLocked: string;
 	firstSeen: Date | null;
+	displayName?: string | null;
+	bio?: string | null;
+	avatarUrl?: string | null;
+	website?: string | null;
+	twitterHandle?: string | null;
+	telegramHandle?: string | null;
+	verified?: boolean;
+	profileClaimed?: boolean;
 }
 
 interface CreatorPageClientProps {
