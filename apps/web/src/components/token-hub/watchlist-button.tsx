@@ -30,21 +30,21 @@ export function WatchlistButton({ tokenAddress, className }: WatchlistButtonProp
 	const isWatched = watchedAddresses.includes(tokenAddress.toLowerCase());
 
 	const mutation = useMutation({
-		mutationFn: async () => {
+		mutationFn: async (currentlyWatched: boolean) => {
 			if (!address) throw new Error("Not connected");
-			if (isWatched) {
+			if (currentlyWatched) {
 				return withAuth(() => removeFromWatchlist(address, tokenAddress));
 			}
 			return withAuth(() => addToWatchlist(address, tokenAddress));
 		},
-		onSuccess: (result) => {
+		onSuccess: (result, currentlyWatched) => {
 			if ("error" in result && typeof result.error === "string") {
 				toast.error(result.error);
 				return;
 			}
 			queryClient.invalidateQueries({ queryKey: ["watched-addresses", address] });
 			queryClient.invalidateQueries({ queryKey: ["watchlist", address] });
-			toast.success(isWatched ? "Removed from watchlist" : "Added to watchlist");
+			toast.success(currentlyWatched ? "Removed from watchlist" : "Added to watchlist");
 		},
 		onError: () => {
 			toast.error("Failed to update watchlist");
@@ -57,13 +57,21 @@ export function WatchlistButton({ tokenAddress, className }: WatchlistButtonProp
 		e.preventDefault();
 		e.stopPropagation();
 
-		// If not authed, request auth first before mutating
+		let watched = isWatched;
+
+		// If not authed, request auth and refetch watched state before deciding
 		if (!isAuthed) {
 			const ok = await requestAuth();
 			if (!ok) return;
+
+			const fresh = await queryClient.fetchQuery({
+				queryKey: ["watched-addresses", address],
+				queryFn: () => getWatchedTokenAddresses(address as string),
+			});
+			watched = fresh.includes(tokenAddress.toLowerCase());
 		}
 
-		mutation.mutate();
+		mutation.mutate(watched);
 	};
 
 	return (
