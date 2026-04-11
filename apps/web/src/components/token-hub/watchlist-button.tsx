@@ -18,7 +18,7 @@ export function WatchlistButton({ tokenAddress, className }: WatchlistButtonProp
 	const { address, isConnected } = useAccount();
 	const queryClient = useQueryClient();
 	const { withAuth } = useWalletAuth();
-	const { isAuthed } = useAuthGate();
+	const { isAuthed, requestAuth } = useAuthGate();
 
 	const { data: watchedAddresses = [] } = useQuery({
 		queryKey: ["watched-addresses", address],
@@ -53,14 +53,23 @@ export function WatchlistButton({ tokenAddress, className }: WatchlistButtonProp
 
 	if (!isConnected) return null;
 
+	const handleClick = async (e: React.MouseEvent) => {
+		e.preventDefault();
+		e.stopPropagation();
+
+		// If not authed, request auth first before mutating
+		if (!isAuthed) {
+			const ok = await requestAuth();
+			if (!ok) return;
+		}
+
+		mutation.mutate();
+	};
+
 	return (
 		<button
 			type="button"
-			onClick={(e) => {
-				e.preventDefault();
-				e.stopPropagation();
-				mutation.mutate();
-			}}
+			onClick={handleClick}
 			disabled={mutation.isPending}
 			className={cn(
 				"rounded-md p-1 transition-colors",

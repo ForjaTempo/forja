@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { useAccount } from "wagmi";
 import { checkAuthStatus } from "@/actions/auth";
 import { useWalletAuth } from "@/hooks/use-wallet-auth";
@@ -8,11 +8,17 @@ import { useWalletAuth } from "@/hooks/use-wallet-auth";
 interface AuthContextValue {
 	isAuthed: boolean;
 	isChecking: boolean;
+	/** True when wallet is connected but session is missing/expired — user must sign to proceed. */
+	needsAuth: boolean;
+	/** Trigger wallet signature to establish session. Returns true on success. */
+	requestAuth: () => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextValue>({
 	isAuthed: false,
 	isChecking: true,
+	needsAuth: false,
+	requestAuth: async () => false,
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -21,6 +27,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 	const [isAuthed, setIsAuthed] = useState(false);
 	const [isChecking, setIsChecking] = useState(false);
 
+	// Passive session check — only verify existing cookie, never auto-sign
 	useEffect(() => {
 		if (!isConnected || !address) {
 			setIsAuthed(false);
@@ -30,7 +37,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 		let cancelled = false;
 
-		async function bootstrap() {
+		async function checkSession() {
 			setIsChecking(true);
 			try {
 				const status = await checkAuthStatus();
@@ -38,13 +45,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 				if (status.authenticated && status.address === (address as string).toLowerCase()) {
 					setIsAuthed(true);
-					setIsChecking(false);
-					return;
+				} else {
+					setIsAuthed(false);
 				}
-
-				// No session or wallet mismatch — request signature
-				const ok = await ensureAuth();
-				if (!cancelled) setIsAuthed(ok);
 			} catch {
 				if (!cancelled) setIsAuthed(false);
 			} finally {
@@ -52,13 +55,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 			}
 		}
 
-		bootstrap();
+		checkSession();
 		return () => {
 			cancelled = true;
 		};
-	}, [address, isConnected, ensureAuth]);
+	}, [address, isConnected]);
 
-	const value = useMemo(() => ({ isAuthed, isChecking }), [isAuthed, isChecking]);
+	const requestAuth = useCallback(async (): Promise<boolean> => {
+		const ok = await ensureAuth();
+		setIsAuthed(ok);
+		return ok;
+	}, [ensureAuth]);
+
+	const needsAuth = isConnected && !isAuthed && !isChecking;
+
+	const value = useMemo(
+		() => ({ isAuthed, isChecking, needsAuth, requestAuth }),
+		[isAuthed, isChecking, needsAuth, requestAuth],
+	);
 
 	return <AuthContext value={value}>{children}</AuthContext>;
 }

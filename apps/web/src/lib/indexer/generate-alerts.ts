@@ -43,8 +43,8 @@ async function insertAlert(
 	title: string,
 	message: string,
 	metadata?: Record<string, unknown>,
-) {
-	if (await isDuplicate(db, walletAddress, type, tokenAddress)) return;
+): Promise<boolean> {
+	if (await isDuplicate(db, walletAddress, type, tokenAddress)) return false;
 
 	await db.insert(schema.alerts).values({
 		walletAddress,
@@ -54,6 +54,7 @@ async function insertAlert(
 		message,
 		metadata: metadata ? JSON.stringify(metadata) : null,
 	});
+	return true;
 }
 
 async function getLastRunTime(db: ReturnType<typeof getDb>): Promise<Date> {
@@ -143,7 +144,7 @@ export async function generateAlerts(): Promise<number> {
 						if (pctChange > 10) {
 							const watchers = tokenWatchers.get(tokenAddr) ?? [];
 							for (const watcher of watchers) {
-								await insertAlert(
+								const inserted = await insertAlert(
 									db,
 									watcher,
 									"holder_spike",
@@ -156,7 +157,7 @@ export async function generateAlerts(): Promise<number> {
 										pctChange,
 									},
 								);
-								alertCount++;
+								if (inserted) alertCount++;
 							}
 						}
 					}
@@ -166,7 +167,7 @@ export async function generateAlerts(): Promise<number> {
 						if (todayStat.holderCount >= milestone && prevStat.holderCount < milestone) {
 							const watchers = tokenWatchers.get(tokenAddr) ?? [];
 							for (const watcher of watchers) {
-								await insertAlert(
+								const inserted = await insertAlert(
 									db,
 									watcher,
 									"milestone",
@@ -175,7 +176,7 @@ export async function generateAlerts(): Promise<number> {
 									`Token now has ${todayStat.holderCount} holders`,
 									{ milestone, holderCount: todayStat.holderCount },
 								);
-								alertCount++;
+								if (inserted) alertCount++;
 							}
 						}
 					}
@@ -221,7 +222,7 @@ export async function generateAlerts(): Promise<number> {
 					if (BigInt(tx.amount) >= threshold) {
 						const watchers = tokenWatchers.get(tokenAddr) ?? [];
 						for (const watcher of watchers) {
-							await insertAlert(
+							const inserted = await insertAlert(
 								db,
 								watcher,
 								"large_transfer",
@@ -230,7 +231,7 @@ export async function generateAlerts(): Promise<number> {
 								`Transfer of ${(Number((BigInt(tx.amount) * 10000n) / totalSupply) / 100).toFixed(1)}% of supply`,
 								{ txHash: tx.txHash, amount: tx.amount },
 							);
-							alertCount++;
+							if (inserted) alertCount++;
 						}
 					}
 				}
@@ -269,7 +270,7 @@ export async function generateAlerts(): Promise<number> {
 				);
 
 				for (const watcher of watchers) {
-					await insertAlert(
+					const inserted = await insertAlert(
 						db,
 						watcher,
 						"unlock_soon",
@@ -278,7 +279,7 @@ export async function generateAlerts(): Promise<number> {
 						`Token lock expires in ${daysUntil} day${daysUntil === 1 ? "" : "s"}`,
 						{ endTime: lock.endTime, amount: lock.totalAmount },
 					);
-					alertCount++;
+					if (inserted) alertCount++;
 				}
 			}
 		} catch (err) {
@@ -306,7 +307,7 @@ export async function generateAlerts(): Promise<number> {
 				if (!watchers) continue;
 
 				for (const watcher of watchers) {
-					await insertAlert(
+					const inserted = await insertAlert(
 						db,
 						watcher,
 						"campaign_live",
@@ -315,7 +316,7 @@ export async function generateAlerts(): Promise<number> {
 						`"${campaign.title}" is now open for claiming`,
 						{ slug: campaign.slug },
 					);
-					alertCount++;
+					if (inserted) alertCount++;
 				}
 			}
 		} catch (err) {

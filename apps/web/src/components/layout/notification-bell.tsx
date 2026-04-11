@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { BellIcon } from "lucide-react";
+import { BellIcon, KeyRoundIcon } from "lucide-react";
 import { useState } from "react";
 import { useAccount } from "wagmi";
 import { getAlerts, getUnreadAlertCount } from "@/actions/alerts";
@@ -13,7 +13,7 @@ import { useAuthGate } from "@/contexts/auth-context";
 export function NotificationBell() {
 	const { address, isConnected } = useAccount();
 	const [open, setOpen] = useState(false);
-	const { isAuthed } = useAuthGate();
+	const { isAuthed, needsAuth, requestAuth } = useAuthGate();
 
 	const { data: unreadCount = 0 } = useQuery({
 		queryKey: ["unread-alert-count", address],
@@ -49,7 +49,25 @@ export function NotificationBell() {
 				<SheetHeader className="sr-only">
 					<SheetTitle>Notifications</SheetTitle>
 				</SheetHeader>
-				<AlertPanel alerts={alertData?.alerts ?? []} onClose={() => setOpen(false)} />
+				{needsAuth ? (
+					<div className="flex flex-col items-center justify-center gap-4 py-16">
+						<KeyRoundIcon className="size-8 text-smoke-dark" />
+						<p className="px-4 text-center text-sm text-smoke-dark">
+							Sign a message to verify your wallet and view notifications
+						</p>
+						<Button
+							onClick={async () => {
+								const ok = await requestAuth();
+								if (!ok) setOpen(false);
+							}}
+							className="bg-molten-amber text-forge-black hover:bg-molten-amber/90"
+						>
+							Sign to Verify
+						</Button>
+					</div>
+				) : (
+					<AlertPanel alerts={alertData?.alerts ?? []} onClose={() => setOpen(false)} />
+				)}
 			</SheetContent>
 		</Sheet>
 	);

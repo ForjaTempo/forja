@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { WalletIcon } from "lucide-react";
+import { KeyRoundIcon, WalletIcon } from "lucide-react";
 import { useState } from "react";
 import { useAccount } from "wagmi";
 import { getCampaignsByCreator } from "@/actions/claims";
@@ -14,6 +14,7 @@ import { getCreatorLocks, getCreatorMultisends } from "@/actions/token-hub";
 import { getWatchlist } from "@/actions/watchlist";
 import { ConnectButton } from "@/components/layout/connect-button";
 import { PageContainer } from "@/components/layout/page-container";
+import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -29,7 +30,7 @@ import { WatchlistTab } from "./watchlist-tab";
 
 export function DashboardClient() {
 	const { address, isConnected } = useAccount();
-	const { isAuthed } = useAuthGate();
+	const { isAuthed, needsAuth, requestAuth } = useAuthGate();
 	const [selectedToken, setSelectedToken] = useState<{
 		address: string;
 		name: string;
@@ -208,7 +209,22 @@ export function DashboardClient() {
 					</TabsContent>
 
 					<TabsContent value="watchlist" className="mt-6">
-						<WatchlistTab tokens={watchlistTokens} />
+						{needsAuth ? (
+							<div className="flex flex-col items-center justify-center gap-4 rounded-lg border border-anvil-gray-light bg-obsidian-black/50 py-12">
+								<KeyRoundIcon className="size-8 text-smoke-dark" />
+								<p className="text-sm text-smoke-dark">
+									Sign a message to verify your wallet and view your watchlist
+								</p>
+								<Button
+									onClick={() => requestAuth()}
+									className="bg-molten-amber text-forge-black hover:bg-molten-amber/90"
+								>
+									Sign to Verify
+								</Button>
+							</div>
+						) : (
+							<WatchlistTab tokens={watchlistTokens} />
+						)}
 					</TabsContent>
 				</Tabs>
 			</div>

@@ -1,19 +1,20 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { WalletIcon } from "lucide-react";
+import { KeyRoundIcon, WalletIcon } from "lucide-react";
 import { useAccount } from "wagmi";
 import { getCreatorProfileData } from "@/actions/profile";
 import { ConnectButton } from "@/components/layout/connect-button";
 import { PageContainer } from "@/components/layout/page-container";
 import { ProfileForm } from "@/components/profile/profile-form";
+import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuthGate } from "@/contexts/auth-context";
 
 export default function ProfilePage() {
 	const { address, isConnected } = useAccount();
-	const { isAuthed, isChecking } = useAuthGate();
+	const { isAuthed, isChecking, needsAuth, requestAuth } = useAuthGate();
 
 	const { data: existing, isLoading } = useQuery({
 		queryKey: ["creator-profile-data", address],
@@ -45,7 +46,20 @@ export default function ProfilePage() {
 					description="Customize how you appear on your creator page"
 				/>
 
-				{isLoading || isChecking ? (
+				{needsAuth ? (
+					<div className="flex flex-col items-center justify-center gap-4 rounded-lg border border-anvil-gray-light bg-obsidian-black/50 py-12">
+						<KeyRoundIcon className="size-10 text-smoke-dark" />
+						<p className="text-sm text-smoke-dark">
+							Sign a message to verify your wallet and load your profile
+						</p>
+						<Button
+							onClick={() => requestAuth()}
+							className="bg-molten-amber text-forge-black hover:bg-molten-amber/90"
+						>
+							Sign to Verify
+						</Button>
+					</div>
+				) : isLoading || isChecking ? (
 					<div className="space-y-4">
 						<Skeleton className="h-10 rounded-md" />
 						<Skeleton className="h-10 rounded-md" />
