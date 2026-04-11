@@ -1,9 +1,11 @@
 import "server-only";
-import { createHmac, timingSafeEqual } from "node:crypto";
+import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 
 const COOKIE_NAME = "forja_session";
+const NONCE_COOKIE = "forja_auth_nonce";
 const SESSION_DURATION = 24 * 60 * 60; // 24h in seconds
+const NONCE_MAX_AGE = 5 * 60; // 5 minutes
 
 function getSecret(): string {
 	return createHmac("sha256", "forja-session-salt")
@@ -68,12 +70,57 @@ export async function requireAuth(
 	requestedAddress: string,
 ): Promise<{ ok: true; address: string } | { ok: false; error: string }> {
 	const authed = await getAuthenticatedAddress();
-	if (!authed) return { ok: false, error: "auth_required" };
-	if (authed !== requestedAddress.toLowerCase()) return { ok: false, error: "Unauthorized" };
+	if (!authed || authed !== requestedAddress.toLowerCase()) {
+		return { ok: false, error: "auth_required" };
+	}
 	return { ok: true, address: authed };
 }
 
 export async function clearSession(): Promise<void> {
 	const cookieStore = await cookies();
 	cookieStore.delete(COOKIE_NAME);
+}
+
+/** Generate a one-time nonce, store it in a short-lived httpOnly cookie. */
+export async function createNonce(): Promise<string> {
+	const nonce = randomBytes(16).toString("hex");
+	const expiresAt = Math.floor(Date.now() / 1000) + NONCE_MAX_AGE;
+	const payload = `${nonce}|${expiresAt}`;
+	const hmac = sign(payload);
+	const value = `${payload}|${hmac}`;
+
+	const cookieStore = await cookies();
+	cookieStore.set(NONCE_COOKIE, value, {
+		httpOnly: true,
+		secure: process.env.NODE_ENV === "production",
+		sameSite: "lax",
+		maxAge: NONCE_MAX_AGE,
+		path: "/",
+	});
+
+	return nonce;
+}
+
+/** Read and consume the nonce cookie. Returns null if invalid/expired/missing. */
+export async function consumeNonce(): Promise<string | null> {
+	const cookieStore = await cookies();
+	const cookie = cookieStore.get(NONCE_COOKIE)?.value;
+	// Always delete — single use
+	cookieStore.delete(NONCE_COOKIE);
+
+	if (!cookie) return null;
+
+	const parts = cookie.split("|");
+	if (parts.length !== 3) return null;
+
+	const [nonce, expiresAtStr, hmac] = parts;
+	if (!nonce || !expiresAtStr || !hmac) return null;
+
+	const payload = `${nonce}|${expiresAtStr}`;
+	if (!verifyHmac(payload, hmac)) return null;
+
+	const expiresAt = Number.parseInt(expiresAtStr, 10);
+	if (Date.now() / 1000 > expiresAt) return null;
+
+	return nonce;
 }

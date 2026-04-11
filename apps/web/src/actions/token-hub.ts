@@ -1,6 +1,6 @@
 "use server";
 import { getDb, schema } from "@forja/db";
-import { and, asc, count, desc, eq, ilike, or, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, ilike, inArray, or, sql } from "drizzle-orm";
 import { isAddress } from "viem";
 
 type SortOption = "newest" | "oldest" | "holders" | "transfers";
@@ -62,7 +62,30 @@ export async function getTokenList({
 			db.select({ value: count() }).from(schema.tokenHubCache).where(where),
 		]);
 
-		return { tokens, total: totalResult?.value ?? 0 };
+		// Batch-fetch creator display names
+		const creatorAddresses = [
+			...new Set(tokens.map((t) => t.creatorAddress).filter((a): a is string => !!a)),
+		];
+		const creatorNames: Record<string, string> = {};
+		if (creatorAddresses.length > 0) {
+			const profiles = await db
+				.select({
+					walletAddress: schema.creatorProfiles.walletAddress,
+					displayName: schema.creatorProfiles.displayName,
+				})
+				.from(schema.creatorProfiles)
+				.where(inArray(schema.creatorProfiles.walletAddress, creatorAddresses));
+			for (const p of profiles) {
+				if (p.displayName) creatorNames[p.walletAddress] = p.displayName;
+			}
+		}
+
+		const enrichedTokens = tokens.map((t) => ({
+			...t,
+			creatorDisplayName: t.creatorAddress ? (creatorNames[t.creatorAddress] ?? null) : null,
+		}));
+
+		return { tokens: enrichedTokens, total: totalResult?.value ?? 0 };
 	} catch (err) {
 		console.error("[actions] getTokenList failed:", err);
 		return { tokens: [], total: 0 };

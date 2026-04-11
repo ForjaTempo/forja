@@ -1,6 +1,6 @@
 "use server";
 import { getDb, schema } from "@forja/db";
-import { and, count, desc, eq, inArray } from "drizzle-orm";
+import { and, count, desc, eq, gte, inArray } from "drizzle-orm";
 import { isAddress } from "viem";
 import { getAuthenticatedAddress, requireAuth } from "@/lib/session";
 
@@ -33,9 +33,50 @@ export async function getWatchlist(walletAddress: string) {
 			.where(inArray(schema.tokenHubCache.address, tokenAddresses));
 
 		const tokenMap = new Map(tokens.map((t) => [t.address, t]));
-		return tokenAddresses
+		const orderedTokens = tokenAddresses
 			.map((a) => tokenMap.get(a))
 			.filter((t): t is NonNullable<typeof t> => !!t);
+
+		// Compute 7d stats for each watched token
+		const sevenDaysAgo = new Date();
+		sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+		const statsRows = await db
+			.select({
+				tokenAddress: schema.tokenDailyStats.tokenAddress,
+				holderCount: schema.tokenDailyStats.holderCount,
+				transferCount: schema.tokenDailyStats.transferCount,
+				date: schema.tokenDailyStats.date,
+			})
+			.from(schema.tokenDailyStats)
+			.where(
+				and(
+					inArray(schema.tokenDailyStats.tokenAddress, tokenAddresses),
+					gte(schema.tokenDailyStats.date, sevenDaysAgo),
+				),
+			)
+			.orderBy(schema.tokenDailyStats.date);
+
+		// First and last holder counts + total transfers per token
+		const firstHolder = new Map<string, number>();
+		const lastHolder = new Map<string, number>();
+		const totalTransfers = new Map<string, number>();
+		for (const row of statsRows) {
+			if (!firstHolder.has(row.tokenAddress)) {
+				firstHolder.set(row.tokenAddress, row.holderCount);
+			}
+			lastHolder.set(row.tokenAddress, row.holderCount);
+			totalTransfers.set(
+				row.tokenAddress,
+				(totalTransfers.get(row.tokenAddress) ?? 0) + row.transferCount,
+			);
+		}
+
+		return orderedTokens.map((t) => ({
+			...t,
+			holderDelta: (lastHolder.get(t.address) ?? 0) - (firstHolder.get(t.address) ?? 0),
+			transfers7d: totalTransfers.get(t.address) ?? 0,
+		}));
 	} catch (err) {
 		console.error("[actions] getWatchlist failed:", err);
 		return [];

@@ -1,8 +1,14 @@
 "use server";
 import { verifyMessage } from "viem";
-import { createSession, getAuthenticatedAddress } from "@/lib/session";
+import { consumeNonce, createNonce, createSession, getAuthenticatedAddress } from "@/lib/session";
 
 const MAX_TIMESTAMP_AGE = 5 * 60; // 5 minutes
+
+/** Generate a one-time challenge nonce for wallet auth. */
+export async function getAuthChallenge(): Promise<{ nonce: string }> {
+	const nonce = await createNonce();
+	return { nonce };
+}
 
 export async function authenticateWallet(
 	address: string,
@@ -20,13 +26,30 @@ export async function authenticateWallet(
 			return { ok: false, error: "Invalid signature" };
 		}
 
-		// Verify message format: "FORJA Auth\nAddress: <addr>\nTimestamp: <ts>"
-		const expectedPrefix = `FORJA Auth\nAddress: ${address.toLowerCase()}\nTimestamp: `;
-		if (!message.startsWith(expectedPrefix)) {
+		// Verify message format: "FORJA Auth\nAddress: <addr>\nTimestamp: <ts>\nNonce: <nonce>"
+		const lines = message.split("\n");
+		if (lines.length !== 4 || lines[0] !== "FORJA Auth") {
 			return { ok: false, error: "Invalid message format" };
 		}
 
-		const timestamp = Number.parseInt(message.slice(expectedPrefix.length), 10);
+		const addrLine = lines[1];
+		const tsLine = lines[2];
+		const nonceLine = lines[3];
+
+		if (
+			!addrLine?.startsWith("Address: ") ||
+			!tsLine?.startsWith("Timestamp: ") ||
+			!nonceLine?.startsWith("Nonce: ")
+		) {
+			return { ok: false, error: "Invalid message format" };
+		}
+
+		const msgAddress = addrLine.slice("Address: ".length);
+		if (msgAddress !== address.toLowerCase()) {
+			return { ok: false, error: "Address mismatch" };
+		}
+
+		const timestamp = Number.parseInt(tsLine.slice("Timestamp: ".length), 10);
 		if (Number.isNaN(timestamp)) {
 			return { ok: false, error: "Invalid timestamp" };
 		}
@@ -34,6 +57,13 @@ export async function authenticateWallet(
 		const now = Math.floor(Date.now() / 1000);
 		if (Math.abs(now - timestamp) > MAX_TIMESTAMP_AGE) {
 			return { ok: false, error: "Expired timestamp" };
+		}
+
+		// Verify and consume the server-issued nonce
+		const msgNonce = nonceLine.slice("Nonce: ".length);
+		const storedNonce = await consumeNonce();
+		if (!storedNonce || storedNonce !== msgNonce) {
+			return { ok: false, error: "Invalid or expired nonce" };
 		}
 
 		await createSession(address.toLowerCase());

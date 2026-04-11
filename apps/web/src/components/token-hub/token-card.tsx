@@ -12,7 +12,7 @@ import { TokenCardBadges } from "./trust-badges";
 const formatter = new Intl.NumberFormat("en-US");
 
 interface TokenCardProps {
-	token: TokenHubCache;
+	token: TokenHubCache & { creatorDisplayName?: string | null };
 	action?: React.ReactNode;
 }
 
@@ -38,7 +38,12 @@ export function TokenCard({ token, action }: TokenCardProps) {
 							)}
 							<div>
 								<h3 className="text-sm font-semibold text-steel-white">{token.name}</h3>
-								<p className="text-xs text-smoke-dark">{token.symbol}</p>
+								<p className="text-xs text-smoke-dark">
+									{token.symbol}
+									{token.creatorDisplayName && (
+										<span className="text-smoke-dark/60"> by {token.creatorDisplayName}</span>
+									)}
+								</p>
 							</div>
 						</div>
 						<div className="flex items-start gap-2">

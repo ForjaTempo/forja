@@ -2,7 +2,7 @@
 
 import { useCallback, useRef } from "react";
 import { useAccount, useSignMessage } from "wagmi";
-import { authenticateWallet } from "@/actions/auth";
+import { authenticateWallet, getAuthChallenge } from "@/actions/auth";
 
 export function useWalletAuth() {
 	const { address } = useAccount();
@@ -13,8 +13,9 @@ export function useWalletAuth() {
 		if (!address || authenticatingRef.current) return false;
 		authenticatingRef.current = true;
 		try {
+			const { nonce } = await getAuthChallenge();
 			const timestamp = Math.floor(Date.now() / 1000);
-			const message = `FORJA Auth\nAddress: ${address.toLowerCase()}\nTimestamp: ${timestamp}`;
+			const message = `FORJA Auth\nAddress: ${address.toLowerCase()}\nTimestamp: ${timestamp}\nNonce: ${nonce}`;
 			const signature = await signMessageAsync({ message });
 			const result = await authenticateWallet(address, signature, message);
 			return result.ok;
