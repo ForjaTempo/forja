@@ -10,18 +10,20 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import type { TrustSignals } from "@/actions/trust-signals";
 import { AddressDisplay } from "@/components/ui/address-display";
-import { Badge } from "@/components/ui/badge";
 import { useExplorerUrl } from "@/hooks/use-explorer-url";
 import { formatDate, formatSupply } from "@/lib/format";
+import { TrustBadges } from "./trust-badges";
 
 const formatter = new Intl.NumberFormat("en-US");
 
 interface TokenOverviewProps {
 	token: TokenHubCache;
+	trustSignals?: TrustSignals | null;
 }
 
-export function TokenOverview({ token }: TokenOverviewProps) {
+export function TokenOverview({ token, trustSignals }: TokenOverviewProps) {
 	const explorerUrl = useExplorerUrl();
 
 	return (
@@ -45,11 +47,7 @@ export function TokenOverview({ token }: TokenOverviewProps) {
 					<div className="flex items-center gap-2">
 						<h1 className="text-2xl font-bold text-steel-white">{token.name}</h1>
 						<span className="text-lg text-smoke-dark">{token.symbol}</span>
-						{token.isForjaCreated && (
-							<Badge className="bg-molten-amber/15 text-molten-amber border-molten-amber/30">
-								FORJA
-							</Badge>
-						)}
+						{trustSignals && <TrustBadges signals={trustSignals} />}
 					</div>
 					<div className="mt-1 flex items-center gap-2">
 						<AddressDisplay address={token.address} showExplorer />

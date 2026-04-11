@@ -7,6 +7,7 @@ import { type ReactNode, useState } from "react";
 import { Toaster } from "sonner";
 import { WagmiProvider } from "wagmi";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { AuthProvider } from "@/contexts/auth-context";
 import { useWrongNetwork } from "@/hooks/use-wrong-network";
 import { config } from "@/lib/wagmi";
 
@@ -30,7 +31,9 @@ export function Providers({ children }: { children: ReactNode }) {
 			<QueryClientProvider client={queryClient}>
 				<RainbowKitProvider theme={rainbowTheme}>
 					<TooltipProvider delayDuration={300}>
-						<NetworkGuard>{children}</NetworkGuard>
+						<AuthProvider>
+							<NetworkGuard>{children}</NetworkGuard>
+						</AuthProvider>
 						<Toaster
 							theme="dark"
 							toastOptions={{

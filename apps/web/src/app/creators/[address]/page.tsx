@@ -19,7 +19,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 	if (!profile) return {};
 
 	const truncated = `${address.slice(0, 8)}...${address.slice(-6)}`;
-	const title = `Creator ${truncated} — FORJA`;
+	const title = `${profile.displayName ?? `Creator ${truncated}`} — FORJA`;
 	const description = `${profile.tokensCreated} tokens created, ${profile.multisendCount} multisends, ${profile.lockCount} locks on Tempo.`;
 	const url = `${APP_URL}/creators/${address}`;
 

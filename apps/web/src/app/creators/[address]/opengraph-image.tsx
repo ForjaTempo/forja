@@ -145,8 +145,19 @@ export default async function CreatorOgImage({ params }: { params: Promise<{ add
 							letterSpacing: "-0.02em",
 						}}
 					>
-						{truncateAddress(address)}
+						{profile.displayName ?? truncateAddress(address)}
 					</div>
+					{profile.displayName && (
+						<div
+							style={{
+								fontSize: 20,
+								color: "#9CA3AF",
+								fontFamily: "monospace",
+							}}
+						>
+							{truncateAddress(address)}
+						</div>
+					)}
 					<div
 						style={{
 							fontSize: 24,
