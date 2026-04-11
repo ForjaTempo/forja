@@ -1,6 +1,6 @@
 import "server-only";
 import { getDb, schema } from "@forja/db";
-import { and, eq, gt, gte, sql } from "drizzle-orm";
+import { and, desc, eq, gt, gte, sql } from "drizzle-orm";
 import { deleteOldAlerts } from "@/actions/alerts";
 
 type AlertType = "holder_spike" | "large_transfer" | "unlock_soon" | "milestone" | "campaign_live";
@@ -199,7 +199,7 @@ export async function generateAlerts(): Promise<number> {
 				const totalSupply = BigInt(tokenInfo.totalSupply);
 				const threshold = totalSupply / 20n; // 5%
 
-				// Check transfers since last alert run (watermark-based)
+				// Check transfers since last alert run (watermark-based, no limit)
 				const largeTransfers = await db
 					.select({
 						amount: schema.tokenTransfers.amount,
@@ -212,9 +212,10 @@ export async function generateAlerts(): Promise<number> {
 						and(
 							eq(schema.tokenTransfers.tokenAddress, tokenAddr),
 							gte(schema.tokenTransfers.createdAt, lastRun),
+							sql`CAST(${schema.tokenTransfers.amount} AS NUMERIC) >= ${threshold.toString()}`,
 						),
 					)
-					.limit(50);
+					.orderBy(desc(schema.tokenTransfers.blockNumber), desc(schema.tokenTransfers.logIndex));
 
 				for (const tx of largeTransfers) {
 					if (BigInt(tx.amount) >= threshold) {

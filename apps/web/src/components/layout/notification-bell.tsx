@@ -8,15 +8,17 @@ import { getAlerts, getUnreadAlertCount } from "@/actions/alerts";
 import { AlertPanel } from "@/components/layout/alert-panel";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { useAuthGate } from "@/contexts/auth-context";
 
 export function NotificationBell() {
 	const { address, isConnected } = useAccount();
 	const [open, setOpen] = useState(false);
+	const { isAuthed } = useAuthGate();
 
 	const { data: unreadCount = 0 } = useQuery({
 		queryKey: ["unread-alert-count", address],
 		queryFn: () => getUnreadAlertCount(address as string),
-		enabled: isConnected && !!address,
+		enabled: isConnected && !!address && isAuthed,
 		staleTime: 30_000,
 		refetchInterval: 60_000,
 	});
@@ -24,7 +26,7 @@ export function NotificationBell() {
 	const { data: alertData } = useQuery({
 		queryKey: ["alerts", address],
 		queryFn: () => getAlerts(address as string, { limit: 30 }),
-		enabled: isConnected && !!address && open,
+		enabled: isConnected && !!address && isAuthed && open,
 		staleTime: 15_000,
 	});
 

@@ -17,6 +17,7 @@ import { PageContainer } from "@/components/layout/page-container";
 import { PageHeader } from "@/components/ui/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAuthGate } from "@/contexts/auth-context";
 import { ClaimsHistory } from "./claims-history";
 import { DashboardOverview } from "./dashboard-overview";
 import { LockHistory } from "./lock-history";
@@ -28,6 +29,7 @@ import { WatchlistTab } from "./watchlist-tab";
 
 export function DashboardClient() {
 	const { address, isConnected } = useAccount();
+	const { isAuthed } = useAuthGate();
 	const [selectedToken, setSelectedToken] = useState<{
 		address: string;
 		name: string;
@@ -80,7 +82,7 @@ export function DashboardClient() {
 	const { data: watchlistTokens = [] } = useQuery({
 		queryKey: ["watchlist", address],
 		queryFn: () => getWatchlist(address as string),
-		enabled: isConnected && !!address,
+		enabled: isConnected && !!address && isAuthed,
 		staleTime: 60_000,
 	});
 

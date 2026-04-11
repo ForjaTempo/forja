@@ -9,14 +9,16 @@ import { PageContainer } from "@/components/layout/page-container";
 import { ProfileForm } from "@/components/profile/profile-form";
 import { PageHeader } from "@/components/ui/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAuthGate } from "@/contexts/auth-context";
 
 export default function ProfilePage() {
 	const { address, isConnected } = useAccount();
+	const { isAuthed, isChecking } = useAuthGate();
 
 	const { data: existing, isLoading } = useQuery({
 		queryKey: ["creator-profile-data", address],
 		queryFn: () => getCreatorProfileData(address as string),
-		enabled: isConnected && !!address,
+		enabled: isConnected && !!address && isAuthed,
 		staleTime: 30_000,
 	});
 
@@ -43,7 +45,7 @@ export default function ProfilePage() {
 					description="Customize how you appear on your creator page"
 				/>
 
-				{isLoading ? (
+				{isLoading || isChecking ? (
 					<div className="space-y-4">
 						<Skeleton className="h-10 rounded-md" />
 						<Skeleton className="h-10 rounded-md" />

@@ -5,6 +5,7 @@ import { StarIcon } from "lucide-react";
 import { toast } from "sonner";
 import { useAccount } from "wagmi";
 import { addToWatchlist, getWatchedTokenAddresses, removeFromWatchlist } from "@/actions/watchlist";
+import { useAuthGate } from "@/contexts/auth-context";
 import { useWalletAuth } from "@/hooks/use-wallet-auth";
 import { cn } from "@/lib/utils";
 
@@ -17,11 +18,12 @@ export function WatchlistButton({ tokenAddress, className }: WatchlistButtonProp
 	const { address, isConnected } = useAccount();
 	const queryClient = useQueryClient();
 	const { withAuth } = useWalletAuth();
+	const { isAuthed } = useAuthGate();
 
 	const { data: watchedAddresses = [] } = useQuery({
 		queryKey: ["watched-addresses", address],
 		queryFn: () => getWatchedTokenAddresses(address as string),
-		enabled: isConnected && !!address,
+		enabled: isConnected && !!address && isAuthed,
 		staleTime: 30_000,
 	});
 
