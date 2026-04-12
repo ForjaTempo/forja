@@ -26,6 +26,10 @@ export const FORJA_LOCKER_V2_ADDRESS = (process.env.NEXT_PUBLIC_FORJA_LOCKER_V2 
 	"0x") as `0x${string}`;
 export const FORJA_CLAIMER_ADDRESS = (process.env.NEXT_PUBLIC_FORJA_CLAIMER ??
 	"0x") as `0x${string}`;
+export const FORJA_LAUNCHPAD_ADDRESS = (process.env.NEXT_PUBLIC_FORJA_LAUNCHPAD ??
+	"0x") as `0x${string}`;
+export const hasLaunchpad =
+	FORJA_LAUNCHPAD_ADDRESS !== "0x" && process.env.NEXT_PUBLIC_LAUNCHPAD_ENABLED === "true";
 
 export const TIP20_DECIMALS = 6;
 
@@ -35,6 +39,7 @@ export const FEES = {
 	tokenLock: 1,
 	batchLock: 1,
 	claimCampaign: 1,
+	launchCreate: 2,
 } as const;
 
 // Phase 12A: Merkle Claim Pages safety limits

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAccount } from "wagmi";
-import { hasClaimer } from "@/lib/contracts";
+import { hasClaimer, hasLaunchpad } from "@/lib/contracts";
 import { cn } from "@/lib/utils";
 import { ConnectButton } from "./connect-button";
 import { MobileNav } from "./mobile-nav";
@@ -14,6 +14,7 @@ const baseNavLinks = [
 	{ href: "/multisend", label: "Multisend" },
 	{ href: "/lock", label: "Lock" },
 	...(hasClaimer ? [{ href: "/claim/create", label: "Claim" }] : []),
+	...(hasLaunchpad ? [{ href: "/launch", label: "Launch" }] : []),
 	{ href: "/tokens", label: "Tokens" },
 ];
 
@@ -48,6 +49,7 @@ export function Header() {
 										(link.href === "/dashboard" && pathname.startsWith("/dashboard")) ||
 										(link.href === "/profile" && pathname.startsWith("/profile")) ||
 										(link.href === "/claim/create" && pathname.startsWith("/claim")) ||
+										(link.href === "/launch" && pathname.startsWith("/launch")) ||
 										(link.href === "/tokens" && pathname.startsWith("/tokens"))
 										? "bg-anvil-gray-light text-molten-amber"
 										: "text-smoke hover:text-steel-white",

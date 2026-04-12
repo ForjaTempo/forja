@@ -491,3 +491,188 @@ export const claimerConfig = {
 } as const;
 
 export const hasClaimer = FORJA_CLAIMER_ADDRESS !== "0x";
+
+// ─── Phase 14: Launchpad ───
+
+import { FORJA_LAUNCHPAD_ADDRESS, hasLaunchpad } from "./constants";
+
+export { hasLaunchpad };
+
+export const launchpadConfig = {
+	address: FORJA_LAUNCHPAD_ADDRESS,
+	abi: [
+		{
+			name: "createLaunch",
+			type: "function",
+			stateMutability: "nonpayable",
+			inputs: [
+				{ name: "name", type: "string" },
+				{ name: "symbol", type: "string" },
+				{ name: "description", type: "string" },
+				{ name: "imageUri", type: "string" },
+			],
+			outputs: [{ name: "launchId", type: "uint256" }],
+		},
+		{
+			name: "buy",
+			type: "function",
+			stateMutability: "nonpayable",
+			inputs: [
+				{ name: "launchId", type: "uint256" },
+				{ name: "usdcAmount", type: "uint256" },
+				{ name: "minTokensOut", type: "uint256" },
+			],
+			outputs: [],
+		},
+		{
+			name: "sell",
+			type: "function",
+			stateMutability: "nonpayable",
+			inputs: [
+				{ name: "launchId", type: "uint256" },
+				{ name: "tokenAmount", type: "uint256" },
+				{ name: "minUsdcOut", type: "uint256" },
+			],
+			outputs: [],
+		},
+		{
+			name: "claimCreatorFee",
+			type: "function",
+			stateMutability: "nonpayable",
+			inputs: [{ name: "launchId", type: "uint256" }],
+			outputs: [],
+		},
+		{
+			name: "getCurrentPrice",
+			type: "function",
+			stateMutability: "view",
+			inputs: [{ name: "launchId", type: "uint256" }],
+			outputs: [{ name: "", type: "uint256" }],
+		},
+		{
+			name: "calculateBuyReturn",
+			type: "function",
+			stateMutability: "view",
+			inputs: [
+				{ name: "launchId", type: "uint256" },
+				{ name: "usdcAmount", type: "uint256" },
+			],
+			outputs: [{ name: "tokensOut", type: "uint256" }],
+		},
+		{
+			name: "calculateSellReturn",
+			type: "function",
+			stateMutability: "view",
+			inputs: [
+				{ name: "launchId", type: "uint256" },
+				{ name: "tokenAmount", type: "uint256" },
+			],
+			outputs: [{ name: "usdcOut", type: "uint256" }],
+		},
+		{
+			name: "launches",
+			type: "function",
+			stateMutability: "view",
+			inputs: [{ name: "", type: "uint256" }],
+			outputs: [
+				{ name: "token", type: "address" },
+				{ name: "creator", type: "address" },
+				{ name: "virtualTokens", type: "uint256" },
+				{ name: "virtualUsdc", type: "uint256" },
+				{ name: "realTokensSold", type: "uint256" },
+				{ name: "realUsdcRaised", type: "uint256" },
+				{ name: "creatorFeeAccrued", type: "uint256" },
+				{ name: "startTime", type: "uint256" },
+				{ name: "graduated", type: "bool" },
+				{ name: "killed", type: "bool" },
+				{ name: "failed", type: "bool" },
+			],
+		},
+		{
+			name: "launchMeta",
+			type: "function",
+			stateMutability: "view",
+			inputs: [{ name: "", type: "uint256" }],
+			outputs: [
+				{ name: "name", type: "string" },
+				{ name: "symbol", type: "string" },
+				{ name: "description", type: "string" },
+				{ name: "imageUri", type: "string" },
+			],
+		},
+		{
+			name: "createFee",
+			type: "function",
+			stateMutability: "view",
+			inputs: [],
+			outputs: [{ name: "", type: "uint256" }],
+		},
+		{
+			name: "nextLaunchId",
+			type: "function",
+			stateMutability: "view",
+			inputs: [],
+			outputs: [{ name: "", type: "uint256" }],
+		},
+		{
+			name: "GRADUATION_THRESHOLD",
+			type: "function",
+			stateMutability: "view",
+			inputs: [],
+			outputs: [{ name: "", type: "uint256" }],
+		},
+		{
+			name: "TOTAL_SUPPLY",
+			type: "function",
+			stateMutability: "view",
+			inputs: [],
+			outputs: [{ name: "", type: "uint256" }],
+		},
+		{
+			type: "event",
+			name: "LaunchCreated",
+			inputs: [
+				{ name: "launchId", type: "uint256", indexed: true },
+				{ name: "creator", type: "address", indexed: true },
+				{ name: "token", type: "address", indexed: true },
+				{ name: "name", type: "string", indexed: false },
+				{ name: "symbol", type: "string", indexed: false },
+				{ name: "description", type: "string", indexed: false },
+				{ name: "imageUri", type: "string", indexed: false },
+			],
+		},
+		{
+			type: "event",
+			name: "TokenBought",
+			inputs: [
+				{ name: "launchId", type: "uint256", indexed: true },
+				{ name: "buyer", type: "address", indexed: true },
+				{ name: "usdcSpent", type: "uint256", indexed: false },
+				{ name: "tokensReceived", type: "uint256", indexed: false },
+				{ name: "newPrice", type: "uint256", indexed: false },
+			],
+		},
+		{
+			type: "event",
+			name: "TokenSold",
+			inputs: [
+				{ name: "launchId", type: "uint256", indexed: true },
+				{ name: "seller", type: "address", indexed: true },
+				{ name: "tokensSold", type: "uint256", indexed: false },
+				{ name: "usdcReceived", type: "uint256", indexed: false },
+				{ name: "fee", type: "uint256", indexed: false },
+				{ name: "newPrice", type: "uint256", indexed: false },
+			],
+		},
+		{
+			type: "event",
+			name: "Graduated",
+			inputs: [
+				{ name: "launchId", type: "uint256", indexed: true },
+				{ name: "token", type: "address", indexed: true },
+				{ name: "usdcInPool", type: "uint256", indexed: false },
+				{ name: "tokensInPool", type: "uint256", indexed: false },
+			],
+		},
+	],
+} as const;
