@@ -22,7 +22,11 @@ export function Header() {
 	const { isConnected } = useAccount();
 
 	const navLinks = isConnected
-		? [...baseNavLinks, { href: "/dashboard", label: "Dashboard" }]
+		? [
+				...baseNavLinks,
+				{ href: "/dashboard", label: "Dashboard" },
+				{ href: "/profile", label: "Profile" },
+			]
 		: baseNavLinks;
 
 	return (
@@ -42,6 +46,7 @@ export function Header() {
 									"rounded-md px-3 py-2 text-sm font-medium transition-colors",
 									pathname === link.href ||
 										(link.href === "/dashboard" && pathname.startsWith("/dashboard")) ||
+										(link.href === "/profile" && pathname.startsWith("/profile")) ||
 										(link.href === "/claim/create" && pathname.startsWith("/claim")) ||
 										(link.href === "/tokens" && pathname.startsWith("/tokens"))
 										? "bg-anvil-gray-light text-molten-amber"
