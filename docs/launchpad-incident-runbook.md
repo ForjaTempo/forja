@@ -100,7 +100,7 @@ Operational procedures for ForjaLaunchpad incidents on Tempo mainnet.
 
 1. **Check indexer state**
    ```sql
-   SELECT * FROM indexer_state WHERE contract_name = 'ForjaLaunchpad';
+   SELECT * FROM indexer_state WHERE contract_name = 'launchpad';
    ```
 
 2. **Compare on-chain vs DB**
@@ -117,12 +117,12 @@ Operational procedures for ForjaLaunchpad incidents on Tempo mainnet.
 1. **Re-index from a specific block**
    Update `indexer_state.last_indexed_block` to a block before the missing events:
    ```sql
-   UPDATE indexer_state SET last_indexed_block = $BLOCK_NUM WHERE contract_name = 'ForjaLaunchpad';
+   UPDATE indexer_state SET last_indexed_block = $BLOCK_NUM WHERE contract_name = 'launchpad';
    ```
 
 2. **Trigger manual sync**
    ```
-   curl -H "x-api-key: $INDEXER_API_KEY" https://forja.fun/api/cron/index
+   curl -X POST -H "Authorization: Bearer $INDEXER_API_KEY" https://forja.fun/api/indexer
    ```
 
 3. **If tokenHubCache badge is missing**
