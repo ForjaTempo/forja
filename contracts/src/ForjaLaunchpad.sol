@@ -80,10 +80,6 @@ contract ForjaLaunchpad is Ownable, ReentrancyGuard, Pausable {
 
     uint256 public constant MAX_LAUNCHES_PER_DAY = 5;
 
-    // ─── User Deposits (for emergency withdraw) ───
-
-    mapping(uint256 => mapping(address => uint256)) public userDeposits;
-
     // ─── Daily Launch Count (anti-spam) ───
 
     mapping(address => mapping(uint256 => uint256)) public dailyLaunchCount;
@@ -250,9 +246,6 @@ contract ForjaLaunchpad is Ownable, ReentrancyGuard, Pausable {
         l.realUsdcRaised -= poolDebit;
         l.creatorFeeAccrued += creatorShare;
 
-        uint256 currentDeposit = userDeposits[launchId][msg.sender];
-        userDeposits[launchId][msg.sender] = poolDebit >= currentDeposit ? 0 : currentDeposit - poolDebit;
-
         uint256 newPrice = (l.virtualUsdc * 1e6) / l.virtualTokens;
 
         uint256 totalFee = creatorShare + treasuryShare;
@@ -367,22 +360,33 @@ contract ForjaLaunchpad is Ownable, ReentrancyGuard, Pausable {
         emit LaunchFailed(launchId);
     }
 
-    /// @notice Emergency withdraw: when contract is paused, users can reclaim their deposits.
-    /// @dev Returns the lesser of userDeposit and available USDC balance. Resets deposit to 0.
+    /// @notice Emergency withdraw: when contract is paused, token holders can return tokens for pro-rata USDC.
+    /// @dev Refund = (userTokens / realTokensSold) * realUsdcRaised. User must have approved token transfer.
+    ///      This handles secondary transfers correctly: whoever holds the tokens gets the refund.
     function emergencyWithdraw(uint256 launchId) external nonReentrant {
         if (!paused()) revert NotPaused();
         Launch storage l = launches[launchId];
         if (l.graduated) revert LaunchAlreadyGraduated();
+        if (l.realTokensSold == 0) revert NothingToWithdraw();
 
-        uint256 deposit = userDeposits[launchId][msg.sender];
-        if (deposit == 0) revert NothingToWithdraw();
+        uint256 userTokens = IERC20(l.token).balanceOf(msg.sender);
+        if (userTokens == 0) revert NothingToWithdraw();
 
-        userDeposits[launchId][msg.sender] = 0;
+        // Pro-rata refund based on token holdings
+        uint256 refund = (userTokens * l.realUsdcRaised) / l.realTokensSold;
 
+        // Cap at available balance (safety net)
         uint256 available = usdc.balanceOf(address(this));
-        uint256 refund = deposit > available ? available : deposit;
+        if (refund > available) refund = available;
 
+        // Effects — reduce pool state so remaining holders get fair share
+        l.realTokensSold -= userTokens;
+        l.realUsdcRaised -= refund;
+
+        // Interactions — take tokens, send USDC
+        IERC20(l.token).safeTransferFrom(msg.sender, address(this), userTokens);
         usdc.safeTransfer(msg.sender, refund);
+
         emit EmergencyWithdraw(launchId, msg.sender, refund);
     }
 
@@ -438,7 +442,6 @@ contract ForjaLaunchpad is Ownable, ReentrancyGuard, Pausable {
         l.realUsdcRaised += netUsdc;
         l.creatorFeeAccrued += creatorShare;
         blockBuys[launchId][block.number] += usdcAmount;
-        userDeposits[launchId][msg.sender] += netUsdc;
 
         uint256 newPrice = (newVirtualUsdc * 1e6) / newVirtualTokens;
 
