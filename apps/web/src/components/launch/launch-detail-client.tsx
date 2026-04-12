@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeftIcon, ExternalLinkIcon, RocketIcon } from "lucide-react";
 import Link from "next/link";
 import { useCallback } from "react";
-import { useAccount } from "wagmi";
+import { useAccount, useReadContract } from "wagmi";
 import {
 	getLaunchDetail,
 	getLaunchTrades,
@@ -18,6 +18,7 @@ import { TradePanel } from "@/components/launch/trade-panel";
 import { PageContainer } from "@/components/layout/page-container";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getExplorerUrl, TEMPO_CHAIN_ID, TIP20_DECIMALS } from "@/lib/constants";
+import { erc20Abi } from "@/lib/contracts";
 import { formatDate } from "@/lib/format";
 
 function shortenAddress(addr: string): string {
@@ -65,6 +66,15 @@ export function LaunchDetailClient({ initialLaunch, initialTrades }: Props) {
 		queryFn: () => getUserLaunchPosition(initialLaunch.id, address as string),
 		enabled: !!address,
 		staleTime: 10_000,
+	});
+
+	// On-chain token balance — accurate even if user received/sent tokens externally
+	const { data: onChainBalance } = useReadContract({
+		address: initialLaunch.tokenAddress as `0x${string}`,
+		abi: erc20Abi,
+		functionName: "balanceOf",
+		args: address ? [address] : undefined,
+		query: { enabled: !!address },
 	});
 
 	const handleTradeSuccess = useCallback(() => {
@@ -204,22 +214,31 @@ export function LaunchDetailClient({ initialLaunch, initialTrades }: Props) {
 						)}
 
 						{/* User Position */}
-						{position && (
+						{(position || onChainBalance !== undefined) && (
 							<Card className="border-anvil-gray-light bg-deep-charcoal">
 								<CardHeader className="pb-2">
 									<CardTitle className="text-sm text-steel-white">Your Position</CardTitle>
 								</CardHeader>
 								<CardContent className="space-y-2 text-xs">
-									<InfoRow
-										label="Tokens Held"
-										value={`${formatTokens(position.tokenAmount)} ${launch.symbol}`}
-									/>
-									<InfoRow label="Total Spent" value={`$${formatUsdc(position.totalUsdcSpent)}`} />
-									<InfoRow
-										label="Total Received"
-										value={`$${formatUsdc(position.totalUsdcReceived)}`}
-									/>
-									<InfoRow label="Trades" value={position.tradeCount.toString()} />
+									{onChainBalance !== undefined && (
+										<InfoRow
+											label="Balance"
+											value={`${formatTokens(onChainBalance.toString())} ${launch.symbol}`}
+										/>
+									)}
+									{position && (
+										<>
+											<InfoRow
+												label="Total Spent"
+												value={`$${formatUsdc(position.totalUsdcSpent)}`}
+											/>
+											<InfoRow
+												label="Total Received"
+												value={`$${formatUsdc(position.totalUsdcReceived)}`}
+											/>
+											<InfoRow label="Trades" value={position.tradeCount.toString()} />
+										</>
+									)}
 								</CardContent>
 							</Card>
 						)}

@@ -115,36 +115,39 @@ export async function indexLaunchEvents(
 			const fee = (usdcSpent * TRADING_FEE_BPS + BPS_DENOMINATOR - 1n) / BPS_DENOMINATOR;
 			const netUsdc = usdcSpent - fee;
 
-			// Insert trade — returning() gives empty array on conflict (duplicate)
-			const inserted = await db
-				.insert(schema.launchTrades)
-				.values({
-					launchDbId: launch.id,
-					traderAddress: (log.args.buyer ?? "").toLowerCase(),
-					type: "buy",
-					tokenAmount: tokensReceived.toString(),
-					usdcAmount: usdcSpent.toString(),
-					fee: fee.toString(),
-					newPrice,
-					txHash: log.transactionHash ?? "",
-					blockNumber: Number(log.blockNumber),
-					logIndex: Number(log.logIndex),
-				})
-				.onConflictDoNothing({
-					target: [schema.launchTrades.txHash, schema.launchTrades.logIndex],
-				})
-				.returning({ id: schema.launchTrades.id });
-
-			// Only update aggregate state if the trade was actually new (idempotent)
-			if (inserted.length > 0) {
-				await db
-					.update(schema.launches)
-					.set({
-						realTokensSold: sql`(CAST(${schema.launches.realTokensSold} AS NUMERIC) + ${tokensReceived.toString()})::text`,
-						realUsdcRaised: sql`(CAST(${schema.launches.realUsdcRaised} AS NUMERIC) + ${netUsdc.toString()})::text`,
+			// Atomic: insert trade + update aggregate in single transaction
+			// If insert succeeds but update fails, both roll back — no drift
+			// If trade is duplicate (conflict), skip aggregate update entirely
+			await db.transaction(async (tx) => {
+				const inserted = await tx
+					.insert(schema.launchTrades)
+					.values({
+						launchDbId: launch.id,
+						traderAddress: (log.args.buyer ?? "").toLowerCase(),
+						type: "buy",
+						tokenAmount: tokensReceived.toString(),
+						usdcAmount: usdcSpent.toString(),
+						fee: fee.toString(),
+						newPrice,
+						txHash: log.transactionHash ?? "",
+						blockNumber: Number(log.blockNumber),
+						logIndex: Number(log.logIndex),
 					})
-					.where(eq(schema.launches.id, launch.id));
-			}
+					.onConflictDoNothing({
+						target: [schema.launchTrades.txHash, schema.launchTrades.logIndex],
+					})
+					.returning({ id: schema.launchTrades.id });
+
+				if (inserted.length > 0) {
+					await tx
+						.update(schema.launches)
+						.set({
+							realTokensSold: sql`(CAST(${schema.launches.realTokensSold} AS NUMERIC) + ${tokensReceived.toString()})::text`,
+							realUsdcRaised: sql`(CAST(${schema.launches.realUsdcRaised} AS NUMERIC) + ${netUsdc.toString()})::text`,
+						})
+						.where(eq(schema.launches.id, launch.id));
+				}
+			});
 		}
 		totalIndexed += buyLogs.length;
 	}
@@ -189,36 +192,37 @@ export async function indexLaunchEvents(
 			const treasuryShare = fee - creatorShare;
 			const poolDebit = usdcReceived + treasuryShare;
 
-			// Insert trade — returning() gives empty array on conflict (duplicate)
-			const inserted = await db
-				.insert(schema.launchTrades)
-				.values({
-					launchDbId: launch.id,
-					traderAddress: (log.args.seller ?? "").toLowerCase(),
-					type: "sell",
-					tokenAmount: tokensSold.toString(),
-					usdcAmount: usdcReceived.toString(),
-					fee: fee.toString(),
-					newPrice,
-					txHash: log.transactionHash ?? "",
-					blockNumber: Number(log.blockNumber),
-					logIndex: Number(log.logIndex),
-				})
-				.onConflictDoNothing({
-					target: [schema.launchTrades.txHash, schema.launchTrades.logIndex],
-				})
-				.returning({ id: schema.launchTrades.id });
-
-			// Only update aggregate state if the trade was actually new (idempotent)
-			if (inserted.length > 0) {
-				await db
-					.update(schema.launches)
-					.set({
-						realTokensSold: sql`(CAST(${schema.launches.realTokensSold} AS NUMERIC) - ${tokensSold.toString()})::text`,
-						realUsdcRaised: sql`(CAST(${schema.launches.realUsdcRaised} AS NUMERIC) - ${poolDebit.toString()})::text`,
+			// Atomic: insert trade + update aggregate in single transaction
+			await db.transaction(async (tx) => {
+				const inserted = await tx
+					.insert(schema.launchTrades)
+					.values({
+						launchDbId: launch.id,
+						traderAddress: (log.args.seller ?? "").toLowerCase(),
+						type: "sell",
+						tokenAmount: tokensSold.toString(),
+						usdcAmount: usdcReceived.toString(),
+						fee: fee.toString(),
+						newPrice,
+						txHash: log.transactionHash ?? "",
+						blockNumber: Number(log.blockNumber),
+						logIndex: Number(log.logIndex),
 					})
-					.where(eq(schema.launches.id, launch.id));
-			}
+					.onConflictDoNothing({
+						target: [schema.launchTrades.txHash, schema.launchTrades.logIndex],
+					})
+					.returning({ id: schema.launchTrades.id });
+
+				if (inserted.length > 0) {
+					await tx
+						.update(schema.launches)
+						.set({
+							realTokensSold: sql`(CAST(${schema.launches.realTokensSold} AS NUMERIC) - ${tokensSold.toString()})::text`,
+							realUsdcRaised: sql`(CAST(${schema.launches.realUsdcRaised} AS NUMERIC) - ${poolDebit.toString()})::text`,
+						})
+						.where(eq(schema.launches.id, launch.id));
+				}
+			});
 		}
 		totalIndexed += sellLogs.length;
 	}
