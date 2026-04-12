@@ -49,6 +49,7 @@ export function TokenCard({ token, action }: TokenCardProps) {
 						<div className="flex items-start gap-2">
 							<TokenCardBadges
 								isForjaCreated={token.isForjaCreated}
+								isLaunchpadToken={token.isLaunchpadToken}
 								topHolderPct={token.topHolderPct}
 							/>
 							{action}

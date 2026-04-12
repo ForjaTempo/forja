@@ -139,6 +139,7 @@ export const tokenHubCache = pgTable(
 		topHolderPct: integer("top_holder_pct").notNull().default(0),
 		logoUri: text("logo_uri"),
 		isForjaCreated: boolean("is_forja_created").notNull().default(false),
+		isLaunchpadToken: boolean("is_launchpad_token").notNull().default(false),
 		lastSyncedAt: timestamp("last_synced_at", { withTimezone: true }).notNull().defaultNow(),
 		createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 	},

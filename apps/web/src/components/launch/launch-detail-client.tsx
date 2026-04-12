@@ -12,6 +12,7 @@ import {
 	type LaunchDetail,
 	type LaunchTradeRow,
 } from "@/actions/launches";
+import { CurveChart } from "@/components/launch/curve-chart";
 import { GraduationProgress } from "@/components/launch/graduation-progress";
 import { TradeHistory } from "@/components/launch/trade-history";
 import { TradePanel } from "@/components/launch/trade-panel";
@@ -156,6 +157,13 @@ export function LaunchDetailClient({ initialLaunch, initialTrades }: Props) {
 								</CardContent>
 							</Card>
 						)}
+
+						{/* Bonding Curve Chart */}
+						<CurveChart
+							realTokensSold={launch.realTokensSold}
+							realUsdcRaised={launch.realUsdcRaised}
+							graduated={launch.graduated}
+						/>
 
 						{/* Stats Row */}
 						<div className="grid grid-cols-2 gap-3 sm:grid-cols-5">

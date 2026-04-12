@@ -64,6 +64,14 @@ export function TradePanel({
 		query: { enabled: !!address },
 	});
 
+	// Spot price for impact calculation
+	const { data: spotPrice } = useReadContract({
+		...launchpadConfig,
+		functionName: "getCurrentPrice",
+		args: [BigInt(onChainLaunchId)],
+		query: { enabled: !isDisabled },
+	});
+
 	// Buy quote
 	const buyAmountRaw = buyAmount ? parseUnits(buyAmount, TIP20_DECIMALS) : 0n;
 	const { data: buyQuote } = useReadContract({
@@ -81,6 +89,25 @@ export function TradePanel({
 		args: [BigInt(onChainLaunchId), sellAmountRaw],
 		query: { enabled: sellAmountRaw > 0n && !isDisabled },
 	});
+
+	// Price impact calculations
+	const buyPriceImpact = (() => {
+		if (!spotPrice || spotPrice === 0n || !buyQuote || buyQuote === 0n || buyAmountRaw <= 0n)
+			return 0;
+		const executionPrice = (buyAmountRaw * 1_000_000n) / buyQuote;
+		const diff =
+			executionPrice > spotPrice ? executionPrice - spotPrice : spotPrice - executionPrice;
+		return Number((diff * 10000n) / spotPrice) / 100;
+	})();
+
+	const sellPriceImpact = (() => {
+		if (!spotPrice || spotPrice === 0n || !sellQuote || sellQuote === 0n || sellAmountRaw <= 0n)
+			return 0;
+		const executionPrice = (sellQuote * 1_000_000n) / sellAmountRaw;
+		const diff =
+			spotPrice > executionPrice ? spotPrice - executionPrice : executionPrice - spotPrice;
+		return Number((diff * 10000n) / spotPrice) / 100;
+	})();
 
 	// ─── Buy: USDC Approval ───
 	const {
@@ -305,6 +332,8 @@ export function TradePanel({
 							</div>
 						)}
 
+						<PriceImpactWarning impact={buyPriceImpact} />
+
 						<SlippageSelector value={slippage} onChange={setSlippage} />
 
 						{buyApproveError && (
@@ -378,6 +407,8 @@ export function TradePanel({
 							</div>
 						)}
 
+						<PriceImpactWarning impact={sellPriceImpact} />
+
 						<SlippageSelector value={slippage} onChange={setSlippage} />
 
 						{tokenApproveError && (
@@ -416,6 +447,19 @@ export function TradePanel({
 				</Tabs>
 			</CardContent>
 		</Card>
+	);
+}
+
+function PriceImpactWarning({ impact }: { impact: number }) {
+	if (impact <= 5) return null;
+	const isHigh = impact > 15;
+	return (
+		<div
+			className={`rounded p-2 text-xs ${isHigh ? "bg-red-500/10 text-red-400" : "bg-yellow-500/10 text-yellow-400"}`}
+		>
+			Price impact: {impact.toFixed(2)}% —{" "}
+			{isHigh ? "Very high impact, consider a smaller trade" : "Consider a smaller trade"}
+		</div>
 	);
 }
 
