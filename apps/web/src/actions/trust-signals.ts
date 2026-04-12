@@ -5,6 +5,7 @@ import { isAddress } from "viem";
 
 export interface TrustSignals {
 	isForjaCreated: boolean;
+	isLaunchpadToken: boolean;
 	profileClaimed: boolean;
 	verified: boolean;
 	isActive: boolean;
@@ -76,6 +77,7 @@ export async function getTokenTrustSignals(tokenAddress: string): Promise<TrustS
 
 		return {
 			isForjaCreated: tokenRow.isForjaCreated,
+			isLaunchpadToken: tokenRow.isLaunchpadToken,
 			profileClaimed,
 			verified,
 			isActive: hasRecentActivity,

@@ -237,6 +237,7 @@ export async function indexLaunchEvents(
 
 	for (const log of gradLogs) {
 		const launchIdStr = (log.args.launchId ?? 0n).toString();
+		const tokenAddr = (log.args.token ?? "").toLowerCase();
 		const timestamps = await fetchBlockTimestamps(client, [log.blockNumber]);
 
 		await db
@@ -251,6 +252,14 @@ export async function indexLaunchEvents(
 					eq(schema.launches.launchId, launchIdStr),
 				),
 			);
+
+		// Mark token as launchpad token in tokenHubCache
+		if (tokenAddr) {
+			await db
+				.update(schema.tokenHubCache)
+				.set({ isLaunchpadToken: true })
+				.where(eq(schema.tokenHubCache.address, tokenAddr));
+		}
 	}
 	totalIndexed += gradLogs.length;
 
