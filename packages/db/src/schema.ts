@@ -261,6 +261,66 @@ export const alerts = pgTable(
 	],
 );
 
+// Phase 14: Bonding Curve Launchpad
+
+export const launches = pgTable(
+	"launches",
+	{
+		id: serial("id").primaryKey(),
+		contractAddress: text("contract_address").notNull(),
+		launchId: text("launch_id").notNull(),
+		tokenAddress: text("token_address").notNull(),
+		creatorAddress: text("creator_address").notNull(),
+		name: text("name").notNull(),
+		symbol: text("symbol").notNull(),
+		description: text("description"),
+		imageUri: text("image_uri"),
+		virtualTokens: text("virtual_tokens").notNull(),
+		virtualUsdc: text("virtual_usdc").notNull(),
+		realTokensSold: text("real_tokens_sold").notNull().default("0"),
+		realUsdcRaised: text("real_usdc_raised").notNull().default("0"),
+		graduated: boolean("graduated").notNull().default(false),
+		graduatedAt: timestamp("graduated_at", { withTimezone: true }),
+		killed: boolean("killed").notNull().default(false),
+		failed: boolean("failed").notNull().default(false),
+		txHash: text("tx_hash").notNull(),
+		blockNumber: integer("block_number").notNull(),
+		createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+	},
+	(table) => [
+		unique("launches_contract_launch_id_idx").on(table.contractAddress, table.launchId),
+		index("launches_creator_address_idx").on(table.creatorAddress),
+		index("launches_token_address_idx").on(table.tokenAddress),
+		index("launches_graduated_idx").on(table.graduated),
+	],
+);
+
+export const launchTrades = pgTable(
+	"launch_trades",
+	{
+		id: serial("id").primaryKey(),
+		launchDbId: integer("launch_db_id")
+			.notNull()
+			.references(() => launches.id, { onDelete: "cascade" }),
+		traderAddress: text("trader_address").notNull(),
+		type: text("type").notNull(), // "buy" | "sell"
+		tokenAmount: text("token_amount").notNull(),
+		usdcAmount: text("usdc_amount").notNull(),
+		fee: text("fee").notNull(),
+		newPrice: text("new_price").notNull(),
+		txHash: text("tx_hash").notNull(),
+		blockNumber: integer("block_number").notNull(),
+		logIndex: integer("log_index").notNull(),
+		createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+	},
+	(table) => [
+		unique("launch_trades_tx_log_idx").on(table.txHash, table.logIndex),
+		index("launch_trades_launch_db_id_idx").on(table.launchDbId),
+		index("launch_trades_trader_address_idx").on(table.traderAddress),
+		index("launch_trades_launch_block_idx").on(table.launchDbId, table.blockNumber),
+	],
+);
+
 export const claimProofs = pgTable(
 	"claim_proofs",
 	{

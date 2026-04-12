@@ -10,8 +10,10 @@ import {
 	getDashboardOverview,
 	getUnlockCalendar,
 } from "@/actions/dashboard";
+import { getLaunchesByCreator } from "@/actions/launches";
 import { getCreatorLocks, getCreatorMultisends } from "@/actions/token-hub";
 import { getWatchlist } from "@/actions/watchlist";
+import { LaunchCard } from "@/components/launch/launch-card";
 import { ConnectButton } from "@/components/layout/connect-button";
 import { PageContainer } from "@/components/layout/page-container";
 import { Button } from "@/components/ui/button";
@@ -19,6 +21,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuthGate } from "@/contexts/auth-context";
+import { hasLaunchpad } from "@/lib/contracts";
 import { ClaimsHistory } from "./claims-history";
 import { DashboardOverview } from "./dashboard-overview";
 import { LockHistory } from "./lock-history";
@@ -77,6 +80,13 @@ export function DashboardClient() {
 		queryKey: ["dashboard-claims", address],
 		queryFn: () => getCampaignsByCreator(address as string),
 		enabled: isConnected && !!address,
+		staleTime: 60_000,
+	});
+
+	const { data: myLaunches = [] } = useQuery({
+		queryKey: ["dashboard-launches", address],
+		queryFn: () => getLaunchesByCreator(address as string),
+		enabled: isConnected && !!address && hasLaunchpad,
 		staleTime: 60_000,
 	});
 
@@ -143,6 +153,14 @@ export function DashboardClient() {
 						>
 							My Tokens ({tokens.length})
 						</TabsTrigger>
+						{hasLaunchpad && (
+							<TabsTrigger
+								value="launches"
+								className="text-smoke data-[state=active]:text-molten-amber"
+							>
+								Launches ({myLaunches.length})
+							</TabsTrigger>
+						)}
 						<TabsTrigger
 							value="multisends"
 							className="text-smoke data-[state=active]:text-molten-amber"
@@ -190,6 +208,22 @@ export function DashboardClient() {
 							/>
 						)}
 					</TabsContent>
+
+					{hasLaunchpad && (
+						<TabsContent value="launches" className="mt-6">
+							{myLaunches.length === 0 ? (
+								<div className="rounded-lg border border-anvil-gray-light bg-obsidian-black/50 py-12 text-center">
+									<p className="text-sm text-smoke-dark">You haven't created any launches yet</p>
+								</div>
+							) : (
+								<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+									{myLaunches.map((launch) => (
+										<LaunchCard key={launch.id} launch={launch} />
+									))}
+								</div>
+							)}
+						</TabsContent>
+					)}
 
 					<TabsContent value="multisends" className="mt-6">
 						<MultisendHistory multisends={multisends} />
