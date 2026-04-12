@@ -1066,4 +1066,168 @@ contract ForjaLaunchpadTest is Test {
         launchpad.createLaunch("Fuzz", "FZZ", "", "");
         vm.stopPrank();
     }
+
+    // ═══════════════════════════════════════════
+    // ║  DAILY CREATION CAP
+    // ═══════════════════════════════════════════
+
+    function test_dailyCap_allowsFiveCreations() public {
+        vm.startPrank(alice);
+        for (uint256 i = 0; i < 5; i++) {
+            launchpad.createLaunch("T", "T", "", "");
+        }
+        vm.stopPrank();
+        assertEq(launchpad.nextLaunchId(), 5);
+    }
+
+    function test_dailyCap_revertsSixthCreation() public {
+        vm.startPrank(alice);
+        for (uint256 i = 0; i < 5; i++) {
+            launchpad.createLaunch("T", "T", "", "");
+        }
+        vm.expectRevert(ForjaLaunchpad.DailyLimitReached.selector);
+        launchpad.createLaunch("T", "T", "", "");
+        vm.stopPrank();
+    }
+
+    function test_dailyCap_resetsNextDay() public {
+        vm.startPrank(alice);
+        for (uint256 i = 0; i < 5; i++) {
+            launchpad.createLaunch("T", "T", "", "");
+        }
+        vm.stopPrank();
+
+        // Advance to next day
+        vm.warp(block.timestamp + 1 days);
+        vm.prank(alice);
+        uint256 id = launchpad.createLaunch("Next Day", "ND", "", "");
+        assertEq(id, 5);
+    }
+
+    // ═══════════════════════════════════════════
+    // ║  EMERGENCY WITHDRAW
+    // ═══════════════════════════════════════════
+
+    function test_emergencyWithdraw_revertsWhenNotPaused() public {
+        uint256 launchId = _createDefaultLaunch();
+        vm.prank(bob);
+        launchpad.buy(launchId, 100e6, 0);
+
+        vm.prank(bob);
+        vm.expectRevert(ForjaLaunchpad.NotPaused.selector);
+        launchpad.emergencyWithdraw(launchId);
+    }
+
+    function test_emergencyWithdraw_revertsGraduated() public {
+        uint256 launchId = _createDefaultLaunch();
+        _graduateLaunch(launchId);
+
+        launchpad.pause();
+        vm.prank(bob);
+        vm.expectRevert(ForjaLaunchpad.LaunchAlreadyGraduated.selector);
+        launchpad.emergencyWithdraw(launchId);
+    }
+
+    function test_emergencyWithdraw_revertsNoDeposit() public {
+        uint256 launchId = _createDefaultLaunch();
+        launchpad.pause();
+
+        vm.prank(charlie);
+        vm.expectRevert(ForjaLaunchpad.NothingToWithdraw.selector);
+        launchpad.emergencyWithdraw(launchId);
+    }
+
+    function test_emergencyWithdraw_refundsCorrectAmount() public {
+        uint256 launchId = _createDefaultLaunch();
+        vm.prank(bob);
+        launchpad.buy(launchId, 100e6, 0);
+
+        uint256 deposit = launchpad.userDeposits(launchId, bob);
+        assertTrue(deposit > 0);
+
+        launchpad.pause();
+        uint256 bobBefore = usdc.balanceOf(bob);
+
+        vm.prank(bob);
+        launchpad.emergencyWithdraw(launchId);
+
+        assertEq(usdc.balanceOf(bob), bobBefore + deposit);
+    }
+
+    function test_emergencyWithdraw_twoUsersProportional() public {
+        uint256 launchId = _createDefaultLaunch();
+        vm.prank(bob);
+        launchpad.buy(launchId, 1_000e6, 0);
+        vm.roll(block.number + 1);
+        vm.prank(charlie);
+        launchpad.buy(launchId, 500e6, 0);
+
+        uint256 bobDeposit = launchpad.userDeposits(launchId, bob);
+        uint256 charlieDeposit = launchpad.userDeposits(launchId, charlie);
+        assertTrue(bobDeposit > charlieDeposit, "Bob deposited more");
+
+        launchpad.pause();
+
+        uint256 bobBefore = usdc.balanceOf(bob);
+        vm.prank(bob);
+        launchpad.emergencyWithdraw(launchId);
+        uint256 bobRefund = usdc.balanceOf(bob) - bobBefore;
+
+        uint256 charlieBefore = usdc.balanceOf(charlie);
+        vm.prank(charlie);
+        launchpad.emergencyWithdraw(launchId);
+        uint256 charlieRefund = usdc.balanceOf(charlie) - charlieBefore;
+
+        assertEq(bobRefund, bobDeposit);
+        assertEq(charlieRefund, charlieDeposit);
+    }
+
+    function test_emergencyWithdraw_doubleWithdrawReverts() public {
+        uint256 launchId = _createDefaultLaunch();
+        vm.prank(bob);
+        launchpad.buy(launchId, 100e6, 0);
+
+        launchpad.pause();
+
+        vm.prank(bob);
+        launchpad.emergencyWithdraw(launchId);
+
+        vm.prank(bob);
+        vm.expectRevert(ForjaLaunchpad.NothingToWithdraw.selector);
+        launchpad.emergencyWithdraw(launchId);
+    }
+
+    function test_emergencyWithdraw_emitsEvent() public {
+        uint256 launchId = _createDefaultLaunch();
+        vm.prank(bob);
+        launchpad.buy(launchId, 100e6, 0);
+        uint256 deposit = launchpad.userDeposits(launchId, bob);
+
+        launchpad.pause();
+
+        vm.prank(bob);
+        vm.expectEmit(true, true, false, true);
+        emit ForjaLaunchpad.EmergencyWithdraw(launchId, bob, deposit);
+        launchpad.emergencyWithdraw(launchId);
+    }
+
+    function test_emergencyWithdraw_depositsDecrementOnSell() public {
+        uint256 launchId = _createDefaultLaunch();
+        vm.prank(bob);
+        launchpad.buy(launchId, 1_000e6, 0);
+        uint256 depositAfterBuy = launchpad.userDeposits(launchId, bob);
+        assertTrue(depositAfterBuy > 0);
+
+        // Sell half
+        ForjaLaunchpad.Launch memory l = launchpad.getLaunchInfo(launchId);
+        uint256 tokens = IERC20(l.token).balanceOf(bob);
+        uint256 halfTokens = tokens / 2;
+        vm.startPrank(bob);
+        IERC20(l.token).approve(address(launchpad), halfTokens);
+        launchpad.sell(launchId, halfTokens, 0);
+        vm.stopPrank();
+
+        uint256 depositAfterSell = launchpad.userDeposits(launchId, bob);
+        assertTrue(depositAfterSell < depositAfterBuy, "Deposit should decrease after sell");
+    }
 }

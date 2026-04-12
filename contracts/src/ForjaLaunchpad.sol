@@ -78,6 +78,16 @@ contract ForjaLaunchpad is Ownable, ReentrancyGuard, Pausable {
     bool public allowlistEnabled;
     mapping(address => bool) public allowlisted;
 
+    uint256 public constant MAX_LAUNCHES_PER_DAY = 5;
+
+    // ─── User Deposits (for emergency withdraw) ───
+
+    mapping(uint256 => mapping(address => uint256)) public userDeposits;
+
+    // ─── Daily Launch Count (anti-spam) ───
+
+    mapping(address => mapping(uint256 => uint256)) public dailyLaunchCount;
+
     // ─── Events ───
 
     event LaunchCreated(
@@ -108,6 +118,7 @@ contract ForjaLaunchpad is Ownable, ReentrancyGuard, Pausable {
     event LaunchKilled(uint256 indexed launchId);
     event LaunchFailed(uint256 indexed launchId);
     event CreatorFeeClaimed(uint256 indexed launchId, address indexed creator, uint256 amount);
+    event EmergencyWithdraw(uint256 indexed launchId, address indexed user, uint256 amount);
     event FeeUpdated(uint256 oldFee, uint256 newFee);
     event TreasuryUpdated(address oldTreasury, address newTreasury);
 
@@ -127,6 +138,9 @@ contract ForjaLaunchpad is Ownable, ReentrancyGuard, Pausable {
     error NotAllowlisted();
     error LaunchNotTimedOut();
     error NothingToClaim();
+    error DailyLimitReached();
+    error NothingToWithdraw();
+    error NotPaused();
 
     constructor(
         address _tipFactory,
@@ -162,6 +176,12 @@ contract ForjaLaunchpad is Ownable, ReentrancyGuard, Pausable {
         string calldata imageUri
     ) external nonReentrant whenNotPaused returns (uint256 launchId) {
         if (allowlistEnabled && !allowlisted[msg.sender]) revert NotAllowlisted();
+
+        {
+            uint256 today = block.timestamp / 1 days;
+            if (dailyLaunchCount[msg.sender][today] >= MAX_LAUNCHES_PER_DAY) revert DailyLimitReached();
+            dailyLaunchCount[msg.sender][today]++;
+        }
 
         if (createFee > 0) usdc.safeTransferFrom(msg.sender, treasury, createFee);
 
@@ -229,6 +249,9 @@ contract ForjaLaunchpad is Ownable, ReentrancyGuard, Pausable {
         l.realTokensSold -= tokenAmount;
         l.realUsdcRaised -= poolDebit;
         l.creatorFeeAccrued += creatorShare;
+
+        uint256 currentDeposit = userDeposits[launchId][msg.sender];
+        userDeposits[launchId][msg.sender] = poolDebit >= currentDeposit ? 0 : currentDeposit - poolDebit;
 
         uint256 newPrice = (l.virtualUsdc * 1e6) / l.virtualTokens;
 
@@ -344,6 +367,25 @@ contract ForjaLaunchpad is Ownable, ReentrancyGuard, Pausable {
         emit LaunchFailed(launchId);
     }
 
+    /// @notice Emergency withdraw: when contract is paused, users can reclaim their deposits.
+    /// @dev Returns the lesser of userDeposit and available USDC balance. Resets deposit to 0.
+    function emergencyWithdraw(uint256 launchId) external nonReentrant {
+        if (!paused()) revert NotPaused();
+        Launch storage l = launches[launchId];
+        if (l.graduated) revert LaunchAlreadyGraduated();
+
+        uint256 deposit = userDeposits[launchId][msg.sender];
+        if (deposit == 0) revert NothingToWithdraw();
+
+        userDeposits[launchId][msg.sender] = 0;
+
+        uint256 available = usdc.balanceOf(address(this));
+        uint256 refund = deposit > available ? available : deposit;
+
+        usdc.safeTransfer(msg.sender, refund);
+        emit EmergencyWithdraw(launchId, msg.sender, refund);
+    }
+
     // ─── Internal ───
 
     function _validateBuy(Launch storage l, uint256 launchId, uint256 usdcAmount) internal view {
@@ -396,6 +438,7 @@ contract ForjaLaunchpad is Ownable, ReentrancyGuard, Pausable {
         l.realUsdcRaised += netUsdc;
         l.creatorFeeAccrued += creatorShare;
         blockBuys[launchId][block.number] += usdcAmount;
+        userDeposits[launchId][msg.sender] += netUsdc;
 
         uint256 newPrice = (newVirtualUsdc * 1e6) / newVirtualTokens;
 
