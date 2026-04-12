@@ -237,6 +237,7 @@ export async function indexLaunchEvents(
 
 	for (const log of gradLogs) {
 		const launchIdStr = (log.args.launchId ?? 0n).toString();
+		const tokenAddr = (log.args.token ?? "").toLowerCase();
 		const timestamps = await fetchBlockTimestamps(client, [log.blockNumber]);
 
 		await db
@@ -251,6 +252,39 @@ export async function indexLaunchEvents(
 					eq(schema.launches.launchId, launchIdStr),
 				),
 			);
+
+		// Mark token as launchpad token in tokenHubCache (upsert to avoid missing if row doesn't exist yet)
+		if (tokenAddr) {
+			const [launchRow] = await db
+				.select({
+					name: schema.launches.name,
+					symbol: schema.launches.symbol,
+					creatorAddress: schema.launches.creatorAddress,
+				})
+				.from(schema.launches)
+				.where(
+					and(
+						eq(schema.launches.contractAddress, contractAddr),
+						eq(schema.launches.launchId, launchIdStr),
+					),
+				)
+				.limit(1);
+
+			await db
+				.insert(schema.tokenHubCache)
+				.values({
+					address: tokenAddr,
+					name: launchRow?.name ?? "Unknown",
+					symbol: launchRow?.symbol ?? "???",
+					isForjaCreated: true,
+					isLaunchpadToken: true,
+					creatorAddress: launchRow?.creatorAddress ?? null,
+				})
+				.onConflictDoUpdate({
+					target: schema.tokenHubCache.address,
+					set: { isLaunchpadToken: true },
+				});
+		}
 	}
 	totalIndexed += gradLogs.length;
 

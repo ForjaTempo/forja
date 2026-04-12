@@ -78,6 +78,12 @@ contract ForjaLaunchpad is Ownable, ReentrancyGuard, Pausable {
     bool public allowlistEnabled;
     mapping(address => bool) public allowlisted;
 
+    uint256 public constant MAX_LAUNCHES_PER_DAY = 5;
+
+    // ─── Daily Launch Count (anti-spam) ───
+
+    mapping(address => mapping(uint256 => uint256)) public dailyLaunchCount;
+
     // ─── Events ───
 
     event LaunchCreated(
@@ -108,6 +114,7 @@ contract ForjaLaunchpad is Ownable, ReentrancyGuard, Pausable {
     event LaunchKilled(uint256 indexed launchId);
     event LaunchFailed(uint256 indexed launchId);
     event CreatorFeeClaimed(uint256 indexed launchId, address indexed creator, uint256 amount);
+    event EmergencyWithdraw(uint256 indexed launchId, address indexed user, uint256 amount);
     event FeeUpdated(uint256 oldFee, uint256 newFee);
     event TreasuryUpdated(address oldTreasury, address newTreasury);
 
@@ -127,6 +134,9 @@ contract ForjaLaunchpad is Ownable, ReentrancyGuard, Pausable {
     error NotAllowlisted();
     error LaunchNotTimedOut();
     error NothingToClaim();
+    error DailyLimitReached();
+    error NothingToWithdraw();
+    error NotPaused();
 
     constructor(
         address _tipFactory,
@@ -162,6 +172,12 @@ contract ForjaLaunchpad is Ownable, ReentrancyGuard, Pausable {
         string calldata imageUri
     ) external nonReentrant whenNotPaused returns (uint256 launchId) {
         if (allowlistEnabled && !allowlisted[msg.sender]) revert NotAllowlisted();
+
+        {
+            uint256 today = block.timestamp / 1 days;
+            if (dailyLaunchCount[msg.sender][today] >= MAX_LAUNCHES_PER_DAY) revert DailyLimitReached();
+            dailyLaunchCount[msg.sender][today]++;
+        }
 
         if (createFee > 0) usdc.safeTransferFrom(msg.sender, treasury, createFee);
 
@@ -342,6 +358,36 @@ contract ForjaLaunchpad is Ownable, ReentrancyGuard, Pausable {
         if (block.timestamp < l.startTime + LAUNCH_TIMEOUT) revert LaunchNotTimedOut();
         l.failed = true;
         emit LaunchFailed(launchId);
+    }
+
+    /// @notice Emergency withdraw: when contract is paused, token holders can return tokens for pro-rata USDC.
+    /// @dev Refund = (userTokens / realTokensSold) * realUsdcRaised. User must have approved token transfer.
+    ///      This handles secondary transfers correctly: whoever holds the tokens gets the refund.
+    function emergencyWithdraw(uint256 launchId) external nonReentrant {
+        if (!paused()) revert NotPaused();
+        Launch storage l = launches[launchId];
+        if (l.graduated) revert LaunchAlreadyGraduated();
+        if (l.realTokensSold == 0) revert NothingToWithdraw();
+
+        uint256 userTokens = IERC20(l.token).balanceOf(msg.sender);
+        if (userTokens == 0) revert NothingToWithdraw();
+
+        // Pro-rata refund based on token holdings
+        uint256 refund = (userTokens * l.realUsdcRaised) / l.realTokensSold;
+
+        // Cap at available balance (safety net)
+        uint256 available = usdc.balanceOf(address(this));
+        if (refund > available) refund = available;
+
+        // Effects — reduce pool state so remaining holders get fair share
+        l.realTokensSold -= userTokens;
+        l.realUsdcRaised -= refund;
+
+        // Interactions — take tokens, send USDC
+        IERC20(l.token).safeTransferFrom(msg.sender, address(this), userTokens);
+        usdc.safeTransfer(msg.sender, refund);
+
+        emit EmergencyWithdraw(launchId, msg.sender, refund);
     }
 
     // ─── Internal ───

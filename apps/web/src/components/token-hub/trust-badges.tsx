@@ -4,6 +4,7 @@ import {
 	AlertTriangleIcon,
 	CheckCircleIcon,
 	ClockIcon,
+	RocketIcon,
 	SparklesIcon,
 	UserCheckIcon,
 	ZapIcon,
@@ -35,6 +36,16 @@ function getBadges(signals: TrustSignals): BadgeDef[] {
 			description: "Created with FORJA token toolkit",
 			className: "bg-molten-amber/15 text-molten-amber border-molten-amber/30",
 			icon: <SparklesIcon className="size-2.5" />,
+		});
+	}
+
+	if (signals.isLaunchpadToken) {
+		badges.push({
+			key: "launchpad",
+			label: "Launchpad",
+			description: "Launched via FORJA bonding curve",
+			className: "bg-molten-amber/15 text-molten-amber border-molten-amber/30",
+			icon: <RocketIcon className="size-2.5" />,
 		});
 	}
 
@@ -156,9 +167,11 @@ export function TrustBadges({ signals, compact }: TrustBadgesProps) {
 /** Lightweight inline badges for token cards — uses tokenHubCache data directly without server action */
 export function TokenCardBadges({
 	isForjaCreated,
+	isLaunchpadToken,
 	topHolderPct,
 }: {
 	isForjaCreated: boolean;
+	isLaunchpadToken?: boolean;
 	topHolderPct: number;
 }) {
 	return (
@@ -167,6 +180,12 @@ export function TokenCardBadges({
 				<Badge className="bg-molten-amber/15 text-molten-amber border-molten-amber/30 inline-flex items-center gap-1">
 					<SparklesIcon className="size-2.5" />
 					FORJA
+				</Badge>
+			)}
+			{isLaunchpadToken && (
+				<Badge className="bg-molten-amber/15 text-molten-amber border-molten-amber/30 inline-flex items-center gap-1">
+					<RocketIcon className="size-2.5" />
+					Launchpad
 				</Badge>
 			)}
 			{topHolderPct > 80 ? (

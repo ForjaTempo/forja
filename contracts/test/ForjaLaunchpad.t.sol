@@ -1066,4 +1066,265 @@ contract ForjaLaunchpadTest is Test {
         launchpad.createLaunch("Fuzz", "FZZ", "", "");
         vm.stopPrank();
     }
+
+    // ═══════════════════════════════════════════
+    // ║  DAILY CREATION CAP
+    // ═══════════════════════════════════════════
+
+    function test_dailyCap_allowsFiveCreations() public {
+        vm.startPrank(alice);
+        for (uint256 i = 0; i < 5; i++) {
+            launchpad.createLaunch("T", "T", "", "");
+        }
+        vm.stopPrank();
+        assertEq(launchpad.nextLaunchId(), 5);
+    }
+
+    function test_dailyCap_revertsSixthCreation() public {
+        vm.startPrank(alice);
+        for (uint256 i = 0; i < 5; i++) {
+            launchpad.createLaunch("T", "T", "", "");
+        }
+        vm.expectRevert(ForjaLaunchpad.DailyLimitReached.selector);
+        launchpad.createLaunch("T", "T", "", "");
+        vm.stopPrank();
+    }
+
+    function test_dailyCap_resetsNextDay() public {
+        vm.startPrank(alice);
+        for (uint256 i = 0; i < 5; i++) {
+            launchpad.createLaunch("T", "T", "", "");
+        }
+        vm.stopPrank();
+
+        // Advance to next day
+        vm.warp(block.timestamp + 1 days);
+        vm.prank(alice);
+        uint256 id = launchpad.createLaunch("Next Day", "ND", "", "");
+        assertEq(id, 5);
+    }
+
+    // ═══════════════════════════════════════════
+    // ║  EMERGENCY WITHDRAW (Token-balance pro-rata)
+    // ═══════════════════════════════════════════
+
+    function test_emergencyWithdraw_revertsWhenNotPaused() public {
+        uint256 launchId = _createDefaultLaunch();
+        vm.prank(bob);
+        launchpad.buy(launchId, 100e6, 0);
+
+        ForjaLaunchpad.Launch memory l = launchpad.getLaunchInfo(launchId);
+        vm.startPrank(bob);
+        IERC20(l.token).approve(address(launchpad), type(uint256).max);
+        vm.expectRevert(ForjaLaunchpad.NotPaused.selector);
+        launchpad.emergencyWithdraw(launchId);
+        vm.stopPrank();
+    }
+
+    function test_emergencyWithdraw_revertsGraduated() public {
+        uint256 launchId = _createDefaultLaunch();
+        _graduateLaunch(launchId);
+
+        launchpad.pause();
+        vm.prank(bob);
+        vm.expectRevert(ForjaLaunchpad.LaunchAlreadyGraduated.selector);
+        launchpad.emergencyWithdraw(launchId);
+    }
+
+    function test_emergencyWithdraw_revertsNoTokens() public {
+        uint256 launchId = _createDefaultLaunch();
+        launchpad.pause();
+
+        // Charlie never bought — has no tokens
+        vm.prank(charlie);
+        vm.expectRevert(ForjaLaunchpad.NothingToWithdraw.selector);
+        launchpad.emergencyWithdraw(launchId);
+    }
+
+    function test_emergencyWithdraw_proRataRefund() public {
+        uint256 launchId = _createDefaultLaunch();
+        vm.prank(bob);
+        launchpad.buy(launchId, 100e6, 0);
+
+        ForjaLaunchpad.Launch memory l = launchpad.getLaunchInfo(launchId);
+        uint256 bobTokens = IERC20(l.token).balanceOf(bob);
+        assertTrue(bobTokens > 0);
+
+        // Bob is the only buyer → owns all realTokensSold → gets all realUsdcRaised
+        launchpad.pause();
+        uint256 bobBefore = usdc.balanceOf(bob);
+
+        vm.startPrank(bob);
+        IERC20(l.token).approve(address(launchpad), bobTokens);
+        launchpad.emergencyWithdraw(launchId);
+        vm.stopPrank();
+
+        uint256 bobRefund = usdc.balanceOf(bob) - bobBefore;
+        assertEq(bobRefund, l.realUsdcRaised, "Single holder should get all raised USDC");
+        assertEq(IERC20(l.token).balanceOf(bob), 0, "Tokens should be returned");
+    }
+
+    function test_emergencyWithdraw_twoUsersProportional() public {
+        uint256 launchId = _createDefaultLaunch();
+        vm.prank(bob);
+        launchpad.buy(launchId, 1_000e6, 0);
+        vm.roll(block.number + 1);
+        vm.prank(charlie);
+        launchpad.buy(launchId, 500e6, 0);
+
+        ForjaLaunchpad.Launch memory l = launchpad.getLaunchInfo(launchId);
+        uint256 bobTokens = IERC20(l.token).balanceOf(bob);
+        uint256 charlieTokens = IERC20(l.token).balanceOf(charlie);
+        assertTrue(bobTokens > charlieTokens, "Bob has more tokens");
+
+        launchpad.pause();
+
+        // Bob withdraws first
+        uint256 bobBefore = usdc.balanceOf(bob);
+        vm.startPrank(bob);
+        IERC20(l.token).approve(address(launchpad), bobTokens);
+        launchpad.emergencyWithdraw(launchId);
+        vm.stopPrank();
+        uint256 bobRefund = usdc.balanceOf(bob) - bobBefore;
+
+        // Charlie withdraws second — gets fair share
+        uint256 charlieBefore = usdc.balanceOf(charlie);
+        vm.startPrank(charlie);
+        IERC20(l.token).approve(address(launchpad), charlieTokens);
+        launchpad.emergencyWithdraw(launchId);
+        vm.stopPrank();
+        uint256 charlieRefund = usdc.balanceOf(charlie) - charlieBefore;
+
+        assertTrue(bobRefund > 0, "Bob got refund");
+        assertTrue(charlieRefund > 0, "Charlie got refund");
+        assertTrue(bobRefund > charlieRefund, "Bob gets more (more tokens)");
+    }
+
+    function test_emergencyWithdraw_doubleWithdrawReverts() public {
+        uint256 launchId = _createDefaultLaunch();
+        vm.prank(bob);
+        launchpad.buy(launchId, 100e6, 0);
+
+        ForjaLaunchpad.Launch memory l = launchpad.getLaunchInfo(launchId);
+        launchpad.pause();
+
+        vm.startPrank(bob);
+        IERC20(l.token).approve(address(launchpad), type(uint256).max);
+        launchpad.emergencyWithdraw(launchId);
+        // Second call: bob has 0 tokens now
+        vm.expectRevert(ForjaLaunchpad.NothingToWithdraw.selector);
+        launchpad.emergencyWithdraw(launchId);
+        vm.stopPrank();
+    }
+
+    function test_emergencyWithdraw_emitsEvent() public {
+        uint256 launchId = _createDefaultLaunch();
+        vm.prank(bob);
+        launchpad.buy(launchId, 100e6, 0);
+
+        ForjaLaunchpad.Launch memory l = launchpad.getLaunchInfo(launchId);
+        uint256 bobTokens = IERC20(l.token).balanceOf(bob);
+        // Bob is only holder → gets all realUsdcRaised
+        uint256 expectedRefund = l.realUsdcRaised;
+
+        launchpad.pause();
+
+        vm.startPrank(bob);
+        IERC20(l.token).approve(address(launchpad), bobTokens);
+        vm.expectEmit(true, true, false, true);
+        emit ForjaLaunchpad.EmergencyWithdraw(launchId, bob, expectedRefund);
+        launchpad.emergencyWithdraw(launchId);
+        vm.stopPrank();
+    }
+
+    function test_emergencyWithdraw_handlesTokenTransfer() public {
+        // Core scenario: buyer transfers tokens to someone else
+        // The token HOLDER (not the original buyer) gets the refund
+        uint256 launchId = _createDefaultLaunch();
+        vm.prank(bob);
+        launchpad.buy(launchId, 1_000e6, 0);
+
+        ForjaLaunchpad.Launch memory l = launchpad.getLaunchInfo(launchId);
+        uint256 bobTokens = IERC20(l.token).balanceOf(bob);
+
+        // Bob transfers all tokens to Charlie
+        vm.prank(bob);
+        IERC20(l.token).transfer(charlie, bobTokens);
+        assertEq(IERC20(l.token).balanceOf(bob), 0);
+        assertEq(IERC20(l.token).balanceOf(charlie), bobTokens);
+
+        launchpad.pause();
+
+        // Bob cannot withdraw (has no tokens)
+        vm.prank(bob);
+        vm.expectRevert(ForjaLaunchpad.NothingToWithdraw.selector);
+        launchpad.emergencyWithdraw(launchId);
+
+        // Charlie (token holder) CAN withdraw
+        uint256 charlieBefore = usdc.balanceOf(charlie);
+        vm.startPrank(charlie);
+        IERC20(l.token).approve(address(launchpad), bobTokens);
+        launchpad.emergencyWithdraw(launchId);
+        vm.stopPrank();
+
+        assertTrue(usdc.balanceOf(charlie) > charlieBefore, "Charlie should get refund");
+    }
+
+    function test_emergencyWithdraw_noDoubleClaimAfterTransfer() public {
+        // Ensures the old deposit-based exploit is impossible:
+        // Buy → transfer tokens → new holder sells → original buyer tries to withdraw
+        uint256 launchId = _createDefaultLaunch();
+        vm.prank(bob);
+        launchpad.buy(launchId, 1_000e6, 0);
+
+        ForjaLaunchpad.Launch memory l = launchpad.getLaunchInfo(launchId);
+        uint256 bobTokens = IERC20(l.token).balanceOf(bob);
+
+        // Bob transfers tokens to Charlie
+        vm.prank(bob);
+        IERC20(l.token).transfer(charlie, bobTokens);
+
+        // Charlie sells on the curve (before pause)
+        vm.startPrank(charlie);
+        IERC20(l.token).approve(address(launchpad), bobTokens);
+        launchpad.sell(launchId, bobTokens, 0);
+        vm.stopPrank();
+
+        launchpad.pause();
+
+        // Bob has no tokens → cannot emergency withdraw
+        vm.prank(bob);
+        vm.expectRevert(ForjaLaunchpad.NothingToWithdraw.selector);
+        launchpad.emergencyWithdraw(launchId);
+    }
+
+    function test_emergencyWithdraw_poolStateDrainsCorrectly() public {
+        // All holders withdraw → realTokensSold and realUsdcRaised both reach 0
+        uint256 launchId = _createDefaultLaunch();
+        vm.prank(bob);
+        launchpad.buy(launchId, 1_000e6, 0);
+        vm.roll(block.number + 1);
+        vm.prank(charlie);
+        launchpad.buy(launchId, 500e6, 0);
+
+        ForjaLaunchpad.Launch memory l = launchpad.getLaunchInfo(launchId);
+        uint256 bobTokens = IERC20(l.token).balanceOf(bob);
+        uint256 charlieTokens = IERC20(l.token).balanceOf(charlie);
+
+        launchpad.pause();
+
+        vm.startPrank(bob);
+        IERC20(l.token).approve(address(launchpad), bobTokens);
+        launchpad.emergencyWithdraw(launchId);
+        vm.stopPrank();
+
+        vm.startPrank(charlie);
+        IERC20(l.token).approve(address(launchpad), charlieTokens);
+        launchpad.emergencyWithdraw(launchId);
+        vm.stopPrank();
+
+        ForjaLaunchpad.Launch memory after_ = launchpad.getLaunchInfo(launchId);
+        assertEq(after_.realTokensSold, 0, "All tokens returned");
+        assertEq(after_.realUsdcRaised, 0, "All USDC refunded");
+    }
 }
