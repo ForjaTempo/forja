@@ -434,3 +434,20 @@ export async function getUserLaunchPosition(
 		return null;
 	}
 }
+
+// ─── On-chain launchId → DB id lookup (for post-create navigation) ───
+
+export async function getLaunchDbId(onChainLaunchId: string): Promise<number | null> {
+	try {
+		const db = getDb();
+		const [row] = await db
+			.select({ id: schema.launches.id })
+			.from(schema.launches)
+			.where(eq(schema.launches.launchId, onChainLaunchId))
+			.limit(1);
+		return row?.id ?? null;
+	} catch (err) {
+		console.error("[launches] getLaunchDbId failed:", err);
+		return null;
+	}
+}

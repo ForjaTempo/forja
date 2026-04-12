@@ -172,7 +172,15 @@ export function LaunchDetailClient({ initialLaunch, initialTrades }: Props) {
 							</CardHeader>
 							<CardContent className="space-y-2 text-xs">
 								<InfoRow label="Token Address" value={launch.tokenAddress} mono />
-								<InfoRow label="Creator" value={launch.creatorAddress} mono />
+								<div className="flex items-start justify-between gap-4">
+									<span className="text-smoke-dark">Creator</span>
+									<Link
+										href={`/creators/${launch.creatorAddress}`}
+										className="font-mono text-right text-molten-amber hover:underline"
+									>
+										{launch.creatorDisplayName ?? shortenAddress(launch.creatorAddress)}
+									</Link>
+								</div>
 								<InfoRow label="Created" value={formatDate(launch.createdAt)} />
 								{launch.graduated && launch.graduatedAt && (
 									<InfoRow label="Graduated" value={formatDate(launch.graduatedAt)} />

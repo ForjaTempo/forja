@@ -1,11 +1,13 @@
 "use client";
 
 import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { ArrowLeftIcon, CheckIcon, RocketIcon, WalletIcon } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
+import { ArrowLeftIcon, CheckIcon, CopyIcon, RocketIcon, WalletIcon } from "lucide-react";
+import Link from "next/link";
 import { type ChangeEvent, useCallback, useState } from "react";
 import { parseUnits } from "viem";
 import { useAccount } from "wagmi";
+import { getLaunchDbId } from "@/actions/launches";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -21,7 +23,6 @@ const IMAGE_URL_RE = /^https:\/\/[^\s]+\.(png|jpg|jpeg|gif|webp|svg)(\?[^\s]*)?$
 
 export function LaunchCreateForm() {
 	const { isConnected } = useAccount();
-	const router = useRouter();
 
 	const [step, setStep] = useState<1 | 2>(1);
 	const [name, setName] = useState("");
@@ -112,42 +113,12 @@ export function LaunchCreateForm() {
 
 	if (isSuccess) {
 		return (
-			<Card className="border-anvil-gray-light bg-deep-charcoal">
-				<CardContent className="flex flex-col items-center gap-6 p-8">
-					<div className="flex size-16 items-center justify-center rounded-full bg-emerald-500/10">
-						<CheckIcon className="size-8 text-emerald-400" />
-					</div>
-					<div className="text-center">
-						<h2 className="text-xl font-bold text-steel-white">Launch Created!</h2>
-						<p className="mt-2 text-sm text-smoke-dark">
-							Your token is now live on the bonding curve.
-						</p>
-					</div>
-
-					{tokenAddress && (
-						<p className="font-mono text-xs text-smoke-dark">Token: {tokenAddress}</p>
-					)}
-
-					<div className="flex gap-3">
-						{launchId !== undefined && (
-							<Button
-								className="bg-molten-amber text-forge-black hover:bg-molten-amber/90"
-								onClick={() => {
-									// We need the DB id, but we only have the on-chain launchId.
-									// For now navigate to listing page; the detail page will be found
-									// via indexer shortly.
-									router.push("/launch");
-								}}
-							>
-								View Launches
-							</Button>
-						)}
-						<Button variant="outline" onClick={handleReset}>
-							Create Another
-						</Button>
-					</div>
-				</CardContent>
-			</Card>
+			<LaunchSuccessCard
+				onChainLaunchId={launchId}
+				tokenAddress={tokenAddress}
+				symbol={symbol}
+				onReset={handleReset}
+			/>
 		);
 	}
 
@@ -321,5 +292,93 @@ function Row({ label, value }: { label: string; value: string }) {
 			<span className="text-sm text-smoke-dark">{label}</span>
 			<span className="text-right text-sm text-steel-white">{value}</span>
 		</div>
+	);
+}
+
+function LaunchSuccessCard({
+	onChainLaunchId,
+	tokenAddress,
+	symbol,
+	onReset,
+}: {
+	onChainLaunchId: bigint | undefined;
+	tokenAddress: string | undefined;
+	symbol: string;
+	onReset: () => void;
+}) {
+	const [copied, setCopied] = useState(false);
+
+	// Poll for DB id (indexer may need a few seconds)
+	const { data: dbId } = useQuery({
+		queryKey: ["launch-db-id", onChainLaunchId?.toString()],
+		queryFn: () => getLaunchDbId(onChainLaunchId?.toString() ?? "0"),
+		enabled: onChainLaunchId !== undefined,
+		refetchInterval: (query) => (query.state.data ? false : 2_000),
+	});
+
+	const launchUrl = dbId
+		? `${typeof window !== "undefined" ? window.location.origin : ""}/launch/${dbId}`
+		: null;
+
+	const handleCopyLink = useCallback(() => {
+		if (!launchUrl) return;
+		navigator.clipboard.writeText(launchUrl);
+		setCopied(true);
+		setTimeout(() => setCopied(false), 2000);
+	}, [launchUrl]);
+
+	const handleShareX = useCallback(() => {
+		const text = `Just launched $${symbol} on @forjatempo! Check it out:`;
+		const url = launchUrl ?? "https://forja.fun/launch";
+		window.open(
+			`https://x.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`,
+			"_blank",
+		);
+	}, [symbol, launchUrl]);
+
+	return (
+		<Card className="border-anvil-gray-light bg-deep-charcoal">
+			<CardContent className="flex flex-col items-center gap-6 p-8">
+				<div className="flex size-16 items-center justify-center rounded-full bg-emerald-500/10">
+					<CheckIcon className="size-8 text-emerald-400" />
+				</div>
+				<div className="text-center">
+					<h2 className="text-xl font-bold text-steel-white">Launch Created!</h2>
+					<p className="mt-2 text-sm text-smoke-dark">
+						Your token is now live on the bonding curve.
+					</p>
+				</div>
+
+				{tokenAddress && <p className="font-mono text-xs text-smoke-dark">Token: {tokenAddress}</p>}
+
+				{/* Share actions */}
+				<div className="flex flex-wrap justify-center gap-3">
+					{dbId ? (
+						<Link href={`/launch/${dbId}`}>
+							<Button className="bg-molten-amber text-forge-black hover:bg-molten-amber/90">
+								View Launch
+							</Button>
+						</Link>
+					) : (
+						<Button className="bg-molten-amber text-forge-black" disabled>
+							{onChainLaunchId !== undefined ? "Indexing..." : "View Launches"}
+						</Button>
+					)}
+					<Button variant="outline" onClick={handleShareX}>
+						Share on X
+					</Button>
+					{launchUrl && (
+						<Button variant="outline" onClick={handleCopyLink}>
+							<CopyIcon className="mr-1 size-3" />
+							{copied ? "Copied!" : "Copy Link"}
+						</Button>
+					)}
+				</div>
+
+				<Button variant="ghost" className="text-sm text-smoke-dark" onClick={onReset}>
+					Create Another
+				</Button>
+			</CardContent>
+		</Card>
 	);
 }
