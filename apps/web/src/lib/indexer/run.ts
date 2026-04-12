@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 import { indexerClient } from "./client";
 import { generateAlerts } from "./generate-alerts";
 import { indexClaimEvents } from "./index-claims";
+import { indexLaunchEvents } from "./index-launches";
 import { indexLockEvents } from "./index-locks";
 import { indexMultisendEvents } from "./index-multisends";
 import { indexTokenEvents } from "./index-tokens";
@@ -33,6 +34,7 @@ const contracts: ContractIndexer[] = [
 	{ name: "multisend", index: indexMultisendEvents },
 	{ name: "locker", index: indexLockEvents },
 	{ name: "claimer", index: indexClaimEvents },
+	{ name: "launchpad", index: indexLaunchEvents },
 	{ name: "transfers", chunkSize: TRANSFER_CHUNK_SIZE, index: indexTransferEvents },
 ];
 
