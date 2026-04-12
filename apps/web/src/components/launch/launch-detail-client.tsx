@@ -158,11 +158,12 @@ export function LaunchDetailClient({ initialLaunch, initialTrades }: Props) {
 						)}
 
 						{/* Stats Row */}
-						<div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+						<div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
 							<MiniStat label="Raised" value={`$${formatUsdc(launch.realUsdcRaised)}`} />
 							<MiniStat label="Volume" value={`$${formatUsdc(launch.totalVolume)}`} />
 							<MiniStat label="Trades" value={launch.tradeCount.toString()} />
 							<MiniStat label="Traders" value={launch.uniqueTraders.toString()} />
+							<MiniStat label="Holders" value={launch.holderCount.toString()} />
 						</div>
 
 						{/* Token Info */}

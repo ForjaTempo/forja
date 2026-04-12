@@ -311,7 +311,7 @@ function LaunchSuccessCard({
 	// Poll for DB id (indexer may need a few seconds)
 	const { data: dbId } = useQuery({
 		queryKey: ["launch-db-id", onChainLaunchId?.toString()],
-		queryFn: () => getLaunchDbId(onChainLaunchId?.toString() ?? "0"),
+		queryFn: () => getLaunchDbId(onChainLaunchId?.toString() ?? "0", FORJA_LAUNCHPAD_ADDRESS),
 		enabled: onChainLaunchId !== undefined,
 		refetchInterval: (query) => (query.state.data ? false : 2_000),
 	});
