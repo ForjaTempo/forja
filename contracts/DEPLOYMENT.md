@@ -4,9 +4,12 @@
 
 | Contract | Description | Default Fee |
 |----------|-------------|-------------|
-| ForjaTokenFactory | TIP-20 token creation wrapper | 20 USDC |
-| ForjaMultisend | Batch token distribution (max 500) | 3 USDC |
-| ForjaLocker | Token lock with vesting/cliff | 10 USDC |
+| ForjaTokenFactory | TIP-20 token creation wrapper | 2 USDC |
+| ForjaMultisend | Batch token distribution (max 500) | 0.5 USDC |
+| ForjaLocker | Token lock with vesting/cliff | 1 USDC |
+| ForjaLockerV2 | Batch lock with vesting/cliff | 1 USDC |
+| ForjaClaimer | Merkle airdrop claim pages | 1 USDC |
+| ForjaLaunchpad | Bonding curve launchpad with Uniswap v4 graduation | 2 USDC (create), 1% (trade) |
 
 ## Prerequisites
 
@@ -102,12 +105,13 @@ cast call <LOCKER_ADDRESS> "lockFee()(uint256)" --rpc-url $RPC_URL
 | ForjaTokenFactory | `0xC513F939402ED2e751Ca315AB0388F9c176e3bE0` |
 | ForjaMultisend | `0x315e9CF87DbbCF38F41b8705A298FCAB9E1Ae787` |
 | ForjaLocker | `0x6d2F881e84b5D87579d2735510104b76AD728BBa` |
+| ForjaLockerV2 | `0xaaa41385264DF29465ce05f25062b602fC6C66Ac` |
+| ForjaClaimer | `0xe1Fd3DDa0160ddBb4C4e7Ab3Cbdaa816557970C6` |
+| ForjaLaunchpad | `0x3Da57c1502c95A7626213fEf7c1297CdF5Fb3362` |
 
 **Deployer/Treasury**: `0x60aD30D45ebc64E1F9DC10ae9C1c30729Cd0c8A7`
-**Deployed**: 2026-04-01
-**Fees**: Create 2 USDC, Multisend 0.5 USDC, Lock 1 USDC
-
-**E2E Verification**: Pending — smoke transactions to be documented after first mainnet usage.
+**Deployed**: 2026-04-01 (core), 2026-04-07 (LockerV2), 2026-04-10 (Claimer), 2026-04-12 (Launchpad)
+**Fees**: Create 2 USDC, Multisend 0.5 USDC, Lock 1 USDC, Claim 1 USDC, Launchpad Create 2 USDC + 1% trade
 
 ### Moderato Testnet (Chain ID: 42431)
 
@@ -116,9 +120,11 @@ cast call <LOCKER_ADDRESS> "lockFee()(uint256)" --rpc-url $RPC_URL
 | ForjaTokenFactory | `0xC513F939402ED2e751Ca315AB0388F9c176e3bE0` |
 | ForjaMultisend | `0x315e9CF87DbbCF38F41b8705A298FCAB9E1Ae787` |
 | ForjaLocker | `0x6d2F881e84b5D87579d2735510104b76AD728BBa` |
+| ForjaLaunchpad | `0xf5Bb91Ce1336cFD3882F65A835d9d41d1F2E020b` |
 
 **Deployer/Treasury**: `0x60aD30D45ebc64E1F9DC10ae9C1c30729Cd0c8A7`
-**Deployed**: 2026-03-31
+**Deployed**: 2026-03-31 (core), 2026-04-12 (Launchpad)
+**Note**: Uniswap v4 not deployed on Moderato — graduation cannot be tested on testnet.
 
 **E2E Verification** (2026-04-01):
 - Test token: Forja Lock Test (FLT) at `0x20c000000000000000000000f787c74e992465a7`
@@ -133,6 +139,8 @@ cast call <LOCKER_ADDRESS> "lockFee()(uint256)" --rpc-url $RPC_URL
 |------|---------|
 | TIP-20 Factory | `0x20Fc000000000000000000000000000000000000` |
 | pathUSD (USDC) | `0x20C0000000000000000000000000000000000000` |
+| Uniswap v4 PoolManager | `0x33620f62c5b9b2086dd6b62f4a297a9f30347029` |
+| Uniswap v4 PositionManager | `0x3fc79444f8eacc1894775493ff3fa41f1e35ce11` |
 
 ## Fee Management (Post-Deploy)
 
