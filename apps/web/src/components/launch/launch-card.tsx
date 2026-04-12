@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRightLeftIcon, RocketIcon, TrendingUpIcon } from "lucide-react";
+import { ArrowRightLeftIcon, RocketIcon, TrendingUpIcon, UserIcon } from "lucide-react";
 import Link from "next/link";
 import type { LaunchListItem } from "@/actions/launches";
 import { Card, CardContent } from "@/components/ui/card";
@@ -9,8 +9,22 @@ import { TIP20_DECIMALS } from "@/lib/constants";
 import { formatDate } from "@/lib/format";
 
 const GRADUATION_THRESHOLD = 69_000_000_000n; // 69K USDC in raw units (6 decimals)
+const TOTAL_SUPPLY = 1_000_000_000; // 1B tokens
 
 const formatter = new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 1 });
+
+function shortenAddress(addr: string): string {
+	return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
+}
+
+function calcMarketCap(virtualTokens: string, virtualUsdc: string): string {
+	const vt = Number(BigInt(virtualTokens)) / 10 ** TIP20_DECIMALS;
+	const vu = Number(BigInt(virtualUsdc)) / 10 ** TIP20_DECIMALS;
+	if (vt === 0) return "$0";
+	const price = vu / vt;
+	const mcap = price * TOTAL_SUPPLY;
+	return `$${formatter.format(mcap)}`;
+}
 
 function formatUsdc(raw: string): string {
 	const n = Number(BigInt(raw)) / 10 ** TIP20_DECIMALS;
@@ -89,7 +103,10 @@ export function LaunchCard({ launch }: LaunchCardProps) {
 						</div>
 					)}
 
-					<div className="mt-3 flex items-center gap-4 text-xs text-smoke-dark">
+					<div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-smoke-dark">
+						<span className="font-medium text-smoke">
+							{calcMarketCap(launch.virtualTokens, launch.virtualUsdc)} mcap
+						</span>
 						<span className="inline-flex items-center gap-1">
 							<ArrowRightLeftIcon className="size-3" />
 							{launch.tradeCount} trades
@@ -100,7 +117,13 @@ export function LaunchCard({ launch }: LaunchCardProps) {
 						</span>
 					</div>
 
-					<p className="mt-2 text-xs text-smoke-dark">Created {formatDate(launch.createdAt)}</p>
+					<div className="mt-2 flex items-center justify-between text-xs text-smoke-dark">
+						<span className="inline-flex items-center gap-1">
+							<UserIcon className="size-3" />
+							{launch.creatorDisplayName ?? shortenAddress(launch.creatorAddress)}
+						</span>
+						<span>{formatDate(launch.createdAt)}</span>
+					</div>
 				</CardContent>
 			</Card>
 		</Link>

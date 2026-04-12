@@ -30,6 +30,7 @@ export interface LaunchDetail extends LaunchRow {
 	tradeCount: number;
 	totalVolume: string;
 	uniqueTraders: number;
+	holderCount: number;
 	creatorDisplayName: string | null;
 }
 
@@ -178,7 +179,7 @@ export async function getLaunchDetail(launchDbId: number): Promise<LaunchDetail 
 	try {
 		const db = getDb();
 
-		const [[launch], [stats], [profileRow]] = await Promise.all([
+		const [[launch], [stats], [profileRow], [holderRow]] = await Promise.all([
 			db.select().from(schema.launches).where(eq(schema.launches.id, launchDbId)).limit(1),
 			db
 				.select({
@@ -198,6 +199,16 @@ export async function getLaunchDetail(launchDbId: number): Promise<LaunchDetail 
 					),
 				)
 				.limit(1),
+			db
+				.select({ holderCount: schema.tokenHubCache.holderCount })
+				.from(schema.tokenHubCache)
+				.where(
+					eq(
+						schema.tokenHubCache.address,
+						sql`(SELECT ${schema.launches.tokenAddress} FROM ${schema.launches} WHERE ${schema.launches.id} = ${launchDbId} LIMIT 1)`,
+					),
+				)
+				.limit(1),
 		]);
 
 		if (!launch) return null;
@@ -207,6 +218,7 @@ export async function getLaunchDetail(launchDbId: number): Promise<LaunchDetail 
 			tradeCount: stats?.tradeCount ?? 0,
 			totalVolume: stats?.totalVolume ?? "0",
 			uniqueTraders: Number(stats?.uniqueTraders ?? 0),
+			holderCount: holderRow?.holderCount ?? 0,
 			creatorDisplayName: profileRow?.displayName ?? null,
 		};
 	} catch (err) {
@@ -431,6 +443,31 @@ export async function getUserLaunchPosition(
 		return { tokenAmount, totalUsdcSpent, totalUsdcReceived, tradeCount };
 	} catch (err) {
 		console.error("[launches] getUserLaunchPosition failed:", err);
+		return null;
+	}
+}
+
+// ─── On-chain launchId → DB id lookup (for post-create navigation) ───
+
+export async function getLaunchDbId(
+	onChainLaunchId: string,
+	contractAddress: string,
+): Promise<number | null> {
+	try {
+		const db = getDb();
+		const [row] = await db
+			.select({ id: schema.launches.id })
+			.from(schema.launches)
+			.where(
+				and(
+					eq(schema.launches.contractAddress, contractAddress.toLowerCase()),
+					eq(schema.launches.launchId, onChainLaunchId),
+				),
+			)
+			.limit(1);
+		return row?.id ?? null;
+	} catch (err) {
+		console.error("[launches] getLaunchDbId failed:", err);
 		return null;
 	}
 }
