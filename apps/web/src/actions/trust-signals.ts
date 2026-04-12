@@ -75,9 +75,28 @@ export async function getTokenTrustSignals(tokenAddress: string): Promise<TrustS
 			? Date.now() - new Date(tokenRow.createdAt).getTime() < 7 * 24 * 60 * 60 * 1000
 			: false;
 
+		// Reconcile launchpad badge: if cache flag is false, check launches table
+		let isLaunchpadToken = tokenRow.isLaunchpadToken;
+		if (!isLaunchpadToken) {
+			const [launchRow] = await db
+				.select({ id: schema.launches.id })
+				.from(schema.launches)
+				.where(eq(schema.launches.tokenAddress, addr))
+				.limit(1);
+			if (launchRow) {
+				isLaunchpadToken = true;
+				// Async backfill — update cache so future reads are fast
+				db.update(schema.tokenHubCache)
+					.set({ isLaunchpadToken: true })
+					.where(eq(schema.tokenHubCache.address, addr))
+					.then(() => {})
+					.catch(() => {});
+			}
+		}
+
 		return {
 			isForjaCreated: tokenRow.isForjaCreated,
-			isLaunchpadToken: tokenRow.isLaunchpadToken,
+			isLaunchpadToken,
 			profileClaimed,
 			verified,
 			isActive: hasRecentActivity,

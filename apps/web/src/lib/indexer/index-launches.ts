@@ -253,12 +253,37 @@ export async function indexLaunchEvents(
 				),
 			);
 
-		// Mark token as launchpad token in tokenHubCache
+		// Mark token as launchpad token in tokenHubCache (upsert to avoid missing if row doesn't exist yet)
 		if (tokenAddr) {
+			const [launchRow] = await db
+				.select({
+					name: schema.launches.name,
+					symbol: schema.launches.symbol,
+					creatorAddress: schema.launches.creatorAddress,
+				})
+				.from(schema.launches)
+				.where(
+					and(
+						eq(schema.launches.contractAddress, contractAddr),
+						eq(schema.launches.launchId, launchIdStr),
+					),
+				)
+				.limit(1);
+
 			await db
-				.update(schema.tokenHubCache)
-				.set({ isLaunchpadToken: true })
-				.where(eq(schema.tokenHubCache.address, tokenAddr));
+				.insert(schema.tokenHubCache)
+				.values({
+					address: tokenAddr,
+					name: launchRow?.name ?? "Unknown",
+					symbol: launchRow?.symbol ?? "???",
+					isForjaCreated: true,
+					isLaunchpadToken: true,
+					creatorAddress: launchRow?.creatorAddress ?? null,
+				})
+				.onConflictDoUpdate({
+					target: schema.tokenHubCache.address,
+					set: { isLaunchpadToken: true },
+				});
 		}
 	}
 	totalIndexed += gradLogs.length;
