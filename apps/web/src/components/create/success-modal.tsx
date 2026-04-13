@@ -65,7 +65,7 @@ export function SuccessModal({
 								href={`${explorerUrl}/tx/${txHash}`}
 								target="_blank"
 								rel="noopener noreferrer"
-								className="inline-flex items-center gap-1 font-mono text-sm text-smoke transition-colors hover:text-molten-amber"
+								className="inline-flex items-center gap-1 font-mono text-sm text-smoke transition-colors hover:text-indigo"
 							>
 								{`${txHash.slice(0, 8)}...${txHash.slice(-6)}`}
 								<ExternalLinkIcon className="size-3" />

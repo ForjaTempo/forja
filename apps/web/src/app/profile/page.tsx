@@ -54,7 +54,7 @@ export default function ProfilePage() {
 						</p>
 						<Button
 							onClick={() => requestAuth()}
-							className="bg-molten-amber text-forge-black hover:bg-molten-amber/90"
+							className="bg-primary text-primary-foreground hover:bg-primary/90"
 						>
 							Sign to Verify
 						</Button>

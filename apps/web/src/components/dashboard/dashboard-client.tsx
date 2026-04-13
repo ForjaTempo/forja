@@ -149,36 +149,36 @@ export function DashboardClient() {
 					<TabsList className="border-b border-anvil-gray-light bg-transparent">
 						<TabsTrigger
 							value="tokens"
-							className="text-smoke data-[state=active]:text-molten-amber"
+							className="text-smoke data-[state=active]:text-indigo"
 						>
 							My Tokens ({tokens.length})
 						</TabsTrigger>
 						{hasLaunchpad && (
 							<TabsTrigger
 								value="launches"
-								className="text-smoke data-[state=active]:text-molten-amber"
+								className="text-smoke data-[state=active]:text-indigo"
 							>
 								Launches ({myLaunches.length})
 							</TabsTrigger>
 						)}
 						<TabsTrigger
 							value="multisends"
-							className="text-smoke data-[state=active]:text-molten-amber"
+							className="text-smoke data-[state=active]:text-indigo"
 						>
 							Multisends ({multisends.length})
 						</TabsTrigger>
-						<TabsTrigger value="locks" className="text-smoke data-[state=active]:text-molten-amber">
+						<TabsTrigger value="locks" className="text-smoke data-[state=active]:text-indigo">
 							Locks ({locks.length})
 						</TabsTrigger>
 						<TabsTrigger
 							value="claims"
-							className="text-smoke data-[state=active]:text-molten-amber"
+							className="text-smoke data-[state=active]:text-indigo"
 						>
 							Claims ({claims.length})
 						</TabsTrigger>
 						<TabsTrigger
 							value="watchlist"
-							className="text-smoke data-[state=active]:text-molten-amber"
+							className="text-smoke data-[state=active]:text-indigo"
 						>
 							Watchlist ({watchlistTokens.length})
 						</TabsTrigger>
@@ -251,7 +251,7 @@ export function DashboardClient() {
 								</p>
 								<Button
 									onClick={() => requestAuth()}
-									className="bg-molten-amber text-forge-black hover:bg-molten-amber/90"
+									className="bg-primary text-primary-foreground hover:bg-primary/90"
 								>
 									Sign to Verify
 								</Button>

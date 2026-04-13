@@ -90,13 +90,13 @@ export function TokenDetailClient({
 					<TabsList className="border-b border-anvil-gray-light bg-transparent">
 						<TabsTrigger
 							value="holders"
-							className="text-smoke data-[state=active]:text-molten-amber"
+							className="text-smoke data-[state=active]:text-indigo"
 						>
 							Holders
 						</TabsTrigger>
 						<TabsTrigger
 							value="activity"
-							className="text-smoke data-[state=active]:text-molten-amber"
+							className="text-smoke data-[state=active]:text-indigo"
 						>
 							Activity
 						</TabsTrigger>

@@ -10,7 +10,7 @@ export default function TokenNotFound() {
 			</p>
 			<Link
 				href="/tokens"
-				className="mt-6 inline-block text-sm text-molten-amber transition-colors hover:text-molten-amber/80"
+				className="mt-6 inline-block text-sm text-indigo transition-colors hover:text-indigo/80"
 			>
 				Back to Token Hub
 			</Link>

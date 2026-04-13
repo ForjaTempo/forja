@@ -167,7 +167,7 @@ export function ProfileForm({ address, existing }: ProfileFormProps) {
 								}}
 							/>
 						) : (
-							<div className="flex size-12 items-center justify-center rounded-full bg-anvil-gray text-lg font-bold text-molten-amber">
+							<div className="flex size-12 items-center justify-center rounded-full bg-anvil-gray text-lg font-bold text-indigo">
 								{(displayName || address).slice(0, 2).toUpperCase()}
 							</div>
 						)}
@@ -184,7 +184,7 @@ export function ProfileForm({ address, existing }: ProfileFormProps) {
 			<Button
 				type="submit"
 				disabled={saving}
-				className="bg-molten-amber text-forge-black hover:bg-molten-amber/90"
+				className="bg-primary text-primary-foreground hover:bg-primary/90"
 			>
 				{saving ? (
 					<Loader2Icon className="mr-2 size-4 animate-spin" />

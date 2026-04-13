@@ -171,7 +171,7 @@ export function LaunchCreateForm() {
 								onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setDescription(e.target.value)}
 								maxLength={500}
 								rows={3}
-								className="flex w-full rounded-md border border-anvil-gray-light bg-obsidian-black/50 px-3 py-2 text-sm text-smoke placeholder:text-smoke-dark/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-molten-amber"
+								className="flex w-full rounded-md border border-anvil-gray-light bg-obsidian-black/50 px-3 py-2 text-sm text-smoke placeholder:text-smoke-dark/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
 							/>
 							<p className="text-xs text-smoke-dark">{description.length}/500 characters</p>
 						</div>
@@ -193,7 +193,7 @@ export function LaunchCreateForm() {
 						</div>
 
 						<Button
-							className="w-full bg-molten-amber text-forge-black hover:bg-molten-amber/90"
+							className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
 							disabled={!formValid}
 							onClick={() => setStep(2)}
 						>
@@ -248,7 +248,7 @@ export function LaunchCreateForm() {
 
 							{needsApproval && !isApprovalConfirmed ? (
 								<Button
-									className="w-full bg-molten-amber text-forge-black hover:bg-molten-amber/90"
+									className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
 									disabled={
 										!hasEnoughBalance || isApproving || isApprovalConfirming || isAllowanceLoading
 									}
@@ -262,7 +262,7 @@ export function LaunchCreateForm() {
 								</Button>
 							) : (
 								<Button
-									className="w-full bg-molten-amber text-forge-black hover:bg-molten-amber/90"
+									className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
 									disabled={!hasEnoughBalance || isCreating || isConfirming}
 									onClick={handleCreate}
 								>
@@ -355,12 +355,12 @@ function LaunchSuccessCard({
 				<div className="flex flex-wrap justify-center gap-3">
 					{dbId ? (
 						<Link href={`/launch/${dbId}`}>
-							<Button className="bg-molten-amber text-forge-black hover:bg-molten-amber/90">
+							<Button className="bg-primary text-primary-foreground hover:bg-primary/90">
 								View Launch
 							</Button>
 						</Link>
 					) : (
-						<Button className="bg-molten-amber text-forge-black" disabled>
+						<Button className="bg-primary text-primary-foreground" disabled>
 							{onChainLaunchId !== undefined ? "Indexing..." : "View Launches"}
 						</Button>
 					)}

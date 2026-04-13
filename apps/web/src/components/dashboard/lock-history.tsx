@@ -57,7 +57,7 @@ export function LockHistory({ locks }: LockHistoryProps) {
 				<button
 					type="button"
 					onClick={handleExport}
-					className="inline-flex items-center gap-1.5 rounded-md border border-anvil-gray-light px-3 py-1.5 text-xs text-smoke transition-colors hover:border-molten-amber hover:text-molten-amber"
+					className="inline-flex items-center gap-1.5 rounded-md border border-anvil-gray-light px-3 py-1.5 text-xs text-smoke transition-colors hover:border-indigo hover:text-indigo"
 				>
 					<DownloadIcon className="size-3" />
 					Export CSV
@@ -151,7 +151,7 @@ export function LockHistory({ locks }: LockHistoryProps) {
 											href={`${explorerUrl}/tx/${lock.txHash}`}
 											target="_blank"
 											rel="noopener noreferrer"
-											className="inline-flex items-center gap-1 font-mono text-xs text-smoke transition-colors hover:text-molten-amber"
+											className="inline-flex items-center gap-1 font-mono text-xs text-smoke transition-colors hover:text-indigo"
 										>
 											{`${lock.txHash.slice(0, 6)}...${lock.txHash.slice(-4)}`}
 											<ExternalLinkIcon className="size-3" />

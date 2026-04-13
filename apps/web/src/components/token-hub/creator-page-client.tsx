@@ -89,17 +89,17 @@ export function CreatorPageClient({
 					<TabsList className="border-b border-anvil-gray-light bg-transparent">
 						<TabsTrigger
 							value="tokens"
-							className="text-smoke data-[state=active]:text-molten-amber"
+							className="text-smoke data-[state=active]:text-indigo"
 						>
 							Tokens ({tokens.length})
 						</TabsTrigger>
 						<TabsTrigger
 							value="multisends"
-							className="text-smoke data-[state=active]:text-molten-amber"
+							className="text-smoke data-[state=active]:text-indigo"
 						>
 							Multisends ({multisends.length})
 						</TabsTrigger>
-						<TabsTrigger value="locks" className="text-smoke data-[state=active]:text-molten-amber">
+						<TabsTrigger value="locks" className="text-smoke data-[state=active]:text-indigo">
 							Locks ({locks.length})
 						</TabsTrigger>
 					</TabsList>
@@ -167,7 +167,7 @@ function MultisendList({ multisends }: { multisends: Multisend[] }) {
 									href={`${explorerUrl}/tx/${ms.txHash}`}
 									target="_blank"
 									rel="noopener noreferrer"
-									className="inline-flex items-center gap-1 font-mono text-xs text-smoke transition-colors hover:text-molten-amber"
+									className="inline-flex items-center gap-1 font-mono text-xs text-smoke transition-colors hover:text-indigo"
 								>
 									{`${ms.txHash.slice(0, 6)}...${ms.txHash.slice(-4)}`}
 									<ExternalLinkIcon className="size-3" />
@@ -239,7 +239,7 @@ function LockList({ locks }: { locks: Lock[] }) {
 										href={`${explorerUrl}/tx/${lock.txHash}`}
 										target="_blank"
 										rel="noopener noreferrer"
-										className="inline-flex items-center gap-1 font-mono text-xs text-smoke transition-colors hover:text-molten-amber"
+										className="inline-flex items-center gap-1 font-mono text-xs text-smoke transition-colors hover:text-indigo"
 									>
 										{`${lock.txHash.slice(0, 6)}...${lock.txHash.slice(-4)}`}
 										<ExternalLinkIcon className="size-3" />

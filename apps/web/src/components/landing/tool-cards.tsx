@@ -10,8 +10,8 @@ const tools = [
 			"Deploy your own TIP-20 token in seconds. Set name, symbol, supply — no Solidity required.",
 		href: "/create",
 		icon: HammerIcon,
-		accent: "from-molten-amber/20 to-molten-amber/5",
-		iconColor: "text-molten-amber",
+		accent: "from-indigo/20 to-indigo/5",
+		iconColor: "text-indigo",
 	},
 	{
 		title: "Multisend",

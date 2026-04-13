@@ -19,7 +19,7 @@ interface TokenCardProps {
 export function TokenCard({ token, action }: TokenCardProps) {
 	return (
 		<Link href={`/tokens/${token.address}`}>
-			<Card className="border-anvil-gray-light bg-deep-charcoal transition-colors hover:border-molten-amber/50">
+			<Card className="border-anvil-gray-light bg-deep-charcoal transition-colors hover:border-indigo/50">
 				<CardContent className="p-4">
 					<div className="flex items-start justify-between gap-2">
 						<div className="flex items-center gap-3">

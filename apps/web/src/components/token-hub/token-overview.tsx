@@ -100,7 +100,7 @@ export function TokenOverview({ token, trustSignals }: TokenOverviewProps) {
 				{token.creatorAddress && token.isForjaCreated && (
 					<Link
 						href={`/creators/${token.creatorAddress}`}
-						className="inline-flex items-center gap-1 text-sm text-smoke transition-colors hover:text-molten-amber"
+						className="inline-flex items-center gap-1 text-sm text-smoke transition-colors hover:text-indigo"
 					>
 						Creator: <AddressDisplay address={token.creatorAddress} />
 					</Link>
@@ -109,7 +109,7 @@ export function TokenOverview({ token, trustSignals }: TokenOverviewProps) {
 					href={`${explorerUrl}/address/${token.address}`}
 					target="_blank"
 					rel="noopener noreferrer"
-					className="inline-flex items-center gap-1 text-sm text-smoke transition-colors hover:text-molten-amber"
+					className="inline-flex items-center gap-1 text-sm text-smoke transition-colors hover:text-indigo"
 				>
 					View on Explorer
 					<ExternalLinkIcon className="size-3" />

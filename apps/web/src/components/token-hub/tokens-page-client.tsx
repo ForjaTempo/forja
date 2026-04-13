@@ -114,19 +114,19 @@ export function TokensPageClient({ initialData, initialStats }: TokensPageClient
 				{stats && (
 					<div className="grid grid-cols-3 gap-4">
 						<div className="rounded-lg border border-anvil-gray-light bg-deep-charcoal p-4 text-center">
-							<p className="font-mono text-2xl font-bold text-molten-amber">
+							<p className="font-mono text-2xl font-bold text-indigo">
 								{formatter.format(stats.totalTokens)}
 							</p>
 							<p className="mt-1 text-xs text-smoke-dark">Total Tokens</p>
 						</div>
 						<div className="rounded-lg border border-anvil-gray-light bg-deep-charcoal p-4 text-center">
-							<p className="font-mono text-2xl font-bold text-molten-amber">
+							<p className="font-mono text-2xl font-bold text-indigo">
 								{formatter.format(stats.forjaTokens)}
 							</p>
 							<p className="mt-1 text-xs text-smoke-dark">FORJA Created</p>
 						</div>
 						<div className="rounded-lg border border-anvil-gray-light bg-deep-charcoal p-4 text-center">
-							<p className="font-mono text-2xl font-bold text-molten-amber">
+							<p className="font-mono text-2xl font-bold text-indigo">
 								{formatter.format(stats.totalHolders)}
 							</p>
 							<p className="mt-1 text-xs text-smoke-dark">Total Holders</p>

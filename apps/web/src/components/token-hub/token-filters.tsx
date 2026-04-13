@@ -30,7 +30,7 @@ export function TokenFilters({
 			<select
 				value={sort}
 				onChange={(e) => onSortChange(e.target.value as SortOption)}
-				className="h-9 rounded-md border border-anvil-gray-light bg-obsidian-black/50 px-3 text-sm text-smoke outline-none focus:border-molten-amber"
+				className="h-9 rounded-md border border-anvil-gray-light bg-obsidian-black/50 px-3 text-sm text-smoke outline-none focus:border-indigo"
 			>
 				{sortOptions.map((opt) => (
 					<option key={opt.value} value={opt.value}>
@@ -44,7 +44,7 @@ export function TokenFilters({
 				onClick={() => onForjaOnlyChange(!forjaOnly)}
 				className={cn(
 					"border-anvil-gray-light text-smoke",
-					forjaOnly && "border-molten-amber bg-molten-amber/10 text-molten-amber",
+					forjaOnly && "border-indigo bg-indigo/10 text-indigo",
 				)}
 			>
 				FORJA Only

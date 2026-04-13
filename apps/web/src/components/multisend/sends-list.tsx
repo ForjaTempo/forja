@@ -37,7 +37,7 @@ function SendRow({ send, explorerUrl }: { send: MultisendEvent; explorerUrl: str
 						href={`${explorerUrl}/tx/${send.txHash}`}
 						target="_blank"
 						rel="noopener noreferrer"
-						className="inline-flex items-center gap-1 font-mono text-smoke transition-colors hover:text-molten-amber"
+						className="inline-flex items-center gap-1 font-mono text-smoke transition-colors hover:text-indigo"
 					>
 						{`${send.txHash.slice(0, 8)}...${send.txHash.slice(-6)}`}
 						<ExternalLinkIcon className="size-3" />

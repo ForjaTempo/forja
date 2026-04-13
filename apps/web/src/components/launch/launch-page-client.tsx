@@ -64,7 +64,7 @@ export function LaunchPageClient({ initialData, initialStats }: Props) {
 					description="Token launchpad with bonding curve and automatic Uniswap v4 graduation"
 					action={
 						<Link href="/launch/create">
-							<Button className="bg-molten-amber text-forge-black hover:bg-molten-amber/90">
+							<Button className="bg-primary text-primary-foreground hover:bg-primary/90">
 								<RocketIcon className="mr-2 size-4" />
 								Create Launch
 							</Button>
@@ -79,7 +79,7 @@ export function LaunchPageClient({ initialData, initialStats }: Props) {
 					<StatCard
 						label="Total Volume"
 						value={formatUsdcCompact(initialStats.totalVolume)}
-						icon={<TrendingUpIcon className="size-4 text-molten-amber" />}
+						icon={<TrendingUpIcon className="size-4 text-indigo" />}
 					/>
 				</div>
 
@@ -92,15 +92,15 @@ export function LaunchPageClient({ initialData, initialStats }: Props) {
 						}}
 					>
 						<TabsList className="border-b border-anvil-gray-light bg-transparent">
-							<TabsTrigger value="hot" className="text-smoke data-[state=active]:text-molten-amber">
+							<TabsTrigger value="hot" className="text-smoke data-[state=active]:text-indigo">
 								Hot
 							</TabsTrigger>
-							<TabsTrigger value="new" className="text-smoke data-[state=active]:text-molten-amber">
+							<TabsTrigger value="new" className="text-smoke data-[state=active]:text-indigo">
 								New
 							</TabsTrigger>
 							<TabsTrigger
 								value="graduated"
-								className="text-smoke data-[state=active]:text-molten-amber"
+								className="text-smoke data-[state=active]:text-indigo"
 							>
 								Graduated
 							</TabsTrigger>

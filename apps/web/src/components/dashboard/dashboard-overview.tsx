@@ -58,7 +58,7 @@ export function DashboardOverview({ overview }: DashboardOverviewProps) {
 					<Link
 						key={action.href}
 						href={action.href}
-						className="rounded-md border border-anvil-gray-light bg-anvil-gray px-4 py-2 text-sm font-medium text-smoke transition-colors hover:border-molten-amber hover:text-molten-amber"
+						className="rounded-md border border-anvil-gray-light bg-anvil-gray px-4 py-2 text-sm font-medium text-smoke transition-colors hover:border-indigo hover:text-indigo"
 					>
 						{action.label}
 					</Link>

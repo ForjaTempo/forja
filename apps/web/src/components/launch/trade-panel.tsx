@@ -302,7 +302,7 @@ export function TradePanel({
 									<button
 										type="button"
 										onClick={() => setBuyAmount(formatUnits(usdcBalance, TIP20_DECIMALS))}
-										className="text-xs text-molten-amber hover:underline"
+										className="text-xs text-indigo hover:underline"
 									>
 										MAX: {Number(formatUnits(usdcBalance, TIP20_DECIMALS)).toLocaleString()}
 									</button>
@@ -378,7 +378,7 @@ export function TradePanel({
 									<button
 										type="button"
 										onClick={() => setSellAmount(formatUnits(tokenBalance, TIP20_DECIMALS))}
-										className="text-xs text-molten-amber hover:underline"
+										className="text-xs text-indigo hover:underline"
 									>
 										MAX: {Number(formatUnits(tokenBalance, TIP20_DECIMALS)).toLocaleString()}
 									</button>

@@ -12,8 +12,8 @@ import { useWrongNetwork } from "@/hooks/use-wrong-network";
 import { config } from "@/lib/wagmi";
 
 const rainbowTheme = darkTheme({
-	accentColor: "#f59e0b",
-	accentColorForeground: "#0f1116",
+	accentColor: "#5b6ada",
+	accentColorForeground: "#ffffff",
 	borderRadius: "medium",
 	fontStack: "system",
 });
@@ -38,9 +38,15 @@ export function Providers({ children }: { children: ReactNode }) {
 							theme="dark"
 							toastOptions={{
 								style: {
-									background: "#1a1d25",
-									border: "1px solid #242832",
-									color: "#f5f5f5",
+									background: "var(--color-surface-card)",
+									border: "1px solid var(--color-border-standard)",
+									color: "var(--color-steel-white)",
+								},
+								classNames: {
+									success: "[&_[data-icon]]:text-forge-green",
+									error: "[&_[data-icon]]:text-ember-red",
+									warning: "[&_[data-icon]]:text-molten-amber",
+									info: "[&_[data-icon]]:text-info",
 								},
 							}}
 						/>

@@ -26,7 +26,7 @@ export function HowItWorks() {
 		<section className="py-20 sm:py-24">
 			<div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 				<div className="text-center">
-					<p className="font-mono text-xs uppercase tracking-[0.2em] text-molten-amber">
+					<p className="font-mono text-xs uppercase tracking-[0.2em] text-indigo">
 						How it works
 					</p>
 					<h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
@@ -46,7 +46,7 @@ export function HowItWorks() {
 							)}
 
 							<div className="mx-auto flex size-16 items-center justify-center rounded-2xl border border-anvil-gray-light bg-anvil-gray">
-								<step.icon className="size-6 text-molten-amber" />
+								<step.icon className="size-6 text-indigo" />
 							</div>
 
 							<p className="mt-1 font-mono text-xs text-smoke-dark">{step.step}</p>

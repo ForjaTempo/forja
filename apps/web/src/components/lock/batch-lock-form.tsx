@@ -475,7 +475,7 @@ export function BatchLockForm({ onSuccess, initialToken }: BatchLockFormProps) {
 											type="checkbox"
 											checked={equalSplit}
 											onChange={(e) => setEqualSplit(e.target.checked)}
-											className="size-3.5 rounded border-anvil-gray-light accent-molten-amber"
+											className="size-3.5 rounded border-anvil-gray-light accent-indigo"
 										/>
 										Equal split
 									</label>
@@ -606,7 +606,7 @@ export function BatchLockForm({ onSuccess, initialToken }: BatchLockFormProps) {
 											onClick={() => setDurationDays(days)}
 											className={`rounded-md border px-3 py-1.5 text-xs font-medium transition-colors ${
 												isActive
-													? "border-molten-amber bg-molten-amber/10 text-molten-amber"
+													? "border-indigo bg-indigo/10 text-indigo"
 													: "border-anvil-gray-light text-smoke-dark hover:text-smoke"
 											}`}
 										>
@@ -678,7 +678,7 @@ export function BatchLockForm({ onSuccess, initialToken }: BatchLockFormProps) {
 												onClick={() => setCliffDays(days)}
 												className={`rounded-md border px-3 py-1.5 text-xs font-medium transition-colors ${
 													isActive
-														? "border-molten-amber bg-molten-amber/10 text-molten-amber"
+														? "border-indigo bg-indigo/10 text-indigo"
 														: "border-anvil-gray-light text-smoke-dark hover:text-smoke"
 												}`}
 											>
