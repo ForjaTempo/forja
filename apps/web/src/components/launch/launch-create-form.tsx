@@ -11,6 +11,7 @@ import { getLaunchDbId } from "@/actions/launches";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { triggerConfetti } from "@/components/ui/confetti";
+import { ImageUpload } from "@/components/ui/image-upload";
 import { Input } from "@/components/ui/input";
 import { TransactionStatus } from "@/components/ui/transaction-status";
 import { useCreateLaunch } from "@/hooks/use-create-launch";
@@ -19,8 +20,6 @@ import { useUsdcApproval } from "@/hooks/use-usdc-approval";
 import { useUsdcBalance } from "@/hooks/use-usdc-balance";
 import { FEES, FORJA_LAUNCHPAD_ADDRESS, TIP20_DECIMALS } from "@/lib/constants";
 import { deriveTxState, formatErrorMessage } from "@/lib/format";
-
-const IMAGE_URL_RE = /^https:\/\/[^\s]+\.(png|jpg|jpeg|gif|webp|svg)(\?[^\s]*)?$/i;
 
 export function LaunchCreateForm() {
 	const { isConnected } = useAccount();
@@ -62,8 +61,7 @@ export function LaunchCreateForm() {
 	const nameValid = name.trim().length >= 1 && name.trim().length <= 50;
 	const symbolValid = symbol.trim().length >= 1 && symbol.trim().length <= 10;
 	const descValid = description.length <= 500;
-	const imageValid = !imageUri || IMAGE_URL_RE.test(imageUri);
-	const formValid = nameValid && symbolValid && descValid && imageValid;
+	const formValid = nameValid && symbolValid && descValid;
 
 	const txState = deriveTxState(isCreating, isConfirming, isSuccess, createError);
 
@@ -178,19 +176,14 @@ export function LaunchCreateForm() {
 						</div>
 
 						<div className="space-y-2">
-							<label htmlFor="imageUri" className="text-sm font-medium text-smoke">
-								Image URL <span className="text-smoke-dark">(optional, https://)</span>
-							</label>
-							<Input
-								id="imageUri"
-								placeholder="https://example.com/logo.png"
-								value={imageUri}
-								onChange={(e) => setImageUri(e.target.value)}
-								className="border-anvil-gray-light bg-obsidian-black/50 text-smoke"
+							<span className="text-sm font-medium text-smoke">
+								Image <span className="text-smoke-dark">(optional)</span>
+							</span>
+							<ImageUpload
+								type="launch"
+								value={imageUri || undefined}
+								onChange={(url) => setImageUri(url ?? "")}
 							/>
-							{imageUri && !imageValid && (
-								<p className="text-xs text-red-400">Must be a valid https:// image URL</p>
-							)}
 						</div>
 
 						<Button
@@ -220,7 +213,7 @@ export function LaunchCreateForm() {
 								<Row label="Name" value={name} />
 								<Row label="Symbol" value={symbol.toUpperCase()} />
 								{description && <Row label="Description" value={description} />}
-								{imageUri && <Row label="Image" value={imageUri} />}
+								{imageUri && <Row label="Image" value="Uploaded" />}
 								<hr className="border-anvil-gray-light" />
 								<Row label="Total Supply" value="1,000,000,000" />
 								<Row label="Initial Price" value="~$0.000028" />

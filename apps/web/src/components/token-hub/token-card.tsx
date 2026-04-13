@@ -1,11 +1,12 @@
 "use client";
 
 import type { TokenHubCache } from "@forja/db";
-import { ArrowRightLeftIcon, CoinsIcon, UsersIcon } from "lucide-react";
+import { ArrowRightLeftIcon, UsersIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { AddressDisplay } from "@/components/ui/address-display";
 import { Card, CardContent } from "@/components/ui/card";
+import { ImageFallback } from "@/components/ui/image-fallback";
 import { formatDate } from "@/lib/format";
 import { TokenCardBadges } from "./trust-badges";
 
@@ -32,9 +33,7 @@ export function TokenCard({ token, action }: TokenCardProps) {
 									className="rounded-full"
 								/>
 							) : (
-								<div className="flex size-10 items-center justify-center rounded-full bg-anvil-gray">
-									<CoinsIcon className="size-5 text-smoke-dark" />
-								</div>
+								<ImageFallback name={token.symbol} size={40} variant="circle" />
 							)}
 							<div>
 								<h3 className="text-sm font-semibold text-steel-white">{token.name}</h3>

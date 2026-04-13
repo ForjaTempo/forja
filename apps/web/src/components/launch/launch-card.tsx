@@ -1,9 +1,10 @@
 "use client";
 
-import { ArrowRightLeftIcon, RocketIcon, TrendingUpIcon, UserIcon } from "lucide-react";
+import { ArrowRightLeftIcon, TrendingUpIcon, UserIcon } from "lucide-react";
 import Link from "next/link";
 import type { LaunchListItem } from "@/actions/launches";
 import { Card, CardContent } from "@/components/ui/card";
+import { ImageFallback } from "@/components/ui/image-fallback";
 import { Progress } from "@/components/ui/progress";
 import { TIP20_DECIMALS } from "@/lib/constants";
 import { formatDate } from "@/lib/format";
@@ -76,9 +77,7 @@ export function LaunchCard({ launch }: LaunchCardProps) {
 									className="size-10 rounded-full object-cover"
 								/>
 							) : (
-								<div className="flex size-10 items-center justify-center rounded-full bg-anvil-gray">
-									<RocketIcon className="size-5 text-smoke-dark" />
-								</div>
+								<ImageFallback name={launch.symbol} size={40} variant="circle" />
 							)}
 							<div>
 								<h3 className="text-sm font-semibold text-steel-white">{launch.name}</h3>

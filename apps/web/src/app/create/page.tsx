@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { updateTokenLogo } from "@/actions/upload";
 import { PostCreationWizard } from "@/components/create/post-creation-wizard";
 import { TokenForm } from "@/components/create/token-form";
 import { TokensList } from "@/components/create/tokens-list";
@@ -15,6 +16,7 @@ interface CreatedToken {
 	symbol: string;
 	txHash: string;
 	tokenAddress: string;
+	logoUrl?: string;
 }
 
 export default function CreatePage() {
@@ -35,6 +37,11 @@ export default function CreatePage() {
 				timestamp: Date.now(),
 			});
 			setListKey((k) => k + 1);
+
+			// Attach uploaded logo to token cache (fire-and-forget)
+			if (data.logoUrl) {
+				updateTokenLogo(data.tokenAddress, data.logoUrl).catch(() => {});
+			}
 		},
 		[txConfirmed, addTransaction],
 	);

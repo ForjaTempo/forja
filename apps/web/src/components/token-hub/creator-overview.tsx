@@ -16,6 +16,7 @@ import { useAccount } from "wagmi";
 import { AddressDisplay } from "@/components/ui/address-display";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ImageFallback } from "@/components/ui/image-fallback";
 import { useExplorerUrl } from "@/hooks/use-explorer-url";
 import { formatDate } from "@/lib/format";
 
@@ -75,15 +76,18 @@ export function CreatorOverview({ profile }: CreatorOverviewProps) {
 			<div className="flex items-start justify-between gap-4">
 				<div className="flex items-center gap-4">
 					{profile.avatarUrl ? (
+						// biome-ignore lint/performance/noImgElement: user-uploaded/external avatar URL
 						<img
 							src={profile.avatarUrl}
 							alt={profile.displayName ?? "Creator avatar"}
 							className="size-16 rounded-full object-cover"
 						/>
 					) : (
-						<div className="flex size-16 items-center justify-center rounded-full bg-anvil-gray text-xl font-bold text-indigo">
-							{(profile.displayName ?? profile.address).slice(0, 2).toUpperCase()}
-						</div>
+						<ImageFallback
+							name={profile.displayName ?? profile.address}
+							size={64}
+							variant="circle"
+						/>
 					)}
 					<div>
 						<div className="flex items-center gap-2">
