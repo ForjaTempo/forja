@@ -4,6 +4,7 @@ import { type ChangeEvent, type FormEvent, useCallback, useRef, useState } from 
 import { formatUnits, parseUnits } from "viem";
 import { useAccount } from "wagmi";
 import { Card, CardContent } from "@/components/ui/card";
+import { ImageUpload } from "@/components/ui/image-upload";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { TransactionStatus } from "@/components/ui/transaction-status";
@@ -28,6 +29,7 @@ interface TokenFormProps {
 		symbol: string;
 		txHash: string;
 		tokenAddress: string;
+		logoUrl?: string;
 	}) => void;
 }
 
@@ -36,6 +38,7 @@ export function TokenForm({ onSuccess }: TokenFormProps) {
 	const [name, setName] = useState("");
 	const [symbol, setSymbol] = useState("");
 	const [initialSupply, setInitialSupply] = useState("");
+	const [logoUrl, setLogoUrl] = useState("");
 	const successFired = useRef(false);
 	const [txDialogOpen, setTxDialogOpen] = useState(false);
 
@@ -99,6 +102,7 @@ export function TokenForm({ onSuccess }: TokenFormProps) {
 					symbol: symbol.trim(),
 					txHash,
 					tokenAddress,
+					logoUrl: logoUrl || undefined,
 				});
 			}
 		},
@@ -154,6 +158,17 @@ export function TokenForm({ onSuccess }: TokenFormProps) {
 								autoComplete="off"
 							/>
 							{symbolError && <p className="text-xs text-ember-red">{symbolError}</p>}
+						</div>
+
+						<div className="space-y-2">
+							<span className="text-sm font-medium text-smoke">
+								Token Logo <span className="text-smoke-dark">(optional)</span>
+							</span>
+							<ImageUpload
+								type="token"
+								value={logoUrl || undefined}
+								onChange={(url) => setLogoUrl(url ?? "")}
+							/>
 						</div>
 
 						<div className="space-y-2">

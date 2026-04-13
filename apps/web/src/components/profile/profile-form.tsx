@@ -6,6 +6,8 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { upsertCreatorProfile } from "@/actions/profile";
 import { Button } from "@/components/ui/button";
+import { ImageFallback } from "@/components/ui/image-fallback";
+import { ImageUpload } from "@/components/ui/image-upload";
 import { Input } from "@/components/ui/input";
 import { useWalletAuth } from "@/hooks/use-wallet-auth";
 import { cn } from "@/lib/utils";
@@ -21,6 +23,7 @@ export function ProfileForm({ address, existing }: ProfileFormProps) {
 	const [displayName, setDisplayName] = useState(existing?.displayName ?? "");
 	const [bio, setBio] = useState(existing?.bio ?? "");
 	const [avatarUrl, setAvatarUrl] = useState(existing?.avatarUrl ?? "");
+	const [bannerUrl, setBannerUrl] = useState(existing?.bannerUrl ?? "");
 	const [website, setWebsite] = useState(existing?.website ?? "");
 	const [twitterHandle, setTwitterHandle] = useState(existing?.twitterHandle ?? "");
 	const [telegramHandle, setTelegramHandle] = useState(existing?.telegramHandle ?? "");
@@ -36,6 +39,7 @@ export function ProfileForm({ address, existing }: ProfileFormProps) {
 				displayName,
 				bio,
 				avatarUrl,
+				bannerUrl,
 				website,
 				twitterHandle,
 				telegramHandle,
@@ -53,7 +57,27 @@ export function ProfileForm({ address, existing }: ProfileFormProps) {
 
 	return (
 		<form onSubmit={handleSubmit} className="space-y-6">
+			{/* Banner Upload */}
+			<div className="space-y-2">
+				<span className="text-sm font-medium text-smoke">Banner</span>
+				<ImageUpload
+					type="banner"
+					value={bannerUrl || undefined}
+					onChange={(url) => setBannerUrl(url ?? "")}
+				/>
+			</div>
+
 			<div className="grid gap-6 sm:grid-cols-2">
+				{/* Avatar Upload */}
+				<div className="space-y-2">
+					<span className="text-sm font-medium text-smoke">Avatar</span>
+					<ImageUpload
+						type="avatar"
+						value={avatarUrl || undefined}
+						onChange={(url) => setAvatarUrl(url ?? "")}
+					/>
+				</div>
+
 				{/* Display Name */}
 				<div className="space-y-2">
 					<label htmlFor="displayName" className="text-sm font-medium text-smoke">
@@ -68,21 +92,6 @@ export function ProfileForm({ address, existing }: ProfileFormProps) {
 						className="border-anvil-gray-light bg-obsidian-black/50 text-steel-white placeholder:text-smoke-dark"
 					/>
 					<p className="text-xs text-smoke-dark">{displayName.length}/60</p>
-				</div>
-
-				{/* Avatar URL */}
-				<div className="space-y-2">
-					<label htmlFor="avatarUrl" className="text-sm font-medium text-smoke">
-						Avatar URL
-					</label>
-					<Input
-						id="avatarUrl"
-						value={avatarUrl}
-						onChange={(e) => setAvatarUrl(e.target.value)}
-						placeholder="https://example.com/avatar.png"
-						className="border-anvil-gray-light bg-obsidian-black/50 text-steel-white placeholder:text-smoke-dark"
-					/>
-					<p className="text-xs text-smoke-dark">Must be an https:// URL</p>
 				</div>
 			</div>
 
@@ -158,6 +167,7 @@ export function ProfileForm({ address, existing }: ProfileFormProps) {
 					<p className="mb-3 text-xs font-medium text-smoke-dark">Preview</p>
 					<div className="flex items-center gap-3">
 						{avatarUrl ? (
+							// biome-ignore lint/performance/noImgElement: preview of user-uploaded/external avatar URL
 							<img
 								src={avatarUrl}
 								alt="Avatar preview"
@@ -167,9 +177,7 @@ export function ProfileForm({ address, existing }: ProfileFormProps) {
 								}}
 							/>
 						) : (
-							<div className="flex size-12 items-center justify-center rounded-full bg-anvil-gray text-lg font-bold text-indigo">
-								{(displayName || address).slice(0, 2).toUpperCase()}
-							</div>
+							<ImageFallback name={displayName || address} size={48} variant="circle" />
 						)}
 						<div>
 							<p className="font-semibold text-steel-white">
