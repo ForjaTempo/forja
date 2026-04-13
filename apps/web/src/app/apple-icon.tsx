@@ -20,7 +20,7 @@ export default function AppleIcon() {
 				style={{
 					fontSize: 120,
 					fontWeight: 700,
-					color: "#F59E0B",
+					color: "#5b6ada",
 				}}
 			>
 				F

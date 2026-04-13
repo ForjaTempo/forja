@@ -81,7 +81,7 @@ export function CreatorOverview({ profile }: CreatorOverviewProps) {
 							className="size-16 rounded-full object-cover"
 						/>
 					) : (
-						<div className="flex size-16 items-center justify-center rounded-full bg-anvil-gray text-xl font-bold text-molten-amber">
+						<div className="flex size-16 items-center justify-center rounded-full bg-anvil-gray text-xl font-bold text-indigo">
 							{(profile.displayName ?? profile.address).slice(0, 2).toUpperCase()}
 						</div>
 					)}
@@ -112,7 +112,7 @@ export function CreatorOverview({ profile }: CreatorOverviewProps) {
 									href={profile.website}
 									target="_blank"
 									rel="noopener noreferrer"
-									className="inline-flex items-center gap-1 text-xs text-smoke transition-colors hover:text-molten-amber"
+									className="inline-flex items-center gap-1 text-xs text-smoke transition-colors hover:text-indigo"
 								>
 									<GlobeIcon className="size-3" />
 									Website
@@ -123,7 +123,7 @@ export function CreatorOverview({ profile }: CreatorOverviewProps) {
 									href={`https://x.com/${profile.twitterHandle}`}
 									target="_blank"
 									rel="noopener noreferrer"
-									className="inline-flex items-center gap-1 text-xs text-smoke transition-colors hover:text-molten-amber"
+									className="inline-flex items-center gap-1 text-xs text-smoke transition-colors hover:text-indigo"
 								>
 									<XIcon className="size-3" />@{profile.twitterHandle}
 								</a>
@@ -133,7 +133,7 @@ export function CreatorOverview({ profile }: CreatorOverviewProps) {
 									href={`https://t.me/${profile.telegramHandle}`}
 									target="_blank"
 									rel="noopener noreferrer"
-									className="inline-flex items-center gap-1 text-xs text-smoke transition-colors hover:text-molten-amber"
+									className="inline-flex items-center gap-1 text-xs text-smoke transition-colors hover:text-indigo"
 								>
 									@{profile.telegramHandle}
 								</a>
@@ -157,7 +157,7 @@ export function CreatorOverview({ profile }: CreatorOverviewProps) {
 						href={`${explorerUrl}/address/${profile.address}`}
 						target="_blank"
 						rel="noopener noreferrer"
-						className="inline-flex items-center gap-1 text-sm text-smoke transition-colors hover:text-molten-amber"
+						className="inline-flex items-center gap-1 text-sm text-smoke transition-colors hover:text-indigo"
 					>
 						Explorer
 						<ExternalLinkIcon className="size-3" />

@@ -28,7 +28,7 @@ export default async function TokenOgImage({ params }: { params: Promise<{ addre
 					style={{
 						fontSize: 96,
 						fontWeight: 700,
-						color: "#F59E0B",
+						color: "#5b6ada",
 						letterSpacing: "-0.02em",
 					}}
 				>
@@ -84,7 +84,7 @@ export default async function TokenOgImage({ params }: { params: Promise<{ addre
 					style={{
 						fontSize: 32,
 						fontWeight: 700,
-						color: "#F59E0B",
+						color: "#5b6ada",
 						letterSpacing: "-0.02em",
 					}}
 				>
@@ -121,7 +121,7 @@ export default async function TokenOgImage({ params }: { params: Promise<{ addre
 						justifyContent: "center",
 						fontSize: 56,
 						fontWeight: 700,
-						color: "#F59E0B",
+						color: "#5b6ada",
 						flexShrink: 0,
 					}}
 				>
@@ -182,7 +182,7 @@ export default async function TokenOgImage({ params }: { params: Promise<{ addre
 				{token.isForjaCreated && (
 					<div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
 						<div style={{ fontSize: 16, color: "#6B7280" }}>Created on</div>
-						<div style={{ fontSize: 28, fontWeight: 600, color: "#F59E0B" }}>FORJA</div>
+						<div style={{ fontSize: 28, fontWeight: 600, color: "#5b6ada" }}>FORJA</div>
 					</div>
 				)}
 			</div>

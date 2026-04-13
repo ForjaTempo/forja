@@ -20,7 +20,7 @@ export function MyTokens({ tokens, onSelectToken }: MyTokensProps) {
 				<p className="text-sm text-smoke-dark">No tokens yet</p>
 				<Link
 					href="/create"
-					className="mt-3 inline-block rounded-md bg-molten-amber px-4 py-2 text-sm font-medium text-forge-black transition-colors hover:bg-molten-amber/90"
+					className="mt-3 inline-block rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
 				>
 					Create your first token
 				</Link>
@@ -35,7 +35,7 @@ export function MyTokens({ tokens, onSelectToken }: MyTokensProps) {
 					key={token.address}
 					type="button"
 					onClick={() => onSelectToken(token.address)}
-					className="rounded-lg border border-anvil-gray-light bg-obsidian-black/50 p-4 text-left transition-colors hover:border-molten-amber/50"
+					className="rounded-lg border border-anvil-gray-light bg-obsidian-black/50 p-4 text-left transition-colors hover:border-indigo/50"
 				>
 					<div className="flex items-center justify-between">
 						<div>

@@ -32,7 +32,7 @@ export default async function CreatorOgImage({ params }: { params: Promise<{ add
 					style={{
 						fontSize: 96,
 						fontWeight: 700,
-						color: "#F59E0B",
+						color: "#5b6ada",
 						letterSpacing: "-0.02em",
 					}}
 				>
@@ -86,7 +86,7 @@ export default async function CreatorOgImage({ params }: { params: Promise<{ add
 					style={{
 						fontSize: 32,
 						fontWeight: 700,
-						color: "#F59E0B",
+						color: "#5b6ada",
 						letterSpacing: "-0.02em",
 					}}
 				>
@@ -123,7 +123,7 @@ export default async function CreatorOgImage({ params }: { params: Promise<{ add
 						justifyContent: "center",
 						fontSize: 48,
 						fontWeight: 700,
-						color: "#F59E0B",
+						color: "#5b6ada",
 						flexShrink: 0,
 					}}
 				>
@@ -199,7 +199,7 @@ export default async function CreatorOgImage({ params }: { params: Promise<{ add
 				{profile.totalValueLocked && (
 					<div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
 						<div style={{ fontSize: 16, color: "#6B7280" }}>Total Value Locked</div>
-						<div style={{ fontSize: 28, fontWeight: 600, color: "#F59E0B" }}>
+						<div style={{ fontSize: 28, fontWeight: 600, color: "#5b6ada" }}>
 							{profile.totalValueLocked}
 						</div>
 					</div>

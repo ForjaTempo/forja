@@ -29,7 +29,7 @@ export default async function ClaimOgImage({ params }: { params: Promise<{ slug:
 						display: "flex",
 						fontSize: 96,
 						fontWeight: 700,
-						color: "#F59E0B",
+						color: "#5b6ada",
 						letterSpacing: "-0.02em",
 					}}
 				>
@@ -95,7 +95,7 @@ export default async function ClaimOgImage({ params }: { params: Promise<{ slug:
 						display: "flex",
 						fontSize: 32,
 						fontWeight: 700,
-						color: "#F59E0B",
+						color: "#5b6ada",
 						letterSpacing: "-0.02em",
 					}}
 				>
@@ -109,7 +109,7 @@ export default async function ClaimOgImage({ params }: { params: Promise<{ slug:
 						padding: "8px 20px",
 						borderRadius: 9999,
 						backgroundColor: "#1F2937",
-						color: "#F59E0B",
+						color: "#5b6ada",
 						fontSize: 18,
 						fontWeight: 600,
 					}}
@@ -155,7 +155,7 @@ export default async function ClaimOgImage({ params }: { params: Promise<{ slug:
 					</div>
 					<div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
 						<div style={{ display: "flex", fontSize: 16, color: "#6B7280" }}>Claimed</div>
-						<div style={{ display: "flex", fontSize: 32, fontWeight: 600, color: "#F59E0B" }}>
+						<div style={{ display: "flex", fontSize: 32, fontWeight: 600, color: "#5b6ada" }}>
 							{`${claimedPct}%`}
 						</div>
 					</div>

@@ -31,11 +31,11 @@ export function Header() {
 		: baseNavLinks;
 
 	return (
-		<header className="sticky top-0 z-50 border-b border-anvil-gray-light bg-forge-black/80 backdrop-blur-md">
+		<header className="sticky top-0 z-50 border-b border-border-subtle bg-surface-page/80 backdrop-blur-md">
 			<div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
 				<div className="flex items-center gap-8">
 					<MobileNav />
-					<Link href="/" className="text-xl font-bold tracking-tight text-molten-amber">
+					<Link href="/" className="text-xl font-bold tracking-tight text-steel-white">
 						FORJA
 					</Link>
 					<nav className="hidden items-center gap-1 md:flex">
@@ -51,7 +51,7 @@ export function Header() {
 										(link.href === "/claim/create" && pathname.startsWith("/claim")) ||
 										(link.href === "/launch" && pathname.startsWith("/launch")) ||
 										(link.href === "/tokens" && pathname.startsWith("/tokens"))
-										? "bg-anvil-gray-light text-molten-amber"
+										? "bg-surface-field text-indigo"
 										: "text-smoke hover:text-steel-white",
 								)}
 							>

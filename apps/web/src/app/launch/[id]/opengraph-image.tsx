@@ -28,7 +28,7 @@ export default async function LaunchOgImage({ params }: { params: Promise<{ id: 
 					backgroundColor: "#0F1116",
 				}}
 			>
-				<div style={{ fontSize: 96, fontWeight: 700, color: "#F59E0B" }}>FORJA</div>
+				<div style={{ fontSize: 96, fontWeight: 700, color: "#5b6ada" }}>FORJA</div>
 				<div style={{ fontSize: 36, fontWeight: 500, color: "#F5F5F5", marginTop: 16 }}>
 					Token Launchpad
 				</div>
@@ -53,7 +53,7 @@ export default async function LaunchOgImage({ params }: { params: Promise<{ id: 
 		? "#10B981"
 		: launch.killed || launch.failed
 			? "#EF4444"
-			: "#F59E0B";
+			: "#5b6ada";
 
 	return new ImageResponse(
 		<div
@@ -75,7 +75,7 @@ export default async function LaunchOgImage({ params }: { params: Promise<{ id: 
 					marginBottom: 48,
 				}}
 			>
-				<div style={{ fontSize: 32, fontWeight: 700, color: "#F59E0B" }}>FORJA</div>
+				<div style={{ fontSize: 32, fontWeight: 700, color: "#5b6ada" }}>FORJA</div>
 				<div
 					style={{
 						fontSize: 18,
@@ -103,7 +103,7 @@ export default async function LaunchOgImage({ params }: { params: Promise<{ id: 
 						justifyContent: "center",
 						fontSize: 56,
 						fontWeight: 700,
-						color: "#F59E0B",
+						color: "#5b6ada",
 						flexShrink: 0,
 					}}
 				>
@@ -146,7 +146,7 @@ export default async function LaunchOgImage({ params }: { params: Promise<{ id: 
 				</div>
 				<div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
 					<div style={{ fontSize: 16, color: "#6B7280" }}>Progress</div>
-					<div style={{ fontSize: 28, fontWeight: 600, color: "#F59E0B" }}>
+					<div style={{ fontSize: 28, fontWeight: 600, color: "#5b6ada" }}>
 						{`${progressPct.toFixed(1)}%`}
 					</div>
 				</div>

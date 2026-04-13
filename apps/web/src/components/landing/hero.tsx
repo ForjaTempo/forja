@@ -7,7 +7,7 @@ export function Hero() {
 		<section className="relative isolate overflow-hidden py-24 sm:py-32 lg:py-40">
 			{/* Radial amber glow behind heading */}
 			<div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10">
-				<div className="absolute left-1/2 top-1/2 size-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-molten-amber/8 blur-[120px] animate-pulse-glow" />
+				<div className="absolute left-1/2 top-1/2 size-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-indigo/8 blur-[120px] animate-pulse-glow" />
 			</div>
 
 			{/* Subtle grid overlay */}
@@ -26,7 +26,7 @@ export function Hero() {
 					<span className="bg-gradient-to-b from-steel-white to-smoke bg-clip-text text-transparent">
 						FOR
 					</span>
-					<span className="bg-gradient-to-b from-molten-amber to-molten-amber-hover bg-clip-text text-transparent">
+					<span className="bg-gradient-to-b from-indigo to-indigo-hover bg-clip-text text-transparent">
 						JA
 					</span>
 				</h1>

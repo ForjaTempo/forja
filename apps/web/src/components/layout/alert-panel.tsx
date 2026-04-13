@@ -135,7 +135,7 @@ export function AlertPanel({ alerts, onClose }: AlertPanelProps) {
 								>
 									{alert.title}
 								</p>
-								{!alert.isRead && <span className="size-2 shrink-0 rounded-full bg-molten-amber" />}
+								{!alert.isRead && <span className="size-2 shrink-0 rounded-full bg-indigo" />}
 							</div>
 							<p className="mt-0.5 text-xs text-smoke-dark line-clamp-2">{alert.message}</p>
 							<p className="mt-1 text-xs text-smoke-dark/60">{timeAgo(alert.createdAt)}</p>

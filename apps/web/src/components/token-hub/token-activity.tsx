@@ -61,7 +61,7 @@ export function TokenActivity({
 										href={`${explorerUrl}/tx/${tx.txHash}`}
 										target="_blank"
 										rel="noopener noreferrer"
-										className="inline-flex items-center gap-1 font-mono text-xs text-smoke transition-colors hover:text-molten-amber"
+										className="inline-flex items-center gap-1 font-mono text-xs text-smoke transition-colors hover:text-indigo"
 									>
 										{`${tx.txHash.slice(0, 6)}...${tx.txHash.slice(-4)}`}
 										<ExternalLinkIcon className="size-3" />

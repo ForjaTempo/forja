@@ -20,7 +20,7 @@ export default function Icon() {
 				style={{
 					fontSize: 20,
 					fontWeight: 700,
-					color: "#F59E0B",
+					color: "#5b6ada",
 				}}
 			>
 				F

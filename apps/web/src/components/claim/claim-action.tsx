@@ -105,7 +105,7 @@ export function ClaimAction({
 							href={`${explorerUrl}/tx/${proof.claimedTxHash}`}
 							target="_blank"
 							rel="noopener noreferrer"
-							className="text-xs text-molten-amber underline"
+							className="text-xs text-indigo underline"
 						>
 							View transaction
 						</a>
