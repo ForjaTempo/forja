@@ -12,6 +12,7 @@ interface ProfileData {
 	displayName?: string;
 	bio?: string;
 	avatarUrl?: string;
+	bannerUrl?: string;
 	website?: string;
 	twitterHandle?: string;
 	telegramHandle?: string;
@@ -73,6 +74,7 @@ export async function upsertCreatorProfile(
 	const displayName = data.displayName?.trim() || null;
 	const bio = data.bio?.trim() || null;
 	const avatarUrl = data.avatarUrl?.trim() || null;
+	const bannerUrl = data.bannerUrl?.trim() || null;
 	const website = data.website?.trim() || null;
 	const twitterHandle = data.twitterHandle?.trim().replace(/^@/, "") || null;
 	const telegramHandle = data.telegramHandle?.trim().replace(/^@/, "") || null;
@@ -83,8 +85,11 @@ export async function upsertCreatorProfile(
 	if (bio && bio.length > MAX_BIO) {
 		return { ok: false, error: `Bio must be ${MAX_BIO} characters or less` };
 	}
-	if (avatarUrl && !HTTPS_RE.test(avatarUrl)) {
-		return { ok: false, error: "Avatar URL must start with https://" };
+	if (avatarUrl && !HTTPS_RE.test(avatarUrl) && !avatarUrl.startsWith("/api/images/")) {
+		return { ok: false, error: "Avatar URL must start with https:// or be an uploaded image" };
+	}
+	if (bannerUrl && !bannerUrl.startsWith("/api/images/")) {
+		return { ok: false, error: "Banner must be an uploaded image" };
 	}
 	if (website && !HTTPS_RE.test(website)) {
 		return { ok: false, error: "Website URL must start with https://" };
@@ -101,6 +106,7 @@ export async function upsertCreatorProfile(
 				displayName,
 				bio,
 				avatarUrl,
+				bannerUrl,
 				website,
 				twitterHandle,
 				telegramHandle,
@@ -111,6 +117,7 @@ export async function upsertCreatorProfile(
 					displayName,
 					bio,
 					avatarUrl,
+					bannerUrl,
 					website,
 					twitterHandle,
 					telegramHandle,
