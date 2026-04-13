@@ -33,7 +33,12 @@ function formatValue(value: number, format: CounterFormat): string {
 	}
 }
 
-function AnimatedCounter({ value, format = "number", duration = 1.5, className }: AnimatedCounterProps) {
+function AnimatedCounter({
+	value,
+	format = "number",
+	duration = 1.5,
+	className,
+}: AnimatedCounterProps) {
 	const ref = useRef<HTMLSpanElement>(null);
 	const motionValue = useMotionValue(0);
 	const springValue = useSpring(motionValue, {

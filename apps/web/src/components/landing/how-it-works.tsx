@@ -26,9 +26,7 @@ export function HowItWorks() {
 		<section className="py-20 sm:py-24">
 			<div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 				<div className="text-center">
-					<p className="font-mono text-xs uppercase tracking-[0.2em] text-indigo">
-						How it works
-					</p>
+					<p className="font-mono text-xs uppercase tracking-[0.2em] text-indigo">How it works</p>
 					<h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
 						Three steps. That's it.
 					</h2>

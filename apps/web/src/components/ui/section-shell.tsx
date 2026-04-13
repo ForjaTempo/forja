@@ -16,9 +16,7 @@ function SectionShell({ title, description, action, children, className }: Secti
 			<div className="flex items-start justify-between gap-4">
 				<div>
 					<h2 className="text-lg font-semibold text-steel-white">{title}</h2>
-					{description && (
-						<p className="mt-0.5 text-sm text-smoke-dark">{description}</p>
-					)}
+					{description && <p className="mt-0.5 text-sm text-smoke-dark">{description}</p>}
 				</div>
 				{action && <div className="shrink-0">{action}</div>}
 			</div>

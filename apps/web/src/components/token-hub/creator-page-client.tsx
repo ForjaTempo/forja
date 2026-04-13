@@ -87,16 +87,10 @@ export function CreatorPageClient({
 
 				<Tabs defaultValue="tokens">
 					<TabsList className="border-b border-anvil-gray-light bg-transparent">
-						<TabsTrigger
-							value="tokens"
-							className="text-smoke data-[state=active]:text-indigo"
-						>
+						<TabsTrigger value="tokens" className="text-smoke data-[state=active]:text-indigo">
 							Tokens ({tokens.length})
 						</TabsTrigger>
-						<TabsTrigger
-							value="multisends"
-							className="text-smoke data-[state=active]:text-indigo"
-						>
+						<TabsTrigger value="multisends" className="text-smoke data-[state=active]:text-indigo">
 							Multisends ({multisends.length})
 						</TabsTrigger>
 						<TabsTrigger value="locks" className="text-smoke data-[state=active]:text-indigo">

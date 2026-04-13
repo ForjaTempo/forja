@@ -1,8 +1,10 @@
 "use client";
 
 import { ExternalLinkIcon, PlusIcon } from "lucide-react";
+import { useEffect } from "react";
 import { AddressDisplay } from "@/components/ui/address-display";
 import { Button } from "@/components/ui/button";
+import { triggerConfetti } from "@/components/ui/confetti";
 import {
 	Dialog,
 	DialogContent,
@@ -33,6 +35,10 @@ export function SuccessModal({
 	onCreateAnother,
 }: SuccessModalProps) {
 	const explorerUrl = useExplorerUrl();
+
+	useEffect(() => {
+		if (open) triggerConfetti();
+	}, [open]);
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>

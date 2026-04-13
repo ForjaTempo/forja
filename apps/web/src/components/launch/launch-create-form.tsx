@@ -4,12 +4,13 @@ import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeftIcon, CheckIcon, CopyIcon, RocketIcon, WalletIcon } from "lucide-react";
 import Link from "next/link";
-import { type ChangeEvent, useCallback, useState } from "react";
+import { type ChangeEvent, useCallback, useEffect, useState } from "react";
 import { parseUnits } from "viem";
 import { useAccount } from "wagmi";
 import { getLaunchDbId } from "@/actions/launches";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { triggerConfetti } from "@/components/ui/confetti";
 import { Input } from "@/components/ui/input";
 import { TransactionStatus } from "@/components/ui/transaction-status";
 import { useCreateLaunch } from "@/hooks/use-create-launch";
@@ -307,6 +308,10 @@ function LaunchSuccessCard({
 	onReset: () => void;
 }) {
 	const [copied, setCopied] = useState(false);
+
+	useEffect(() => {
+		triggerConfetti();
+	}, []);
 
 	// Poll for DB id (indexer may need a few seconds)
 	const { data: dbId } = useQuery({

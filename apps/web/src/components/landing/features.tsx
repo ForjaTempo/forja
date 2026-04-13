@@ -28,9 +28,7 @@ export function Features() {
 		<section className="border-y border-anvil-gray-light/40 bg-anvil-gray/30 py-20 sm:py-24">
 			<div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 				<div className="text-center">
-					<p className="font-mono text-xs uppercase tracking-[0.2em] text-indigo">
-						Why FORJA
-					</p>
+					<p className="font-mono text-xs uppercase tracking-[0.2em] text-indigo">Why FORJA</p>
 					<h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Built for builders</h2>
 				</div>
 

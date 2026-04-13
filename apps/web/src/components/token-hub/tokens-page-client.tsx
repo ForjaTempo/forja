@@ -9,12 +9,12 @@ import { PageContainer } from "@/components/layout/page-container";
 import { TokenFilters } from "@/components/token-hub/token-filters";
 import { TokenGrid } from "@/components/token-hub/token-grid";
 import { TokenSearch } from "@/components/token-hub/token-search";
+import { AnimatedCounter } from "@/components/ui/animated-counter";
 import { PageHeader } from "@/components/ui/page-header";
 
 type SortOption = "newest" | "oldest" | "holders" | "transfers";
 
 const LIMIT = 20;
-const formatter = new Intl.NumberFormat("en-US");
 const VALID_SORTS = new Set<string>(["newest", "oldest", "holders", "transfers"]);
 
 function parseSortParam(value: string | null): SortOption {
@@ -113,22 +113,25 @@ export function TokensPageClient({ initialData, initialStats }: TokensPageClient
 
 				{stats && (
 					<div className="grid grid-cols-3 gap-4">
-						<div className="rounded-lg border border-anvil-gray-light bg-deep-charcoal p-4 text-center">
-							<p className="font-mono text-2xl font-bold text-indigo">
-								{formatter.format(stats.totalTokens)}
-							</p>
+						<div className="rounded-lg border border-border-subtle bg-surface-card p-4 text-center">
+							<AnimatedCounter
+								value={stats.totalTokens}
+								className="font-mono text-2xl font-bold text-indigo"
+							/>
 							<p className="mt-1 text-xs text-smoke-dark">Total Tokens</p>
 						</div>
-						<div className="rounded-lg border border-anvil-gray-light bg-deep-charcoal p-4 text-center">
-							<p className="font-mono text-2xl font-bold text-indigo">
-								{formatter.format(stats.forjaTokens)}
-							</p>
+						<div className="rounded-lg border border-border-subtle bg-surface-card p-4 text-center">
+							<AnimatedCounter
+								value={stats.forjaTokens}
+								className="font-mono text-2xl font-bold text-indigo"
+							/>
 							<p className="mt-1 text-xs text-smoke-dark">FORJA Created</p>
 						</div>
-						<div className="rounded-lg border border-anvil-gray-light bg-deep-charcoal p-4 text-center">
-							<p className="font-mono text-2xl font-bold text-indigo">
-								{formatter.format(stats.totalHolders)}
-							</p>
+						<div className="rounded-lg border border-border-subtle bg-surface-card p-4 text-center">
+							<AnimatedCounter
+								value={stats.totalHolders}
+								className="font-mono text-2xl font-bold text-indigo"
+							/>
 							<p className="mt-1 text-xs text-smoke-dark">Total Holders</p>
 						</div>
 					</div>

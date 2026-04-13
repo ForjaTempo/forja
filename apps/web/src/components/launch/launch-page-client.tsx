@@ -10,6 +10,7 @@ import { LaunchSearch } from "@/components/launch/launch-search";
 import { PageContainer } from "@/components/layout/page-container";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
+import { StatCard } from "@/components/ui/stat-card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TIP20_DECIMALS } from "@/lib/constants";
 
@@ -98,10 +99,7 @@ export function LaunchPageClient({ initialData, initialStats }: Props) {
 							<TabsTrigger value="new" className="text-smoke data-[state=active]:text-indigo">
 								New
 							</TabsTrigger>
-							<TabsTrigger
-								value="graduated"
-								className="text-smoke data-[state=active]:text-indigo"
-							>
+							<TabsTrigger value="graduated" className="text-smoke data-[state=active]:text-indigo">
 								Graduated
 							</TabsTrigger>
 						</TabsList>
@@ -127,25 +125,5 @@ export function LaunchPageClient({ initialData, initialStats }: Props) {
 				/>
 			</div>
 		</PageContainer>
-	);
-}
-
-function StatCard({
-	label,
-	value,
-	icon,
-}: {
-	label: string;
-	value: string;
-	icon?: React.ReactNode;
-}) {
-	return (
-		<div className="rounded-lg border border-anvil-gray-light bg-obsidian-black/50 p-4">
-			<p className="text-xs text-smoke-dark">{label}</p>
-			<div className="mt-1 flex items-center gap-2">
-				{icon}
-				<p className="text-lg font-semibold text-steel-white">{value}</p>
-			</div>
-		</div>
 	);
 }

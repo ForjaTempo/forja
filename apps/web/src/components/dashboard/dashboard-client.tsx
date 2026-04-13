@@ -147,39 +147,24 @@ export function DashboardClient() {
 
 				<Tabs defaultValue="tokens">
 					<TabsList className="border-b border-anvil-gray-light bg-transparent">
-						<TabsTrigger
-							value="tokens"
-							className="text-smoke data-[state=active]:text-indigo"
-						>
+						<TabsTrigger value="tokens" className="text-smoke data-[state=active]:text-indigo">
 							My Tokens ({tokens.length})
 						</TabsTrigger>
 						{hasLaunchpad && (
-							<TabsTrigger
-								value="launches"
-								className="text-smoke data-[state=active]:text-indigo"
-							>
+							<TabsTrigger value="launches" className="text-smoke data-[state=active]:text-indigo">
 								Launches ({myLaunches.length})
 							</TabsTrigger>
 						)}
-						<TabsTrigger
-							value="multisends"
-							className="text-smoke data-[state=active]:text-indigo"
-						>
+						<TabsTrigger value="multisends" className="text-smoke data-[state=active]:text-indigo">
 							Multisends ({multisends.length})
 						</TabsTrigger>
 						<TabsTrigger value="locks" className="text-smoke data-[state=active]:text-indigo">
 							Locks ({locks.length})
 						</TabsTrigger>
-						<TabsTrigger
-							value="claims"
-							className="text-smoke data-[state=active]:text-indigo"
-						>
+						<TabsTrigger value="claims" className="text-smoke data-[state=active]:text-indigo">
 							Claims ({claims.length})
 						</TabsTrigger>
-						<TabsTrigger
-							value="watchlist"
-							className="text-smoke data-[state=active]:text-indigo"
-						>
+						<TabsTrigger value="watchlist" className="text-smoke data-[state=active]:text-indigo">
 							Watchlist ({watchlistTokens.length})
 						</TabsTrigger>
 					</TabsList>
