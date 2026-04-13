@@ -126,7 +126,7 @@ export function LockCard({ lock, role, onClaim, onRevoke, isActionPending }: Loc
 							type="button"
 							onClick={() => onClaim?.(lock.lockId, lock.source)}
 							disabled={isActionPending}
-							className="flex-1 rounded-md bg-molten-amber px-3 py-2 text-sm font-medium text-obsidian-black transition-colors hover:bg-molten-amber/90 disabled:opacity-50"
+							className="flex-1 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
 						>
 							Claim{" "}
 							{Number.parseFloat(claimableFormatted).toLocaleString("en-US", {

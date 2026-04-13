@@ -34,11 +34,11 @@ interface TransactionStatusProps {
 const stateConfig = {
 	idle: { icon: null, label: "" },
 	waiting: {
-		icon: <LoaderIcon className="size-8 animate-spin text-molten-amber" />,
+		icon: <LoaderIcon className="size-8 animate-spin text-indigo" />,
 		label: "Waiting for approval...",
 	},
 	pending: {
-		icon: <LoaderIcon className="size-8 animate-spin text-molten-amber" />,
+		icon: <LoaderIcon className="size-8 animate-spin text-indigo" />,
 		label: "Transaction pending...",
 	},
 	confirmed: {
@@ -90,7 +90,7 @@ export function TransactionStatus({
 							href={`${explorerUrl}/tx/${txHash}`}
 							target="_blank"
 							rel="noopener noreferrer"
-							className="inline-flex items-center gap-1.5 font-mono text-xs text-smoke-dark transition-colors hover:text-molten-amber"
+							className="inline-flex items-center gap-1.5 font-mono text-xs text-smoke-dark transition-colors hover:text-indigo"
 						>
 							{`${txHash.slice(0, 10)}...${txHash.slice(-8)}`}
 							<ExternalLinkIcon className="size-3" />

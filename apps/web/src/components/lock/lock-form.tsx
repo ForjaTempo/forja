@@ -337,7 +337,7 @@ export function LockForm({ onSuccess, initialToken }: LockFormProps) {
 											onClick={() => setDurationDays(days)}
 											className={`rounded-md border px-3 py-1.5 text-xs font-medium transition-colors ${
 												isActive
-													? "border-molten-amber bg-molten-amber/10 text-molten-amber"
+													? "border-indigo bg-indigo/10 text-indigo"
 													: "border-anvil-gray-light text-smoke-dark hover:text-smoke"
 											}`}
 										>
@@ -409,7 +409,7 @@ export function LockForm({ onSuccess, initialToken }: LockFormProps) {
 												onClick={() => setCliffDays(days)}
 												className={`rounded-md border px-3 py-1.5 text-xs font-medium transition-colors ${
 													isActive
-														? "border-molten-amber bg-molten-amber/10 text-molten-amber"
+														? "border-indigo bg-indigo/10 text-indigo"
 														: "border-anvil-gray-light text-smoke-dark hover:text-smoke"
 												}`}
 											>

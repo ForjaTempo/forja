@@ -15,6 +15,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
+import { StatCard } from "@/components/ui/stat-card";
 import { formatDate, formatSupply } from "@/lib/format";
 
 const AreaChart = dynamic(() => import("recharts").then((m) => m.AreaChart), { ssr: false });
@@ -210,15 +211,6 @@ export function TokenAnalytics({
 					</div>
 				</div>
 			)}
-		</div>
-	);
-}
-
-function StatCard({ label, value }: { label: string; value: string }) {
-	return (
-		<div className="rounded-lg border border-anvil-gray-light bg-obsidian-black/50 p-3">
-			<p className="text-xs text-smoke-dark">{label}</p>
-			<p className="mt-1 font-mono text-sm font-semibold text-steel-white">{value}</p>
 		</div>
 	);
 }

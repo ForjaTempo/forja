@@ -7,7 +7,7 @@ export function Cta() {
 		<section className="relative isolate overflow-hidden py-20 sm:py-24">
 			{/* Subtle radial glow */}
 			<div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10">
-				<div className="absolute bottom-0 left-1/2 h-[300px] w-[600px] -translate-x-1/2 rounded-full bg-molten-amber/6 blur-[100px]" />
+				<div className="absolute bottom-0 left-1/2 h-[300px] w-[600px] -translate-x-1/2 rounded-full bg-indigo/6 blur-[100px]" />
 			</div>
 
 			<div className="mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">

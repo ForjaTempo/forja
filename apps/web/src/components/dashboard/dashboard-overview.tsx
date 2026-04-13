@@ -3,6 +3,7 @@
 import { CoinsIcon, DollarSignIcon, ShieldIcon, UsersIcon } from "lucide-react";
 import Link from "next/link";
 import type { DashboardOverviewData } from "@/actions/dashboard";
+import { StatCard } from "@/components/ui/stat-card";
 import { formatSupply } from "@/lib/format";
 
 const formatter = new Intl.NumberFormat("en-US");
@@ -40,16 +41,12 @@ export function DashboardOverview({ overview }: DashboardOverviewProps) {
 		<div className="space-y-6">
 			<div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
 				{stats.map((stat) => (
-					<div
+					<StatCard
 						key={stat.label}
-						className="rounded-lg border border-anvil-gray-light bg-obsidian-black/50 p-4"
-					>
-						<div className="flex items-center gap-1.5 text-xs text-smoke-dark">
-							<stat.icon className="size-3" />
-							{stat.label}
-						</div>
-						<p className="mt-1 font-mono text-lg font-semibold text-steel-white">{stat.value}</p>
-					</div>
+						label={stat.label}
+						value={stat.value}
+						icon={<stat.icon className="size-3" />}
+					/>
 				))}
 			</div>
 
@@ -58,7 +55,7 @@ export function DashboardOverview({ overview }: DashboardOverviewProps) {
 					<Link
 						key={action.href}
 						href={action.href}
-						className="rounded-md border border-anvil-gray-light bg-anvil-gray px-4 py-2 text-sm font-medium text-smoke transition-colors hover:border-molten-amber hover:text-molten-amber"
+						className="rounded-md border border-anvil-gray-light bg-anvil-gray px-4 py-2 text-sm font-medium text-smoke transition-colors hover:border-indigo hover:text-indigo"
 					>
 						{action.label}
 					</Link>

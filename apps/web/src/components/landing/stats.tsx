@@ -24,7 +24,7 @@ export function Stats() {
 				<div className="grid gap-8 sm:grid-cols-3">
 					{statLabels.map((stat) => (
 						<div key={stat.key} className="text-center">
-							<p className="font-mono text-4xl font-bold text-molten-amber sm:text-5xl">
+							<p className="font-mono text-4xl font-bold text-indigo sm:text-5xl">
 								{isLoading ? (
 									<span className="inline-block h-12 w-20 animate-pulse rounded bg-anvil-gray" />
 								) : (

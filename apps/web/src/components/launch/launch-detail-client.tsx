@@ -185,7 +185,7 @@ export function LaunchDetailClient({ initialLaunch, initialTrades }: Props) {
 									<span className="text-smoke-dark">Creator</span>
 									<Link
 										href={`/creators/${launch.creatorAddress}`}
-										className="font-mono text-right text-molten-amber hover:underline"
+										className="font-mono text-right text-indigo hover:underline"
 									>
 										{launch.creatorDisplayName ?? shortenAddress(launch.creatorAddress)}
 									</Link>

@@ -43,7 +43,7 @@ export function AddressDisplay({ address, showExplorer = false, className }: Add
 					href={`${explorerUrl}/address/${address}`}
 					target="_blank"
 					rel="noopener noreferrer"
-					className="text-smoke-dark transition-colors hover:text-molten-amber"
+					className="text-smoke-dark transition-colors hover:text-indigo"
 					title="View on explorer"
 				>
 					<ExternalLinkIcon className="size-3" />

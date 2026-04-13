@@ -81,9 +81,7 @@ export function WatchlistButton({ tokenAddress, className }: WatchlistButtonProp
 			disabled={mutation.isPending}
 			className={cn(
 				"rounded-md p-1 transition-colors",
-				isWatched
-					? "text-molten-amber hover:text-molten-amber/70"
-					: "text-smoke-dark hover:text-molten-amber",
+				isWatched ? "text-indigo hover:text-indigo/70" : "text-smoke-dark hover:text-indigo",
 				className,
 			)}
 			title={isWatched ? "Remove from watchlist" : "Add to watchlist"}

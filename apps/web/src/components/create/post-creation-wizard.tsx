@@ -68,7 +68,7 @@ export function PostCreationWizard({
 								href={`${explorerUrl}/tx/${txHash}`}
 								target="_blank"
 								rel="noopener noreferrer"
-								className="inline-flex items-center gap-1 font-mono text-sm text-smoke transition-colors hover:text-molten-amber"
+								className="inline-flex items-center gap-1 font-mono text-sm text-smoke transition-colors hover:text-indigo"
 							>
 								{`${txHash.slice(0, 8)}...${txHash.slice(-6)}`}
 								<ExternalLinkIcon className="size-3" />
@@ -82,9 +82,9 @@ export function PostCreationWizard({
 
 						<Link
 							href={`/multisend?token=${tokenAddress}`}
-							className="flex items-center gap-3 rounded-lg border border-anvil-gray-light p-3 transition-colors hover:border-molten-amber/50 hover:bg-molten-amber/5"
+							className="flex items-center gap-3 rounded-lg border border-anvil-gray-light p-3 transition-colors hover:border-indigo/50 hover:bg-indigo/5"
 						>
-							<SendIcon className="size-5 shrink-0 text-molten-amber" />
+							<SendIcon className="size-5 shrink-0 text-indigo" />
 							<div className="flex-1">
 								<p className="text-sm font-medium text-smoke">Distribute Tokens</p>
 								<p className="text-xs text-smoke-dark">
@@ -96,9 +96,9 @@ export function PostCreationWizard({
 
 						<Link
 							href={`/lock?token=${tokenAddress}`}
-							className="flex items-center gap-3 rounded-lg border border-anvil-gray-light p-3 transition-colors hover:border-molten-amber/50 hover:bg-molten-amber/5"
+							className="flex items-center gap-3 rounded-lg border border-anvil-gray-light p-3 transition-colors hover:border-indigo/50 hover:bg-indigo/5"
 						>
-							<LockIcon className="size-5 shrink-0 text-molten-amber" />
+							<LockIcon className="size-5 shrink-0 text-indigo" />
 							<div className="flex-1">
 								<p className="text-sm font-medium text-smoke">Lock Team Tokens</p>
 								<p className="text-xs text-smoke-dark">
@@ -111,9 +111,9 @@ export function PostCreationWizard({
 						{hasClaimer && (
 							<Link
 								href={`/claim/create?token=${tokenAddress}`}
-								className="flex items-center gap-3 rounded-lg border border-anvil-gray-light p-3 transition-colors hover:border-molten-amber/50 hover:bg-molten-amber/5"
+								className="flex items-center gap-3 rounded-lg border border-anvil-gray-light p-3 transition-colors hover:border-indigo/50 hover:bg-indigo/5"
 							>
-								<GiftIcon className="size-5 shrink-0 text-molten-amber" />
+								<GiftIcon className="size-5 shrink-0 text-indigo" />
 								<div className="flex-1">
 									<p className="text-sm font-medium text-smoke">Create Claim Page</p>
 									<p className="text-xs text-smoke-dark">
@@ -128,9 +128,9 @@ export function PostCreationWizard({
 							href={`${explorerUrl}/address/${tokenAddress}`}
 							target="_blank"
 							rel="noopener noreferrer"
-							className="flex items-center gap-3 rounded-lg border border-anvil-gray-light p-3 transition-colors hover:border-molten-amber/50 hover:bg-molten-amber/5"
+							className="flex items-center gap-3 rounded-lg border border-anvil-gray-light p-3 transition-colors hover:border-indigo/50 hover:bg-indigo/5"
 						>
-							<CoinsIcon className="size-5 shrink-0 text-molten-amber" />
+							<CoinsIcon className="size-5 shrink-0 text-indigo" />
 							<div className="flex-1">
 								<p className="text-sm font-medium text-smoke">View on Explorer</p>
 								<p className="text-xs text-smoke-dark">Check your token on Tempo Explorer</p>

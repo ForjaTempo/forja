@@ -38,7 +38,7 @@ export function NotificationBell() {
 				<Button variant="ghost" size="icon" className="relative">
 					<BellIcon className="size-5 text-smoke" />
 					{unreadCount > 0 && (
-						<span className="absolute -right-0.5 -top-0.5 flex size-4 items-center justify-center rounded-full bg-molten-amber text-[10px] font-bold text-forge-black">
+						<span className="absolute -right-0.5 -top-0.5 flex size-4 items-center justify-center rounded-full bg-indigo text-[10px] font-bold text-white">
 							{unreadCount > 9 ? "9+" : unreadCount}
 						</span>
 					)}
@@ -60,7 +60,7 @@ export function NotificationBell() {
 								const ok = await requestAuth();
 								if (!ok) setOpen(false);
 							}}
-							className="bg-molten-amber text-forge-black hover:bg-molten-amber/90"
+							className="bg-primary text-primary-foreground hover:bg-primary/90"
 						>
 							Sign to Verify
 						</Button>

@@ -40,13 +40,13 @@ export function MobileNav() {
 					<span className="sr-only">Menu</span>
 				</Button>
 			</SheetTrigger>
-			<SheetContent side="left" className="w-72 bg-anvil-gray border-anvil-gray-light">
+			<SheetContent side="left" className="w-72 bg-surface-card border-border-subtle">
 				<SheetHeader>
 					<SheetTitle>
 						<Link
 							href="/"
 							onClick={() => setOpen(false)}
-							className="text-xl font-bold text-molten-amber"
+							className="text-xl font-bold text-steel-white"
 						>
 							FORJA
 						</Link>
@@ -61,8 +61,8 @@ export function MobileNav() {
 							className={cn(
 								"rounded-md px-3 py-2 text-sm font-medium transition-colors",
 								pathname === link.href
-									? "bg-anvil-gray-light text-molten-amber"
-									: "text-smoke hover:bg-anvil-gray-light hover:text-steel-white",
+									? "bg-surface-field text-indigo"
+									: "text-smoke hover:bg-surface-field hover:text-steel-white",
 							)}
 						>
 							{link.label}

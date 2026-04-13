@@ -31,7 +31,7 @@ export function ClaimsHistory({ campaigns }: ClaimsHistoryProps) {
 			<Card>
 				<CardContent className="py-10 text-center text-sm text-smoke-dark">
 					No claim campaigns yet.{" "}
-					<Link href="/claim/create" className="text-molten-amber underline">
+					<Link href="/claim/create" className="text-indigo underline">
 						Create one
 					</Link>
 				</CardContent>
@@ -58,7 +58,7 @@ export function ClaimsHistory({ campaigns }: ClaimsHistoryProps) {
 								<div className="min-w-0 flex-1">
 									<Link
 										href={`/claim/${c.slug}`}
-										className="block truncate font-semibold text-foreground hover:text-molten-amber"
+										className="block truncate font-semibold text-foreground hover:text-indigo"
 									>
 										{c.title}
 									</Link>

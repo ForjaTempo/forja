@@ -12,14 +12,14 @@ export default function ErrorPage({
 	return (
 		<div className="flex flex-1 flex-col items-center justify-center px-4 py-24">
 			<div className="text-center">
-				<p className="text-6xl font-bold text-molten-amber">Oops</p>
+				<p className="text-6xl font-bold text-indigo">Oops</p>
 				<h1 className="mt-4 text-2xl font-semibold text-steel-white">Something went wrong</h1>
 				<p className="mt-2 text-smoke">An unexpected error occurred. Please try again.</p>
 				<div className="mt-8 flex items-center justify-center gap-4">
 					<button
 						type="button"
 						onClick={reset}
-						className="rounded-lg bg-molten-amber px-6 py-2.5 font-medium text-forge-black transition-colors hover:bg-molten-amber-hover"
+						className="rounded-lg bg-primary px-6 py-2.5 font-medium text-primary-foreground transition-colors hover:bg-primary/90"
 					>
 						Try Again
 					</button>
