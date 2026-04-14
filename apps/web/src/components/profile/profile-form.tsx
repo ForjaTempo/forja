@@ -28,7 +28,7 @@ export function ProfileForm({ address, existing }: ProfileFormProps) {
 	const [twitterHandle, setTwitterHandle] = useState(existing?.twitterHandle ?? "");
 	const [telegramHandle, setTelegramHandle] = useState(existing?.telegramHandle ?? "");
 	const [saving, setSaving] = useState(false);
-	const { withAuth } = useWalletAuth();
+	const { ensureAuth, withAuth } = useWalletAuth();
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -64,6 +64,7 @@ export function ProfileForm({ address, existing }: ProfileFormProps) {
 					type="banner"
 					value={bannerUrl || undefined}
 					onChange={(url) => setBannerUrl(url ?? "")}
+					ensureAuth={ensureAuth}
 				/>
 			</div>
 
@@ -75,6 +76,7 @@ export function ProfileForm({ address, existing }: ProfileFormProps) {
 						type="avatar"
 						value={avatarUrl || undefined}
 						onChange={(url) => setAvatarUrl(url ?? "")}
+						ensureAuth={ensureAuth}
 					/>
 				</div>
 

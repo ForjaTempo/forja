@@ -18,11 +18,13 @@ import { useCreateLaunch } from "@/hooks/use-create-launch";
 import { useTransactionEffects } from "@/hooks/use-transaction-effects";
 import { useUsdcApproval } from "@/hooks/use-usdc-approval";
 import { useUsdcBalance } from "@/hooks/use-usdc-balance";
+import { useWalletAuth } from "@/hooks/use-wallet-auth";
 import { FEES, FORJA_LAUNCHPAD_ADDRESS, TIP20_DECIMALS } from "@/lib/constants";
 import { deriveTxState, formatErrorMessage } from "@/lib/format";
 
 export function LaunchCreateForm() {
 	const { isConnected } = useAccount();
+	const { ensureAuth } = useWalletAuth();
 
 	const [step, setStep] = useState<1 | 2>(1);
 	const [name, setName] = useState("");
@@ -183,6 +185,7 @@ export function LaunchCreateForm() {
 								type="launch"
 								value={imageUri || undefined}
 								onChange={(url) => setImageUri(url ?? "")}
+								ensureAuth={ensureAuth}
 							/>
 						</div>
 

@@ -8,6 +8,8 @@ interface ImageUploadProps {
 	type: "token" | "launch" | "avatar" | "banner";
 	value?: string;
 	onChange: (url: string | null) => void;
+	/** Called before upload starts. Must return true to proceed, false to abort. */
+	ensureAuth?: () => Promise<boolean>;
 	className?: string;
 }
 
@@ -40,7 +42,7 @@ const VARIANT_STYLES: Record<
 	},
 };
 
-export function ImageUpload({ type, value, onChange, className }: ImageUploadProps) {
+export function ImageUpload({ type, value, onChange, ensureAuth, className }: ImageUploadProps) {
 	const [uploading, setUploading] = useState(false);
 	const [progress, setProgress] = useState(0);
 	const [error, setError] = useState<string | null>(null);
@@ -64,6 +66,15 @@ export function ImageUpload({ type, value, onChange, className }: ImageUploadPro
 			if (!validTypes.includes(file.type)) {
 				setError("Invalid format. Use PNG, JPEG, WebP, or GIF");
 				return;
+			}
+
+			// Ensure auth session before uploading
+			if (ensureAuth) {
+				const authed = await ensureAuth();
+				if (!authed) {
+					setError("Please sign the message to authenticate");
+					return;
+				}
 			}
 
 			// Show preview immediately
@@ -100,7 +111,7 @@ export function ImageUpload({ type, value, onChange, className }: ImageUploadPro
 								reject(new Error("Invalid response"));
 							}
 						} else if (xhr.status === 401) {
-							reject(new Error("Please connect your wallet first"));
+							reject(new Error("Authentication required — please try again"));
 						} else if (xhr.status === 429) {
 							reject(new Error("Upload rate limit exceeded"));
 						} else {
@@ -125,7 +136,7 @@ export function ImageUpload({ type, value, onChange, className }: ImageUploadPro
 				setProgress(0);
 			}
 		},
-		[type, onChange],
+		[type, onChange, ensureAuth],
 	);
 
 	const handleDrop = useCallback(

@@ -1,10 +1,10 @@
 "use server";
 import { getDb, schema } from "@forja/db";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { isAddress } from "viem";
 import { requireAuth } from "@/lib/session";
 
-/** Update token logo after upload — marks as user_upload to prevent sync overwrite */
+/** Update token logo after upload — upserts into cache with user_upload source */
 export async function updateTokenLogo(
 	tokenAddress: string,
 	logoUrl: string,
@@ -17,12 +17,21 @@ export async function updateTokenLogo(
 		return { ok: false, error: "Invalid image URL" };
 	}
 
-	// Find the token's creator to verify ownership
 	const db = getDb();
+	const addr = tokenAddress.toLowerCase();
+
+	// Find the token's creator to verify ownership
 	const [token] = await db
-		.select({ creatorAddress: schema.tokens.creatorAddress })
+		.select({
+			name: schema.tokens.name,
+			symbol: schema.tokens.symbol,
+			decimals: schema.tokens.decimals,
+			initialSupply: schema.tokens.initialSupply,
+			creatorAddress: schema.tokens.creatorAddress,
+			createdAt: schema.tokens.createdAt,
+		})
 		.from(schema.tokens)
-		.where(eq(schema.tokens.address, tokenAddress.toLowerCase()))
+		.where(eq(schema.tokens.address, addr))
 		.limit(1);
 
 	if (!token) {
@@ -32,19 +41,28 @@ export async function updateTokenLogo(
 	const auth = await requireAuth(token.creatorAddress);
 	if (!auth.ok) return auth;
 
-	// Update or insert cache entry
-	const [existing] = await db
-		.select({ id: schema.tokenHubCache.id })
-		.from(schema.tokenHubCache)
-		.where(eq(schema.tokenHubCache.address, tokenAddress.toLowerCase()))
-		.limit(1);
-
-	if (existing) {
-		await db
-			.update(schema.tokenHubCache)
-			.set({ logoUri: logoUrl, logoSource: "user_upload" })
-			.where(eq(schema.tokenHubCache.address, tokenAddress.toLowerCase()));
-	}
+	// Upsert: update if exists, insert seed row if not (sync will fill stats later)
+	await db
+		.insert(schema.tokenHubCache)
+		.values({
+			address: addr,
+			name: token.name,
+			symbol: token.symbol,
+			decimals: token.decimals,
+			totalSupply: token.initialSupply,
+			creatorAddress: token.creatorAddress.toLowerCase(),
+			logoUri: logoUrl,
+			logoSource: "user_upload",
+			isForjaCreated: true,
+			createdAt: token.createdAt,
+		})
+		.onConflictDoUpdate({
+			target: schema.tokenHubCache.address,
+			set: {
+				logoUri: sql`EXCLUDED.logo_uri`,
+				logoSource: sql`EXCLUDED.logo_source`,
+			},
+		});
 
 	return { ok: true };
 }
