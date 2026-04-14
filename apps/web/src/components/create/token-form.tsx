@@ -13,6 +13,7 @@ import { useCreateToken } from "@/hooks/use-create-token";
 import { useTransactionEffects } from "@/hooks/use-transaction-effects";
 import { useUsdcApproval } from "@/hooks/use-usdc-approval";
 import { useUsdcBalance } from "@/hooks/use-usdc-balance";
+import { useWalletAuth } from "@/hooks/use-wallet-auth";
 import { TIP20_DECIMALS } from "@/lib/constants";
 import { tokenFactoryConfig } from "@/lib/contracts";
 import { deriveTxState, formatErrorMessage } from "@/lib/format";
@@ -35,6 +36,7 @@ interface TokenFormProps {
 
 export function TokenForm({ onSuccess }: TokenFormProps) {
 	const { isConnected } = useAccount();
+	const { ensureAuth } = useWalletAuth();
 	const [name, setName] = useState("");
 	const [symbol, setSymbol] = useState("");
 	const [initialSupply, setInitialSupply] = useState("");
@@ -168,6 +170,7 @@ export function TokenForm({ onSuccess }: TokenFormProps) {
 								type="token"
 								value={logoUrl || undefined}
 								onChange={(url) => setLogoUrl(url ?? "")}
+								ensureAuth={ensureAuth}
 							/>
 						</div>
 
