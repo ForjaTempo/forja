@@ -1,8 +1,13 @@
 "use client";
 
 import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { ScrollReveal } from "@/components/ui/scroll-reveal";
 
-export function Cta() {
+interface CtaProps {
+	uniqueCreators?: number;
+}
+
+export function Cta({ uniqueCreators }: CtaProps) {
 	return (
 		<section className="relative isolate overflow-hidden py-20 sm:py-24">
 			{/* Subtle radial glow */}
@@ -11,13 +16,17 @@ export function Cta() {
 			</div>
 
 			<div className="mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
-				<h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Ready to forge?</h2>
-				<p className="mt-4 text-base text-smoke-dark sm:text-lg">
-					Connect your wallet and start building on Tempo.
-				</p>
-				<div className="mt-8 flex justify-center">
-					<ConnectButton />
-				</div>
+				<ScrollReveal>
+					<h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Ready to forge?</h2>
+					<p className="mt-4 text-base text-smoke-dark sm:text-lg">
+						{uniqueCreators && uniqueCreators > 0
+							? `Join ${uniqueCreators} creator${uniqueCreators !== 1 ? "s" : ""} building on Tempo.`
+							: "Connect your wallet and start building on Tempo."}
+					</p>
+					<div className="mt-8 flex justify-center">
+						<ConnectButton />
+					</div>
+				</ScrollReveal>
 			</div>
 		</section>
 	);

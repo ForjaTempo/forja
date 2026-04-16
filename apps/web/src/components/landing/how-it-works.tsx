@@ -1,4 +1,9 @@
+"use client";
+
+import { motion } from "framer-motion";
 import { CheckCircleIcon, MousePointerClickIcon, WalletIcon } from "lucide-react";
+import { ScrollReveal } from "@/components/ui/scroll-reveal";
+import { fadeInUp, staggerContainer } from "@/lib/motion";
 
 const steps = [
 	{
@@ -11,7 +16,7 @@ const steps = [
 		step: "02",
 		icon: MousePointerClickIcon,
 		title: "Choose Tool",
-		description: "Pick from Token Create, Multisend, or Token Lock.",
+		description: "Pick from Token Create, Multisend, Lock, Claim, or Launchpad.",
 	},
 	{
 		step: "03",
@@ -25,16 +30,24 @@ export function HowItWorks() {
 	return (
 		<section className="py-20 sm:py-24">
 			<div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-				<div className="text-center">
-					<p className="font-mono text-xs uppercase tracking-[0.2em] text-indigo">How it works</p>
-					<h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
-						Three steps. That's it.
-					</h2>
-				</div>
+				<ScrollReveal>
+					<div className="text-center">
+						<p className="font-mono text-xs uppercase tracking-[0.2em] text-indigo">How it works</p>
+						<h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
+							Three steps. That&apos;s it.
+						</h2>
+					</div>
+				</ScrollReveal>
 
-				<div className="mt-14 grid gap-8 md:grid-cols-3">
+				<motion.div
+					className="mt-14 grid gap-8 md:grid-cols-3"
+					variants={staggerContainer}
+					initial="hidden"
+					whileInView="visible"
+					viewport={{ once: true, margin: "-50px" }}
+				>
 					{steps.map((step, i) => (
-						<div key={step.step} className="relative text-center">
+						<motion.div key={step.step} variants={fadeInUp} className="relative text-center">
 							{/* Connector line between steps */}
 							{i < steps.length - 1 && (
 								<div
@@ -50,9 +63,9 @@ export function HowItWorks() {
 							<p className="mt-1 font-mono text-xs text-smoke-dark">{step.step}</p>
 							<h3 className="mt-2 text-lg font-semibold">{step.title}</h3>
 							<p className="mt-2 text-sm leading-relaxed text-smoke-dark">{step.description}</p>
-						</div>
+						</motion.div>
 					))}
-				</div>
+				</motion.div>
 			</div>
 		</section>
 	);
