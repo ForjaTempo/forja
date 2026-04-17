@@ -1,9 +1,11 @@
 "use client";
 
+import { ChevronDownIcon, ChevronUpIcon, TagIcon } from "lucide-react";
 import { type ChangeEvent, type FormEvent, useCallback, useRef, useState } from "react";
 import { formatUnits, parseUnits } from "viem";
 import { useAccount } from "wagmi";
 import { Card, CardContent } from "@/components/ui/card";
+import { FilterChip } from "@/components/ui/filter-chip";
 import { ImageUpload } from "@/components/ui/image-upload";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
@@ -17,6 +19,7 @@ import { useWalletAuth } from "@/hooks/use-wallet-auth";
 import { TIP20_DECIMALS } from "@/lib/constants";
 import { tokenFactoryConfig } from "@/lib/contracts";
 import { deriveTxState, formatErrorMessage } from "@/lib/format";
+import { LAUNCH_TAGS, MAX_LAUNCH_TAGS } from "@/lib/launch-tags";
 import { CreateButton } from "./create-button";
 
 const NAME_MAX = 50;
@@ -31,6 +34,7 @@ interface TokenFormProps {
 		txHash: string;
 		tokenAddress: string;
 		logoUrl?: string;
+		tags?: string[];
 	}) => void;
 }
 
@@ -41,8 +45,18 @@ export function TokenForm({ onSuccess }: TokenFormProps) {
 	const [symbol, setSymbol] = useState("");
 	const [initialSupply, setInitialSupply] = useState("");
 	const [logoUrl, setLogoUrl] = useState("");
+	const [tags, setTags] = useState<string[]>([]);
+	const [tagsOpen, setTagsOpen] = useState(false);
 	const successFired = useRef(false);
 	const [txDialogOpen, setTxDialogOpen] = useState(false);
+
+	const toggleTag = useCallback((tag: string) => {
+		setTags((prev) => {
+			if (prev.includes(tag)) return prev.filter((t) => t !== tag);
+			if (prev.length >= MAX_LAUNCH_TAGS) return prev;
+			return [...prev, tag];
+		});
+	}, []);
 
 	const { fee, formatted: feeFormatted } = useCreateFee();
 	const { balance, formatted: balanceFormatted } = useUsdcBalance();
@@ -105,6 +119,7 @@ export function TokenForm({ onSuccess }: TokenFormProps) {
 					txHash,
 					tokenAddress,
 					logoUrl: logoUrl || undefined,
+					tags: tags.length > 0 ? tags : undefined,
 				});
 			}
 		},
@@ -191,6 +206,50 @@ export function TokenForm({ onSuccess }: TokenFormProps) {
 								Leave as 0 to create a token without initial mint
 							</p>
 							{supplyError && <p className="text-xs text-ember-red">{supplyError}</p>}
+						</div>
+
+						<div className="space-y-2">
+							<button
+								type="button"
+								onClick={() => setTagsOpen((v) => !v)}
+								className="flex w-full items-center justify-between rounded-md border border-anvil-gray-light bg-obsidian-black/30 px-3 py-2 text-sm text-smoke transition-colors hover:bg-obsidian-black/50"
+							>
+								<span className="flex items-center gap-2">
+									<TagIcon className="size-4" />
+									Tags{" "}
+									<span className="text-smoke-dark">
+										{tags.length > 0 ? `(${tags.length}/${MAX_LAUNCH_TAGS})` : "(optional)"}
+									</span>
+								</span>
+								{tagsOpen ? (
+									<ChevronUpIcon className="size-4" />
+								) : (
+									<ChevronDownIcon className="size-4" />
+								)}
+							</button>
+							{tagsOpen && (
+								<div className="space-y-2 rounded-md border border-anvil-gray-light bg-obsidian-black/20 p-3">
+									<p className="text-xs text-smoke-dark">
+										Help people discover your token. Pick up to {MAX_LAUNCH_TAGS} tags.
+									</p>
+									<div className="flex flex-wrap gap-2">
+										{LAUNCH_TAGS.map((tag) => {
+											const active = tags.includes(tag);
+											const disabled = !active && tags.length >= MAX_LAUNCH_TAGS;
+											return (
+												<FilterChip
+													key={tag}
+													active={active}
+													onClick={disabled ? undefined : () => toggleTag(tag)}
+													className={disabled ? "cursor-not-allowed opacity-50" : ""}
+												>
+													{tag}
+												</FilterChip>
+											);
+										})}
+									</div>
+								</div>
+							)}
 						</div>
 
 						{name.trim() && symbol.trim() && (
