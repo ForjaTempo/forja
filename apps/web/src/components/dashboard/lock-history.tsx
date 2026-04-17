@@ -2,7 +2,10 @@
 
 import type { Lock } from "@forja/db";
 import { DownloadIcon, ExternalLinkIcon, LockIcon } from "lucide-react";
+import Link from "next/link";
 import { AddressDisplay } from "@/components/ui/address-display";
+import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Progress } from "@/components/ui/progress";
 import { useExplorerUrl } from "@/hooks/use-explorer-url";
 import { exportToCsv } from "@/lib/csv-export";
@@ -18,9 +21,18 @@ export function LockHistory({ locks }: LockHistoryProps) {
 
 	if (locks.length === 0) {
 		return (
-			<div className="py-12 text-center">
-				<p className="text-sm text-smoke-dark">No locks created</p>
-			</div>
+			<EmptyState
+				icon={<LockIcon className="size-8" />}
+				title="No locks created"
+				description="Lock tokens with vesting schedules to build trust with your community."
+				action={
+					<Link href="/lock">
+						<Button variant="outline" className="border-anvil-gray-light">
+							Create a Lock
+						</Button>
+					</Link>
+				}
+			/>
 		);
 	}
 

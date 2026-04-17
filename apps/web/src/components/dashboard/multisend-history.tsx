@@ -2,7 +2,10 @@
 
 import type { Multisend } from "@forja/db";
 import { DownloadIcon, ExternalLinkIcon, SendIcon } from "lucide-react";
+import Link from "next/link";
 import { AddressDisplay } from "@/components/ui/address-display";
+import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { useExplorerUrl } from "@/hooks/use-explorer-url";
 import { exportToCsv } from "@/lib/csv-export";
 import { formatDate, formatSupply } from "@/lib/format";
@@ -18,9 +21,18 @@ export function MultisendHistory({ multisends }: MultisendHistoryProps) {
 
 	if (multisends.length === 0) {
 		return (
-			<div className="py-12 text-center">
-				<p className="text-sm text-smoke-dark">No multisend history</p>
-			</div>
+			<EmptyState
+				icon={<SendIcon className="size-8" />}
+				title="No multisend history"
+				description="Distribute tokens to up to 500 addresses in a single transaction."
+				action={
+					<Link href="/multisend">
+						<Button variant="outline" className="border-anvil-gray-light">
+							Start a Multisend
+						</Button>
+					</Link>
+				}
+			/>
 		);
 	}
 
