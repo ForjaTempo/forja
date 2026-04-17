@@ -7,6 +7,7 @@ import { useState } from "react";
 import { useAccount } from "wagmi";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { hasSwap } from "@/lib/constants";
 import { hasClaimer, hasLaunchpad } from "@/lib/contracts";
 import { cn } from "@/lib/utils";
 
@@ -16,6 +17,7 @@ const baseNavLinks = [
 	{ href: "/lock", label: "Lock" },
 	...(hasClaimer ? [{ href: "/claim/create", label: "Claim" }] : []),
 	...(hasLaunchpad ? [{ href: "/launch", label: "Launch" }] : []),
+	...(hasSwap ? [{ href: "/swap", label: "Swap" }] : []),
 	{ href: "/tokens", label: "Tokens" },
 ];
 

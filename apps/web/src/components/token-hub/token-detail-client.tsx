@@ -9,6 +9,7 @@ import { getTokenDetail, getTokenHolderDistribution, getTokenTransfers } from "@
 import { getTokenTrustSignals } from "@/actions/trust-signals";
 import { PageContainer } from "@/components/layout/page-container";
 import { ShareButtons } from "@/components/shared/share-buttons";
+import { SwapCta } from "@/components/swap/swap-cta";
 import { LiquidityGuidance } from "@/components/token-detail/liquidity-guidance";
 import { ConcentrationWarning } from "@/components/token-hub/concentration-warning";
 import { HolderDistribution } from "@/components/token-hub/holder-distribution";
@@ -101,7 +102,10 @@ export function TokenDetailClient({
 					<div className="flex-1">
 						<TokenOverview token={token} trustSignals={trustSignals} />
 					</div>
-					<WatchlistButton tokenAddress={token.address} className="mt-1" />
+					<div className="mt-1 flex items-center gap-2">
+						<SwapCta tokenAddress={token.address} />
+						<WatchlistButton tokenAddress={token.address} />
+					</div>
 				</div>
 
 				{/* State signals */}
