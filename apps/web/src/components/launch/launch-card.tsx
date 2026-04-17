@@ -3,6 +3,7 @@
 import { ArrowRightLeftIcon, TrendingUpIcon, UserIcon } from "lucide-react";
 import Link from "next/link";
 import type { LaunchListItem } from "@/actions/launches";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { ImageFallback } from "@/components/ui/image-fallback";
 import { Progress } from "@/components/ui/progress";
@@ -35,24 +36,12 @@ function formatUsdc(raw: string): string {
 
 function getStatusBadge(launch: LaunchListItem) {
 	if (launch.graduated) {
-		return (
-			<span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-400">
-				Graduated
-			</span>
-		);
+		return <Badge variant="success">Graduated</Badge>;
 	}
 	if (launch.killed || launch.failed) {
-		return (
-			<span className="inline-flex items-center gap-1 rounded-full bg-red-500/10 px-2 py-0.5 text-xs font-medium text-red-400">
-				{launch.killed ? "Killed" : "Failed"}
-			</span>
-		);
+		return <Badge variant="destructive">{launch.killed ? "Killed" : "Failed"}</Badge>;
 	}
-	return (
-		<span className="inline-flex items-center gap-1 rounded-full bg-molten-amber/10 px-2 py-0.5 text-xs font-medium text-molten-amber">
-			Live
-		</span>
-	);
+	return <Badge variant="warning">Live</Badge>;
 }
 
 interface LaunchCardProps {
@@ -65,7 +54,10 @@ export function LaunchCard({ launch }: LaunchCardProps) {
 
 	return (
 		<Link href={`/launch/${launch.id}`}>
-			<Card className="border-anvil-gray-light bg-deep-charcoal transition-colors hover:border-indigo/50">
+			<Card
+				variant="interactive"
+				className="border-anvil-gray-light bg-deep-charcoal hover:border-indigo/50"
+			>
 				<CardContent className="p-4">
 					<div className="flex items-start justify-between gap-2">
 						<div className="flex items-center gap-3">

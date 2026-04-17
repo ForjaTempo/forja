@@ -21,8 +21,10 @@ import {
 	type LaunchTradeRow,
 } from "@/actions/launches";
 import { CurveChart } from "@/components/launch/curve-chart";
+import { GraduationBanner } from "@/components/launch/graduation-banner";
 import { GraduationProgress } from "@/components/launch/graduation-progress";
-import { TradeHistory } from "@/components/launch/trade-history";
+import { LiveTradeFeed } from "@/components/launch/live-trade-feed";
+import { TerminatedBanner } from "@/components/launch/terminated-banner";
 import { TradePanel } from "@/components/launch/trade-panel";
 import { PageContainer } from "@/components/layout/page-container";
 import { Badge } from "@/components/ui/badge";
@@ -165,6 +167,20 @@ export function LaunchDetailClient({ initialLaunch, initialTrades }: Props) {
 
 				<SocialLinksRow launch={launch} />
 
+				{/* State banners */}
+				{launch.graduated && (
+					<GraduationBanner
+						tokenAddress={launch.tokenAddress}
+						graduatedAt={launch.graduatedAt}
+						totalVolume={launch.totalVolume}
+						uniqueTraders={launch.uniqueTraders}
+						createdAt={launch.createdAt}
+					/>
+				)}
+				{!launch.graduated && (launch.killed || launch.failed) && (
+					<TerminatedBanner reason={launch.killed ? "killed" : "failed"} />
+				)}
+
 				{/* Main Grid */}
 				<div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
 					{/* Left Column (2/3) */}
@@ -218,8 +234,8 @@ export function LaunchDetailClient({ initialLaunch, initialTrades }: Props) {
 							</CardContent>
 						</Card>
 
-						{/* Trade History */}
-						<TradeHistory
+						{/* Live Trade Feed */}
+						<LiveTradeFeed
 							trades={tradesData?.trades ?? []}
 							total={tradesData?.total ?? 0}
 							isLoading={tradesLoading}
@@ -228,7 +244,7 @@ export function LaunchDetailClient({ initialLaunch, initialTrades }: Props) {
 					</div>
 
 					{/* Right Column (1/3) — sticky on desktop */}
-					<div className="space-y-6 lg:sticky lg:top-20 lg:self-start">
+					<div id="trade-panel-anchor" className="space-y-6 lg:sticky lg:top-20 lg:self-start">
 						{/* Graduation Progress */}
 						<GraduationProgress
 							realUsdcRaised={launch.realUsdcRaised}
@@ -287,25 +303,11 @@ export function LaunchDetailClient({ initialLaunch, initialTrades }: Props) {
 }
 
 function StatusBadge({ launch }: { launch: LaunchDetail }) {
-	if (launch.graduated) {
-		return (
-			<span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-400">
-				Graduated
-			</span>
-		);
-	}
+	if (launch.graduated) return <Badge variant="success">Graduated</Badge>;
 	if (launch.killed || launch.failed) {
-		return (
-			<span className="rounded-full bg-red-500/10 px-2 py-0.5 text-xs font-medium text-red-400">
-				{launch.killed ? "Killed" : "Failed"}
-			</span>
-		);
+		return <Badge variant="destructive">{launch.killed ? "Killed" : "Failed"}</Badge>;
 	}
-	return (
-		<span className="rounded-full bg-molten-amber/10 px-2 py-0.5 text-xs font-medium text-molten-amber">
-			Live
-		</span>
-	);
+	return <Badge variant="warning">Live</Badge>;
 }
 
 function MiniStat({ label, value }: { label: string; value: string }) {
