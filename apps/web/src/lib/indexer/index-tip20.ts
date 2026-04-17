@@ -1,36 +1,74 @@
 import "server-only";
 import { type getDb, schema } from "@forja/db";
 import type { PublicClient } from "viem";
-import { parseAbiItem } from "viem";
 import { TIP20_FACTORY_ADDRESS } from "../constants";
+import { erc20Abi } from "../contracts";
 import { fetchBlockTimestamps } from "./utils";
 
 /**
- * Tempo TIP20 factory `TokenCreated` event.
- * Signature per docs.tempo.xyz/protocol/tip20/spec.
+ * Topic hash for Tempo's TIP20Factory `TokenCreated` event.
  *
- * If the production log shape diverges (e.g. creator renamed to issuer), adjust
- * the signature and redeploy. Raw log dump can be inspected via
- * `eth_getLogs({ address: TIP20_FACTORY_ADDRESS, fromBlock, toBlock })` without
- * a typed ABI to verify field ordering.
+ * Derived by sampling live on-chain logs from 0x20Fc000000000000000000000000000000000000.
+ * The event's non-indexed payload includes an underlying asset address, a bytes32
+ * identifier, a bytes20 salt-like field, and three dynamic strings (name, symbol,
+ * denomination). Because the full structure is complex and version-sensitive, we
+ * only parse `topics[0]` (event sig) and `topics[1]` (new token address). Token
+ * metadata (name, symbol, decimals) is pulled via standard ERC-20 view calls.
  */
-const tokenCreatedEvent = parseAbiItem(
-	"event TokenCreated(address indexed token, address indexed creator, string name, string symbol, uint8 decimals)",
-);
+const TOKEN_CREATED_TOPIC = "0x44f7b8011db3e3647a530b4ff635726de5fafc8fa8ad10f0f31c0eb9dd52fc65";
+
+const METADATA_BATCH = 8;
+
+/**
+ * Fetch name / symbol / decimals for a freshly discovered token via standard
+ * ERC-20 view calls. Returns null values when a call fails so we don't hang
+ * the indexer on a malformed token.
+ */
+async function readTokenMetadata(
+	client: PublicClient,
+	address: `0x${string}`,
+): Promise<{ name: string | null; symbol: string | null; decimals: number | null }> {
+	const [nameResult, symbolResult, decimalsResult] = await Promise.allSettled([
+		client.readContract({ address, abi: erc20Abi, functionName: "name" }),
+		client.readContract({ address, abi: erc20Abi, functionName: "symbol" }),
+		client.readContract({ address, abi: erc20Abi, functionName: "decimals" }),
+	]);
+
+	return {
+		name:
+			nameResult.status === "fulfilled" && typeof nameResult.value === "string"
+				? nameResult.value
+				: null,
+		symbol:
+			symbolResult.status === "fulfilled" && typeof symbolResult.value === "string"
+				? symbolResult.value
+				: null,
+		decimals:
+			decimalsResult.status === "fulfilled" && typeof decimalsResult.value === "number"
+				? decimalsResult.value
+				: decimalsResult.status === "fulfilled" && typeof decimalsResult.value === "bigint"
+					? Number(decimalsResult.value)
+					: null,
+	};
+}
+
+/**
+ * Decode a 32-byte topic into a lowercase checksummed-style address string.
+ */
+function topicToAddress(topic: `0x${string}`): string {
+	return `0x${topic.slice(-40)}`.toLowerCase();
+}
 
 /**
  * Index TIP-20 tokens created via Tempo's factory precompile.
  *
  * Strategy:
- *   - Upsert into `token_hub_cache` with `source = "tip20_factory"`.
- *   - ON CONFLICT DO NOTHING — we never downgrade a FORJA or launchpad row.
- *   - FORJA-created tokens are indexed independently by `index-tokens` and
- *     inserted into `tokens`; `token-list-sync` then reconciles them here
- *     with `source = "forja"`. If a TIP20 factory event arrives for a token
- *     already present (e.g. because FORJA's factory ultimately calls the
- *     TIP20 precompile), the existing row is preserved.
- *   - `totalSupply` is NOT fetched here (RPC call per token too costly for
- *     large backfills). Left null; filled by token-list-sync or on-demand.
+ *   - Filter logs by topic[0] (event sig hash).
+ *   - Extract token address from topics[1] (no complex data decoding).
+ *   - Fetch name/symbol/decimals via ERC-20 view calls (batched by METADATA_BATCH
+ *     to avoid hammering the RPC with thousands of parallel requests).
+ *   - Upsert into tokenHubCache with source="tip20_factory", ON CONFLICT DO NOTHING
+ *     so existing forja/launchpad rows are preserved.
  */
 export async function indexTip20Events(
 	db: ReturnType<typeof getDb>,
@@ -40,57 +78,62 @@ export async function indexTip20Events(
 ) {
 	const logs = await client.getLogs({
 		address: TIP20_FACTORY_ADDRESS,
-		event: tokenCreatedEvent,
 		fromBlock,
 		toBlock,
 	});
 
-	if (logs.length === 0) return 0;
+	// Filter to TokenCreated events (by topic[0]) and extract token addresses.
+	const candidates = logs
+		.filter((l) => l.topics[0] === TOKEN_CREATED_TOPIC && l.topics[1])
+		.map((l) => ({
+			address: topicToAddress(l.topics[1] as `0x${string}`),
+			blockNumber: l.blockNumber,
+		}));
+
+	if (candidates.length === 0) return 0;
+
+	// Deduplicate within this batch.
+	const uniqueAddresses = Array.from(new Map(candidates.map((c) => [c.address, c])).values());
 
 	const blockTimestamps = await fetchBlockTimestamps(
 		client,
-		logs.map((l) => l.blockNumber),
+		uniqueAddresses.map((c) => c.blockNumber),
 	);
 
-	const rows = logs
-		.map((log) => {
-			const args = log.args as {
-				token?: `0x${string}`;
-				creator?: `0x${string}`;
-				name?: string;
-				symbol?: string;
-				decimals?: number;
-			};
-			if (!args.token) return null;
-			return {
-				address: args.token.toLowerCase(),
-				name: args.name ?? "",
-				symbol: args.symbol ?? "",
-				decimals: typeof args.decimals === "number" ? args.decimals : 6,
-				creatorAddress: args.creator?.toLowerCase() ?? null,
+	// Batch metadata fetches to respect RPC rate limits.
+	const rows: Array<typeof schema.tokenHubCache.$inferInsert> = [];
+	for (let i = 0; i < uniqueAddresses.length; i += METADATA_BATCH) {
+		const batch = uniqueAddresses.slice(i, i + METADATA_BATCH);
+		const metadata = await Promise.all(
+			batch.map((c) => readTokenMetadata(client, c.address as `0x${string}`)),
+		);
+
+		batch.forEach((c, j) => {
+			const meta = metadata[j];
+			// Skip tokens where we can't resolve basic metadata — they may be malformed
+			// or the factory may have emitted a spurious event.
+			if (!meta?.name && !meta?.symbol) return;
+			rows.push({
+				address: c.address,
+				name: meta.name ?? "",
+				symbol: meta.symbol ?? "",
+				decimals: meta.decimals ?? 6,
+				creatorAddress: null,
 				isForjaCreated: false,
 				isLaunchpadToken: false,
-				source: "tip20_factory" as const,
+				source: "tip20_factory",
 				lastSyncedAt: new Date(),
-				createdAt: blockTimestamps.get(log.blockNumber) ?? new Date(),
-			};
-		})
-		.filter((r): r is NonNullable<typeof r> => r !== null);
+				createdAt: blockTimestamps.get(c.blockNumber) ?? new Date(),
+			});
+		});
+	}
 
 	if (rows.length === 0) return 0;
 
-	// Deduplicate within batch (same token address could appear twice if factory
-	// is re-entered in same chunk). Last wins.
-	const unique = new Map<string, (typeof rows)[number]>();
-	for (const row of rows) {
-		unique.set(row.address, row);
-	}
-
-	// ON CONFLICT DO NOTHING preserves FORJA / launchpad / previously-seen rows.
 	await db
 		.insert(schema.tokenHubCache)
-		.values(Array.from(unique.values()))
+		.values(rows)
 		.onConflictDoNothing({ target: schema.tokenHubCache.address });
 
-	return unique.size;
+	return rows.length;
 }
