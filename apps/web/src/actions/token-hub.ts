@@ -528,6 +528,7 @@ export async function getCreatorProfile(address: string) {
 			displayName: profileRow?.displayName ?? null,
 			bio: profileRow?.bio ?? null,
 			avatarUrl: profileRow?.avatarUrl ?? null,
+			bannerUrl: profileRow?.bannerUrl ?? null,
 			website: profileRow?.website ?? null,
 			twitterHandle: profileRow?.twitterHandle ?? null,
 			telegramHandle: profileRow?.telegramHandle ?? null,

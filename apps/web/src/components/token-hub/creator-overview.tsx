@@ -6,6 +6,7 @@ import {
 	ExternalLinkIcon,
 	GlobeIcon,
 	LockIcon,
+	MessageCircleIcon,
 	SendIcon,
 	ShieldIcon,
 	UsersIcon,
@@ -34,6 +35,7 @@ interface CreatorOverviewProps {
 		displayName?: string | null;
 		bio?: string | null;
 		avatarUrl?: string | null;
+		bannerUrl?: string | null;
 		website?: string | null;
 		twitterHandle?: string | null;
 		telegramHandle?: string | null;
@@ -73,50 +75,97 @@ export function CreatorOverview({ profile }: CreatorOverviewProps) {
 
 	return (
 		<div className="space-y-6">
-			<div className="flex items-start justify-between gap-4">
-				<div className="flex items-center gap-4">
-					{profile.avatarUrl ? (
-						// biome-ignore lint/performance/noImgElement: user-uploaded/external avatar URL
+			<div className="overflow-hidden rounded-xl border border-anvil-gray-light bg-deep-charcoal">
+				{/* Banner */}
+				<div className="relative h-32 w-full sm:h-48">
+					{profile.bannerUrl ? (
+						// biome-ignore lint/performance/noImgElement: external/uploaded banner URL
 						<img
-							src={profile.avatarUrl}
-							alt={profile.displayName ?? "Creator avatar"}
-							className="size-16 rounded-full object-cover"
+							src={profile.bannerUrl}
+							alt={`${profile.displayName ?? "Creator"} banner`}
+							className="h-full w-full object-cover"
 						/>
 					) : (
-						<ImageFallback
-							name={profile.displayName ?? profile.address}
-							size={64}
-							variant="circle"
-						/>
+						<div className="h-full w-full bg-gradient-to-br from-indigo/30 via-anvil-gray to-obsidian-black" />
 					)}
-					<div>
-						<div className="flex items-center gap-2">
-							<h1 className="text-2xl font-bold text-steel-white">
-								{profile.displayName ?? "Creator Profile"}
-							</h1>
-							{profile.verified && (
-								<Badge className="bg-emerald-500/15 text-emerald-400 border-emerald-500/30">
-									Verified
-								</Badge>
-							)}
-							{profile.profileClaimed && !profile.verified && (
-								<Badge className="bg-emerald-500/15 text-emerald-400 border-emerald-500/30">
-									Claimed
-								</Badge>
-							)}
+				</div>
+
+				{/* Avatar + meta */}
+				<div className="relative px-4 pb-4 pt-0 sm:px-6">
+					<div className="-mt-10 flex flex-col gap-4 sm:-mt-12 sm:flex-row sm:items-end sm:justify-between">
+						<div className="flex items-end gap-4">
+							<div className="shrink-0 rounded-full border-4 border-deep-charcoal bg-deep-charcoal">
+								{profile.avatarUrl ? (
+									// biome-ignore lint/performance/noImgElement: user-uploaded/external avatar URL
+									<img
+										src={profile.avatarUrl}
+										alt={profile.displayName ?? "Creator avatar"}
+										className="size-20 rounded-full object-cover sm:size-24"
+									/>
+								) : (
+									<ImageFallback
+										name={profile.displayName ?? profile.address}
+										size={96}
+										variant="circle"
+									/>
+								)}
+							</div>
+							<div className="min-w-0 pb-1">
+								<div className="flex flex-wrap items-center gap-2">
+									<h1 className="truncate text-xl font-bold text-steel-white sm:text-2xl">
+										{profile.displayName ?? "Creator Profile"}
+									</h1>
+									{profile.verified && <Badge variant="success">Verified</Badge>}
+									{profile.profileClaimed && !profile.verified && (
+										<Badge variant="success">Claimed</Badge>
+									)}
+								</div>
+								<div className="mt-1">
+									<AddressDisplay address={profile.address} showExplorer />
+								</div>
+							</div>
 						</div>
-						<div className="mt-1">
-							<AddressDisplay address={profile.address} showExplorer />
+
+						<div className="flex shrink-0 items-center gap-2 self-start sm:self-end">
+							{isOwner && (
+								<Link href="/profile">
+									<Button
+										variant="outline"
+										size="sm"
+										className="border-anvil-gray-light text-smoke hover:text-steel-white"
+									>
+										{profile.profileClaimed ? "Edit Profile" : "Claim Profile"}
+									</Button>
+								</Link>
+							)}
+							<a
+								href={`${explorerUrl}/address/${profile.address}`}
+								target="_blank"
+								rel="noopener noreferrer"
+								className="inline-flex items-center gap-1 text-sm text-smoke transition-colors hover:text-indigo"
+							>
+								Explorer
+								<ExternalLinkIcon className="size-3" />
+							</a>
 						</div>
-						{profile.bio && <p className="mt-2 max-w-lg text-sm text-smoke">{profile.bio}</p>}
-						{/* Social links */}
-						<div className="mt-2 flex flex-wrap items-center gap-3">
+					</div>
+
+					{profile.bio && (
+						<p className="mt-4 max-w-2xl text-sm leading-relaxed text-smoke">{profile.bio}</p>
+					)}
+
+					{(profile.website || profile.twitterHandle || profile.telegramHandle) && (
+						<div className="mt-4 flex flex-wrap items-center gap-2">
 							{profile.website && (
 								<a
-									href={profile.website}
+									href={
+										profile.website.startsWith("http")
+											? profile.website
+											: `https://${profile.website}`
+									}
 									target="_blank"
 									rel="noopener noreferrer"
-									className="inline-flex items-center gap-1 text-xs text-smoke transition-colors hover:text-indigo"
+									className="inline-flex items-center gap-1.5 rounded-md border border-anvil-gray-light bg-anvil-gray/40 px-2.5 py-1 text-xs text-smoke hover:border-indigo/50 hover:text-indigo"
 								>
 									<GlobeIcon className="size-3" />
 									Website
@@ -124,48 +173,31 @@ export function CreatorOverview({ profile }: CreatorOverviewProps) {
 							)}
 							{profile.twitterHandle && (
 								<a
-									href={`https://x.com/${profile.twitterHandle}`}
+									href={`https://x.com/${profile.twitterHandle.replace(/^@/, "")}`}
 									target="_blank"
 									rel="noopener noreferrer"
-									className="inline-flex items-center gap-1 text-xs text-smoke transition-colors hover:text-indigo"
+									className="inline-flex items-center gap-1.5 rounded-md border border-anvil-gray-light bg-anvil-gray/40 px-2.5 py-1 text-xs text-smoke hover:border-indigo/50 hover:text-indigo"
 								>
-									<XIcon className="size-3" />@{profile.twitterHandle}
+									<XIcon className="size-3" />@{profile.twitterHandle.replace(/^@/, "")}
 								</a>
 							)}
 							{profile.telegramHandle && (
 								<a
-									href={`https://t.me/${profile.telegramHandle}`}
+									href={
+										profile.telegramHandle.startsWith("http")
+											? profile.telegramHandle
+											: `https://t.me/${profile.telegramHandle.replace(/^@/, "")}`
+									}
 									target="_blank"
 									rel="noopener noreferrer"
-									className="inline-flex items-center gap-1 text-xs text-smoke transition-colors hover:text-indigo"
+									className="inline-flex items-center gap-1.5 rounded-md border border-anvil-gray-light bg-anvil-gray/40 px-2.5 py-1 text-xs text-smoke hover:border-indigo/50 hover:text-indigo"
 								>
-									@{profile.telegramHandle}
+									<MessageCircleIcon className="size-3" />
+									Telegram
 								</a>
 							)}
 						</div>
-					</div>
-				</div>
-				<div className="flex items-center gap-2">
-					{isOwner && (
-						<Link href="/profile">
-							<Button
-								variant="outline"
-								size="sm"
-								className="border-anvil-gray-light text-smoke hover:text-steel-white"
-							>
-								{profile.profileClaimed ? "Edit Profile" : "Claim Profile"}
-							</Button>
-						</Link>
 					)}
-					<a
-						href={`${explorerUrl}/address/${profile.address}`}
-						target="_blank"
-						rel="noopener noreferrer"
-						className="inline-flex items-center gap-1 text-sm text-smoke transition-colors hover:text-indigo"
-					>
-						Explorer
-						<ExternalLinkIcon className="size-3" />
-					</a>
 				</div>
 			</div>
 
