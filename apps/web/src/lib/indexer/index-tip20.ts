@@ -20,18 +20,24 @@ const TOKEN_CREATED_TOPIC = "0x44f7b8011db3e3647a530b4ff635726de5fafc8fa8ad10f0f
 const METADATA_BATCH = 8;
 
 /**
- * Fetch name / symbol / decimals for a freshly discovered token via standard
- * ERC-20 view calls. Returns null values when a call fails so we don't hang
- * the indexer on a malformed token.
+ * Fetch name / symbol / decimals / totalSupply for a freshly discovered token
+ * via standard ERC-20 view calls. Returns null values when a call fails so we
+ * don't hang the indexer on a malformed token.
  */
 async function readTokenMetadata(
 	client: PublicClient,
 	address: `0x${string}`,
-): Promise<{ name: string | null; symbol: string | null; decimals: number | null }> {
-	const [nameResult, symbolResult, decimalsResult] = await Promise.allSettled([
+): Promise<{
+	name: string | null;
+	symbol: string | null;
+	decimals: number | null;
+	totalSupply: string | null;
+}> {
+	const [nameResult, symbolResult, decimalsResult, supplyResult] = await Promise.allSettled([
 		client.readContract({ address, abi: erc20Abi, functionName: "name" }),
 		client.readContract({ address, abi: erc20Abi, functionName: "symbol" }),
 		client.readContract({ address, abi: erc20Abi, functionName: "decimals" }),
+		client.readContract({ address, abi: erc20Abi, functionName: "totalSupply" }),
 	]);
 
 	return {
@@ -49,6 +55,10 @@ async function readTokenMetadata(
 				: decimalsResult.status === "fulfilled" && typeof decimalsResult.value === "bigint"
 					? Number(decimalsResult.value)
 					: null,
+		totalSupply:
+			supplyResult.status === "fulfilled" && typeof supplyResult.value === "bigint"
+				? supplyResult.value.toString()
+				: null,
 	};
 }
 
@@ -118,6 +128,7 @@ export async function indexTip20Events(
 				name: meta.name ?? "",
 				symbol: meta.symbol ?? "",
 				decimals: meta.decimals ?? 6,
+				totalSupply: meta.totalSupply,
 				creatorAddress: null,
 				isForjaCreated: false,
 				isLaunchpadToken: false,

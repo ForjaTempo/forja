@@ -135,7 +135,47 @@ export async function syncTokenList(): Promise<{ synced: number }> {
 		});
 	}
 
-	if (rows.length === 0) return { synced: 0 };
+	// 4b. Refresh metrics (holder / transfer / topHolderPct) for EVERY row in
+	// tokenHubCache — including tip20_factory rows that neither the token list
+	// nor the FORJA tokens table surfaces. Without this, external tokens stay
+	// at 0/0/0 even after their transfers have been indexed.
+	const allCacheRows = await db
+		.select({
+			address: schema.tokenHubCache.address,
+			totalSupply: schema.tokenHubCache.totalSupply,
+		})
+		.from(schema.tokenHubCache);
+
+	for (const row of allCacheRows) {
+		const addr = row.address.toLowerCase();
+		if (seenAddresses.has(addr)) continue;
+
+		let pct = 0;
+		if (row.totalSupply && BigInt(row.totalSupply) > 0n) {
+			const [topHolder] = await db
+				.select({ balance: schema.tokenHolderBalances.balance })
+				.from(schema.tokenHolderBalances)
+				.where(eq(schema.tokenHolderBalances.tokenAddress, addr))
+				.orderBy(desc(sql`CAST(${schema.tokenHolderBalances.balance} AS NUMERIC)`))
+				.limit(1);
+			if (topHolder) {
+				pct = Number((BigInt(topHolder.balance) * 100n) / BigInt(row.totalSupply));
+			}
+		}
+
+		// Update ONLY live metrics — don't touch identity fields.
+		await db
+			.update(schema.tokenHubCache)
+			.set({
+				holderCount: holderMap.get(addr) ?? 0,
+				transferCount: transferMap.get(addr) ?? 0,
+				topHolderPct: pct,
+				lastSyncedAt: now,
+			})
+			.where(eq(schema.tokenHubCache.address, addr));
+	}
+
+	if (rows.length === 0) return { synced: allCacheRows.length - seenAddresses.size };
 
 	// 5. Upsert all
 	for (const row of rows) {
