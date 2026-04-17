@@ -1,11 +1,18 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { GiftIcon, HammerIcon, LockIcon, RocketIcon, SendIcon } from "lucide-react";
+import {
+	ArrowLeftRightIcon,
+	GiftIcon,
+	HammerIcon,
+	LockIcon,
+	RocketIcon,
+	SendIcon,
+} from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { hasLaunchpad } from "@/lib/constants";
+import { hasLaunchpad, hasSwap } from "@/lib/constants";
 import { hasClaimer } from "@/lib/contracts";
 import { fadeInUp, staggerContainer } from "@/lib/motion";
 
@@ -55,12 +62,22 @@ const allTools = [
 		accent: "from-amber-500/20 to-amber-500/5",
 		iconColor: "text-amber-400",
 	},
+	{
+		title: "Swap",
+		description:
+			"Trade any TIP-20 token instantly. Best route across Uniswap v4 + transparent 0.25% fee.",
+		href: "/swap",
+		icon: ArrowLeftRightIcon,
+		accent: "from-rose-500/20 to-rose-500/5",
+		iconColor: "text-rose-400",
+	},
 ] as const;
 
 export function ToolCards() {
 	const tools = allTools.filter((tool) => {
 		if (tool.href === "/claim/create" && !hasClaimer) return false;
 		if (tool.href === "/launch" && !hasLaunchpad) return false;
+		if (tool.href === "/swap" && !hasSwap) return false;
 		return true;
 	});
 	return (
@@ -72,7 +89,8 @@ export function ToolCards() {
 						Everything you need
 					</h2>
 					<p className="mx-auto mt-3 max-w-xl text-base text-smoke-dark">
-						Five tools to create, distribute, lock, claim, and launch tokens on Tempo.
+						All-in-one toolkit to create, distribute, lock, claim, launch, and trade tokens on
+						Tempo.
 					</p>
 				</div>
 
