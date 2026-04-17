@@ -9,6 +9,7 @@ const SOURCE_OPTIONS: { value: SourceFilter; label: string }[] = [
 	{ value: "all", label: "All" },
 	{ value: "forja", label: "FORJA" },
 	{ value: "launchpad", label: "Launchpad" },
+	{ value: "external", label: "External" },
 ];
 
 const STATUS_OPTIONS: { value: StatusFilter; label: string }[] = [
