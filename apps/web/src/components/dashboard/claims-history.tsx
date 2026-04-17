@@ -1,9 +1,12 @@
 "use client";
 
+import { GiftIcon } from "lucide-react";
 import Link from "next/link";
 import { formatUnits } from "viem";
 import type { ClaimCampaignRow } from "@/actions/claims";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Progress } from "@/components/ui/progress";
 import { TIP20_DECIMALS } from "@/lib/constants";
 import { formatDate } from "@/lib/format";
@@ -28,14 +31,18 @@ function formatAmount(raw: string, decimals: number = TIP20_DECIMALS): string {
 export function ClaimsHistory({ campaigns }: ClaimsHistoryProps) {
 	if (campaigns.length === 0) {
 		return (
-			<Card>
-				<CardContent className="py-10 text-center text-sm text-smoke-dark">
-					No claim campaigns yet.{" "}
-					<Link href="/claim/create" className="text-indigo underline">
-						Create one
+			<EmptyState
+				icon={<GiftIcon className="size-8" />}
+				title="No claim campaigns yet"
+				description="Run Merkle-based token claims for your community."
+				action={
+					<Link href="/claim/create">
+						<Button variant="outline" className="border-anvil-gray-light">
+							Create a Campaign
+						</Button>
 					</Link>
-				</CardContent>
-			</Card>
+				}
+			/>
 		);
 	}
 
