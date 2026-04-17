@@ -66,6 +66,14 @@ contract ForjaSwapRouter is Ownable, Pausable, ReentrancyGuard, IUnlockCallback 
     error DeadlineExpired();
     error InvalidPool();
     error SlippageExceeded(uint256 amountOut, uint256 minAmountOut);
+    /// @notice Permit token must equal the pool's input token. Without this
+    ///         check, an attacker could submit a Permit2 signature for a
+    ///         cheap/worthless token while the swap consumes a stuck balance
+    ///         of the real input token sitting in the router.
+    error PermitTokenMismatch(address expected, address given);
+    /// @notice Permit amount must equal the requested swap amountIn so the
+    ///         user signs an exact authorisation, not an upper bound.
+    error PermitAmountMismatch(uint256 expected, uint256 given);
 
     // ─── Types ─────────────────────────────────────────────────────────────
     /// @notice Single-pool swap request signed by the user via Permit2.
@@ -130,6 +138,19 @@ contract ForjaSwapRouter is Ownable, Pausable, ReentrancyGuard, IUnlockCallback 
 
         address tokenIn = params.zeroForOne ? params.poolKey.currency0 : params.poolKey.currency1;
         address tokenOut = params.zeroForOne ? params.poolKey.currency1 : params.poolKey.currency0;
+
+        // CRITICAL: bind the user's signed permit to the swap's actual input
+        // token AND the requested amountIn. Without these checks an attacker
+        // could submit a permit for a worthless token while the swap drains
+        // a stuck balance of the real tokenIn (see rescueToken) and pockets
+        // the output. The amount equality also stops loose upper-bound
+        // permits from being reused against the user.
+        if (permit.permitted.token != tokenIn) {
+            revert PermitTokenMismatch(tokenIn, permit.permitted.token);
+        }
+        if (permit.permitted.amount != params.amountIn) {
+            revert PermitAmountMismatch(params.amountIn, permit.permitted.amount);
+        }
 
         // 1. Pull the full amountIn from user via Permit2 to this contract.
         permit2.permitTransferFrom(

@@ -206,6 +206,121 @@ contract ForjaSwapRouterTest is Test {
         router.swapExactInputSingle(params, _permit(SWAP_AMOUNT), "");
     }
 
+    // ───── Permit binding (CRITICAL — auth surface) ────────────────────────
+
+    function test_swap_reverts_when_permit_token_does_not_match_pool_input() public {
+        // The pool's input token is USDC (we swap zeroForOne with USDC<TOKEN
+        // ordering normalised). Build a permit that references TEST instead.
+        ForjaSwapRouter.ExactInputSingle memory params = _swapParams(
+            SWAP_AMOUNT,
+            0,
+            true,
+            block.timestamp + 1 hours
+        );
+
+        // Compute which token the router will derive as tokenIn so the
+        // expected error address matches at runtime.
+        address derivedTokenIn = params.zeroForOne ? params.poolKey.currency0 : params.poolKey.currency1;
+
+        IPermit2.PermitTransferFrom memory wrongPermit = IPermit2.PermitTransferFrom({
+            permitted: IPermit2.TokenPermissions({token: address(token), amount: SWAP_AMOUNT}),
+            nonce: 0,
+            deadline: block.timestamp + 1 hours
+        });
+
+        vm.prank(alice);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ForjaSwapRouter.PermitTokenMismatch.selector,
+                derivedTokenIn,
+                address(token)
+            )
+        );
+        router.swapExactInputSingle(params, wrongPermit, "");
+    }
+
+    function test_swap_reverts_when_permit_amount_does_not_match_amountIn() public {
+        ForjaSwapRouter.ExactInputSingle memory params = _swapParams(
+            SWAP_AMOUNT,
+            0,
+            true,
+            block.timestamp + 1 hours
+        );
+        IPermit2.PermitTransferFrom memory looseUpperBoundPermit = IPermit2.PermitTransferFrom({
+            permitted: IPermit2.TokenPermissions({
+                token: address(usdc),
+                amount: SWAP_AMOUNT * 10 // user signs an upper bound, NOT the exact swap size
+            }),
+            nonce: 0,
+            deadline: block.timestamp + 1 hours
+        });
+
+        vm.prank(alice);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ForjaSwapRouter.PermitAmountMismatch.selector,
+                SWAP_AMOUNT,
+                SWAP_AMOUNT * 10
+            )
+        );
+        router.swapExactInputSingle(params, looseUpperBoundPermit, "");
+    }
+
+    /// @notice Audit-driven test: an attacker MUST NOT be able to drain a
+    ///         stuck balance of the real tokenIn by signing a Permit2 transfer
+    ///         for a different (worthless) token. The router seeds the call
+    ///         with the cheap token, then the unlocked callback would use the
+    ///         stuck tokenIn balance for settlement and ship the output to
+    ///         the attacker. The pre-call permit binding MUST stop this BEFORE
+    ///         the swap fires.
+    function test_attacker_cannot_drain_stuck_input_via_wrong_permit_token() public {
+        // 1. Simulate stuck USDC sitting in the router (e.g. from a botched
+        //    rescueToken op or a misrouted transfer).
+        usdc.mint(address(router), SWAP_AMOUNT);
+        assertEq(usdc.balanceOf(address(router)), SWAP_AMOUNT, "stuck balance set up");
+
+        // 2. Attacker mints worthless TEST tokens and approves Permit2 for them.
+        address attacker = makeAddr("attacker");
+        token.mint(attacker, SWAP_AMOUNT);
+        vm.prank(attacker);
+        token.approve(address(permit2), type(uint256).max);
+
+        // 3. Attacker builds a swap that targets the USDC/TEST pool but signs
+        //    a Permit2 transfer for the cheap TEST token, hoping the router
+        //    will pull TEST, "skim fee" off TEST, and use the stuck USDC for
+        //    the swap settlement.
+        ForjaSwapRouter.ExactInputSingle memory exploitParams = _swapParams(
+            SWAP_AMOUNT,
+            0,
+            true,
+            block.timestamp + 1 hours
+        );
+        address derivedTokenIn = exploitParams.zeroForOne
+            ? exploitParams.poolKey.currency0
+            : exploitParams.poolKey.currency1;
+        IPermit2.PermitTransferFrom memory cheapPermit = IPermit2.PermitTransferFrom({
+            permitted: IPermit2.TokenPermissions({token: address(token), amount: SWAP_AMOUNT}),
+            nonce: 0,
+            deadline: block.timestamp + 1 hours
+        });
+
+        // 4. Router MUST reject before any token movement.
+        vm.prank(attacker);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ForjaSwapRouter.PermitTokenMismatch.selector,
+                derivedTokenIn,
+                address(token)
+            )
+        );
+        router.swapExactInputSingle(exploitParams, cheapPermit, "");
+
+        // 5. Stuck balance untouched, attacker holds nothing of value.
+        assertEq(usdc.balanceOf(address(router)), SWAP_AMOUNT, "stuck balance preserved");
+        assertEq(usdc.balanceOf(attacker), 0, "attacker gained no USDC");
+        assertEq(token.balanceOf(attacker), SWAP_AMOUNT, "attacker's TEST untouched");
+    }
+
     function test_unlockCallback_reverts_when_not_pool_manager() public {
         bytes memory dummy = new bytes(0);
         vm.expectRevert(ForjaSwapRouter.NotPoolManager.selector);
