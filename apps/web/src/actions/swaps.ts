@@ -1,7 +1,9 @@
 "use server";
 import { getDb, schema } from "@forja/db";
 import { and, count, desc, eq, gte, or, sql } from "drizzle-orm";
-import { isAddress } from "viem";
+import { type Address, isAddress } from "viem";
+import { indexerClient } from "@/lib/indexer/client";
+import { getQuote, hasLiquidity, type SwapQuote } from "@/lib/swap/quoter";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -130,6 +132,107 @@ export async function getSwapVolumeByToken(
 	} catch (err) {
 		console.error("[swaps] getSwapVolumeByToken failed:", err);
 		return [];
+	}
+}
+
+/**
+ * Serializable shape of a SwapQuote — all bigints become decimal strings so
+ * the result crosses the server-action boundary cleanly.
+ */
+export interface SerializedSwapQuote {
+	tokenIn: string;
+	tokenOut: string;
+	amountIn: string;
+	forjaFee: string;
+	amountInAfterFee: string;
+	amountOut: string;
+	minAmountOut: string;
+	priceImpactBps: number;
+	poolKey: {
+		currency0: string;
+		currency1: string;
+		fee: number;
+		tickSpacing: number;
+		hooks: string;
+	};
+	zeroForOne: boolean;
+	sqrtPriceLimitX96: string;
+	sqrtPriceX96Before: string;
+	sqrtPriceX96After: string;
+}
+
+function serializeQuote(q: SwapQuote): SerializedSwapQuote {
+	return {
+		tokenIn: q.tokenIn,
+		tokenOut: q.tokenOut,
+		amountIn: q.amountIn.toString(),
+		forjaFee: q.forjaFee.toString(),
+		amountInAfterFee: q.amountInAfterFee.toString(),
+		amountOut: q.amountOut.toString(),
+		minAmountOut: q.minAmountOut.toString(),
+		priceImpactBps: q.priceImpactBps,
+		poolKey: { ...q.poolKey },
+		zeroForOne: q.zeroForOne,
+		sqrtPriceLimitX96: q.sqrtPriceLimitX96.toString(),
+		sqrtPriceX96Before: q.sqrtPriceX96Before.toString(),
+		sqrtPriceX96After: q.sqrtPriceX96After.toString(),
+	};
+}
+
+/**
+ * Off-chain swap quote. Probes standard v4 fee tiers and picks the pool with
+ * the most output. Returns `null` when no liquidity exists for the pair.
+ *
+ * The estimate uses single-range constant-product math; the on-chain
+ * `minAmountOut` floor (from `slippageBps`) protects users from real-world
+ * tick crossings.
+ */
+export async function getSwapQuote(params: {
+	tokenIn: string;
+	tokenOut: string;
+	amountIn: string;
+	slippageBps: number;
+}): Promise<SerializedSwapQuote | null> {
+	if (!isAddress(params.tokenIn) || !isAddress(params.tokenOut)) return null;
+	if (params.tokenIn.toLowerCase() === params.tokenOut.toLowerCase()) return null;
+
+	let amountIn: bigint;
+	try {
+		amountIn = BigInt(params.amountIn);
+	} catch {
+		return null;
+	}
+	if (amountIn <= 0n) return null;
+	if (params.slippageBps < 0 || params.slippageBps > 5_000) return null;
+
+	try {
+		const quote = await getQuote({
+			client: indexerClient,
+			tokenIn: params.tokenIn as Address,
+			tokenOut: params.tokenOut as Address,
+			amountIn,
+			slippageBps: params.slippageBps,
+		});
+		if (!quote) return null;
+		return serializeQuote(quote);
+	} catch (err) {
+		console.error("[swaps] getSwapQuote failed:", err);
+		return null;
+	}
+}
+
+/**
+ * Cheap pool-existence check. Used by Token Hub / detail pages to gate the
+ * Swap CTA without computing a full quote.
+ */
+export async function checkSwapAvailable(tokenA: string, tokenB: string): Promise<boolean> {
+	if (!isAddress(tokenA) || !isAddress(tokenB)) return false;
+	if (tokenA.toLowerCase() === tokenB.toLowerCase()) return false;
+	try {
+		return await hasLiquidity(indexerClient, tokenA as Address, tokenB as Address);
+	} catch (err) {
+		console.error("[swaps] checkSwapAvailable failed:", err);
+		return false;
 	}
 }
 
