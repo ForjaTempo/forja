@@ -142,6 +142,7 @@ export const tokenHubCache = pgTable(
 		logoSource: text("logo_source"),
 		isForjaCreated: boolean("is_forja_created").notNull().default(false),
 		isLaunchpadToken: boolean("is_launchpad_token").notNull().default(false),
+		tags: text("tags").array().notNull().default(sql`'{}'::text[]`),
 		lastSyncedAt: timestamp("last_synced_at", { withTimezone: true }).notNull().defaultNow(),
 		createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 	},
@@ -149,6 +150,7 @@ export const tokenHubCache = pgTable(
 		index("token_hub_cache_symbol_idx").on(table.symbol),
 		index("token_hub_cache_creator_address_idx").on(table.creatorAddress),
 		index("token_hub_cache_is_forja_created_idx").on(table.isForjaCreated),
+		index("token_hub_cache_tags_gin_idx").using("gin", table.tags),
 	],
 );
 

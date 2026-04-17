@@ -1,12 +1,12 @@
 "use client";
 
-import type { TokenHubCache } from "@forja/db";
+import type { TokenEnriched } from "@/actions/token-hub";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TokenCard } from "./token-card";
 
 interface TokenGridProps {
-	tokens: (TokenHubCache & { creatorDisplayName?: string | null })[];
+	tokens: TokenEnriched[];
 	total: number;
 	isLoading: boolean;
 	hasMore: boolean;

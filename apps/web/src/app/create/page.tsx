@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { setTokenTags } from "@/actions/token-hub";
 import { updateTokenLogo } from "@/actions/upload";
 import { PostCreationWizard } from "@/components/create/post-creation-wizard";
 import { TokenForm } from "@/components/create/token-form";
@@ -9,6 +10,7 @@ import { PageContainer } from "@/components/layout/page-container";
 import { PageHeader } from "@/components/ui/page-header";
 import { Separator } from "@/components/ui/separator";
 import { useTransactionToast } from "@/hooks/use-transaction-toast";
+import { useWalletAuth } from "@/hooks/use-wallet-auth";
 import { useAppStore } from "@/stores/app-store";
 
 interface CreatedToken {
@@ -17,6 +19,7 @@ interface CreatedToken {
 	txHash: string;
 	tokenAddress: string;
 	logoUrl?: string;
+	tags?: string[];
 }
 
 export default function CreatePage() {
@@ -24,6 +27,7 @@ export default function CreatePage() {
 	const [formKey, setFormKey] = useState(0);
 	const [listKey, setListKey] = useState(0);
 	const { txConfirmed } = useTransactionToast();
+	const { ensureAuth } = useWalletAuth();
 	const addTransaction = useAppStore((s) => s.addTransaction);
 
 	const handleSuccess = useCallback(
@@ -42,8 +46,21 @@ export default function CreatePage() {
 			if (data.logoUrl) {
 				updateTokenLogo(data.tokenAddress, data.logoUrl).catch(() => {});
 			}
+
+			// Save tags (creator-gated, fire-and-forget)
+			if (data.tags && data.tags.length > 0) {
+				(async () => {
+					try {
+						const authed = await ensureAuth();
+						if (!authed) return;
+						await setTokenTags({ address: data.tokenAddress, tags: data.tags ?? [] });
+					} catch (err) {
+						console.error("[create] setTokenTags failed:", err);
+					}
+				})();
+			}
 		},
-		[txConfirmed, addTransaction],
+		[txConfirmed, addTransaction, ensureAuth],
 	);
 
 	const handleCreateAnother = useCallback(() => {
