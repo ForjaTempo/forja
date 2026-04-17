@@ -3,9 +3,33 @@ import {
 	FORJA_LOCKER_ADDRESS,
 	FORJA_LOCKER_V2_ADDRESS,
 	FORJA_MULTISEND_ADDRESS,
+	FORJA_SWAP_ROUTER_ADDRESS,
 	FORJA_TOKEN_FACTORY_ADDRESS,
 	PATHUSDC_ADDRESS,
 } from "./constants";
+
+/**
+ * ForjaSwapRouter event ABI — used by the indexer to parse SwapExecuted logs.
+ * Full surface (read methods, write methods, errors) lives in the on-chain
+ * contract; only the indexed event signature is needed off-chain.
+ */
+export const swapRouterConfig = {
+	address: FORJA_SWAP_ROUTER_ADDRESS,
+	abi: [
+		{
+			type: "event",
+			name: "SwapExecuted",
+			inputs: [
+				{ name: "user", type: "address", indexed: true },
+				{ name: "tokenIn", type: "address", indexed: true },
+				{ name: "tokenOut", type: "address", indexed: true },
+				{ name: "amountIn", type: "uint256", indexed: false },
+				{ name: "amountOut", type: "uint256", indexed: false },
+				{ name: "feeAmount", type: "uint256", indexed: false },
+			],
+		},
+	],
+} as const;
 
 export const pathusdcConfig = {
 	address: PATHUSDC_ADDRESS,

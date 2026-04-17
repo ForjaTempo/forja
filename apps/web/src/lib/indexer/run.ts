@@ -7,6 +7,7 @@ import { indexClaimEvents } from "./index-claims";
 import { indexLaunchEvents } from "./index-launches";
 import { indexLockEvents } from "./index-locks";
 import { indexMultisendEvents } from "./index-multisends";
+import { indexSwapEvents } from "./index-swaps";
 import { indexTip20Events } from "./index-tip20";
 import { indexTokenEvents } from "./index-tokens";
 import { indexTransferEvents } from "./index-transfers";
@@ -39,6 +40,7 @@ const contracts: ContractIndexer[] = [
 	{ name: "locker", index: indexLockEvents },
 	{ name: "claimer", index: indexClaimEvents },
 	{ name: "launchpad", index: indexLaunchEvents },
+	{ name: "swap-router", index: indexSwapEvents },
 	{ name: "tip20-factory", index: indexTip20Events },
 	{ name: "transfers", chunkSize: TRANSFER_CHUNK_SIZE, index: indexTransferEvents },
 ];

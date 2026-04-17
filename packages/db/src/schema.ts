@@ -355,3 +355,30 @@ export const claimProofs = pgTable(
 		index("claim_proofs_recipient_idx").on(table.recipientAddress),
 	],
 );
+
+// Phase SWAP: token swaps executed via ForjaSwapRouter
+
+export const swaps = pgTable(
+	"swaps",
+	{
+		id: serial("id").primaryKey(),
+		txHash: text("tx_hash").notNull(),
+		logIndex: integer("log_index").notNull(),
+		blockNumber: integer("block_number").notNull(),
+		userAddress: text("user_address").notNull(),
+		tokenIn: text("token_in").notNull(),
+		tokenOut: text("token_out").notNull(),
+		amountIn: text("amount_in").notNull(),
+		amountOut: text("amount_out").notNull(),
+		feeAmount: text("fee_amount").notNull(),
+		createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+	},
+	(table) => [
+		unique("swaps_tx_log_idx").on(table.txHash, table.logIndex),
+		index("swaps_user_idx").on(table.userAddress),
+		index("swaps_token_in_idx").on(table.tokenIn),
+		index("swaps_token_out_idx").on(table.tokenOut),
+		index("swaps_created_at_idx").on(table.createdAt),
+		index("swaps_block_number_idx").on(table.blockNumber),
+	],
+);
