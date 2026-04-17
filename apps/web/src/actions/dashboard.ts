@@ -11,6 +11,10 @@ export interface DashboardOverviewData {
 	totalFeesPaid: number;
 	multisendCount: number;
 	lockCount: number;
+	launchCount: number;
+	watchlistCount: number;
+	unreadAlerts: number;
+	displayName: string | null;
 }
 
 /**
@@ -25,40 +29,72 @@ export async function getDashboardOverview(address: string): Promise<DashboardOv
 		const db = getDb();
 		const addr = address.toLowerCase();
 
-		const [[tokenResult], [multisendResult], [lockResult], [recipientResult], [tvlResult]] =
-			await Promise.all([
-				db
-					.select({ value: count() })
-					.from(schema.tokens)
-					.where(eq(schema.tokens.creatorAddress, addr)),
-				db
-					.select({ value: count() })
-					.from(schema.multisends)
-					.where(eq(schema.multisends.senderAddress, addr)),
-				db
-					.select({ value: count() })
-					.from(schema.locks)
-					.where(eq(schema.locks.creatorAddress, addr)),
-				db
-					.select({
-						value: sql<number>`COALESCE(SUM(${schema.multisends.recipientCount}), 0)`,
-					})
-					.from(schema.multisends)
-					.where(eq(schema.multisends.senderAddress, addr)),
-				db
-					.select({
-						value: sql<string>`COALESCE(SUM(CAST(${schema.locks.totalAmount} AS NUMERIC) - CAST(${schema.locks.claimedAmount} AS NUMERIC)), 0)`,
-					})
-					.from(schema.locks)
-					.where(and(eq(schema.locks.creatorAddress, addr), eq(schema.locks.revoked, false))),
-			]);
+		const [
+			[tokenResult],
+			[multisendResult],
+			[lockResult],
+			[recipientResult],
+			[tvlResult],
+			[launchResult],
+			[watchlistResult],
+			[alertsResult],
+			[profileRow],
+		] = await Promise.all([
+			db
+				.select({ value: count() })
+				.from(schema.tokens)
+				.where(eq(schema.tokens.creatorAddress, addr)),
+			db
+				.select({ value: count() })
+				.from(schema.multisends)
+				.where(eq(schema.multisends.senderAddress, addr)),
+			db.select({ value: count() }).from(schema.locks).where(eq(schema.locks.creatorAddress, addr)),
+			db
+				.select({
+					value: sql<number>`COALESCE(SUM(${schema.multisends.recipientCount}), 0)`,
+				})
+				.from(schema.multisends)
+				.where(eq(schema.multisends.senderAddress, addr)),
+			db
+				.select({
+					value: sql<string>`COALESCE(SUM(CAST(${schema.locks.totalAmount} AS NUMERIC) - CAST(${schema.locks.claimedAmount} AS NUMERIC)), 0)`,
+				})
+				.from(schema.locks)
+				.where(and(eq(schema.locks.creatorAddress, addr), eq(schema.locks.revoked, false))),
+			db
+				.select({ value: count() })
+				.from(schema.launches)
+				.where(eq(schema.launches.creatorAddress, addr)),
+			db
+				.select({ value: count() })
+				.from(schema.watchlist)
+				.where(eq(schema.watchlist.walletAddress, addr)),
+			db
+				.select({ value: count() })
+				.from(schema.alerts)
+				.where(and(eq(schema.alerts.walletAddress, addr), eq(schema.alerts.isRead, false))),
+			db
+				.select({ displayName: schema.creatorProfiles.displayName })
+				.from(schema.creatorProfiles)
+				.where(eq(schema.creatorProfiles.walletAddress, addr))
+				.limit(1),
+		]);
 
 		const tokensCreated = tokenResult?.value ?? 0;
 		const multisendCount = multisendResult?.value ?? 0;
 		const lockCount = lockResult?.value ?? 0;
+		const launchCount = launchResult?.value ?? 0;
+		const watchlistCount = watchlistResult?.value ?? 0;
+		const unreadAlerts = alertsResult?.value ?? 0;
 
-		// No activity at all
-		if (tokensCreated === 0 && multisendCount === 0 && lockCount === 0) {
+		// No activity at all — even watchlist counts as "some" activity
+		if (
+			tokensCreated === 0 &&
+			multisendCount === 0 &&
+			lockCount === 0 &&
+			launchCount === 0 &&
+			watchlistCount === 0
+		) {
 			return null;
 		}
 
@@ -68,7 +104,8 @@ export async function getDashboardOverview(address: string): Promise<DashboardOv
 		const feesPaid =
 			tokensCreated * FEES.tokenCreate +
 			multisendCount * FEES.multisend +
-			lockCount * FEES.tokenLock;
+			lockCount * FEES.tokenLock +
+			launchCount * FEES.launchCreate;
 
 		return {
 			tokensCreated,
@@ -77,6 +114,10 @@ export async function getDashboardOverview(address: string): Promise<DashboardOv
 			totalFeesPaid: feesPaid,
 			multisendCount,
 			lockCount,
+			launchCount,
+			watchlistCount,
+			unreadAlerts,
+			displayName: profileRow?.displayName ?? null,
 		};
 	} catch (err) {
 		console.error("[dashboard] getDashboardOverview failed:", err);

@@ -4,6 +4,8 @@ import { ArrowDownIcon, ArrowUpIcon, CoinsIcon, UsersIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import type { TokenWithStats } from "@/actions/dashboard";
+import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 
 const formatter = new Intl.NumberFormat("en-US");
 
@@ -15,16 +17,18 @@ interface MyTokensProps {
 export function MyTokens({ tokens, onSelectToken }: MyTokensProps) {
 	if (tokens.length === 0) {
 		return (
-			<div className="py-12 text-center">
-				<CoinsIcon className="mx-auto mb-3 size-8 text-smoke-dark" />
-				<p className="text-sm text-smoke-dark">No tokens yet</p>
-				<Link
-					href="/create"
-					className="mt-3 inline-block rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-				>
-					Create your first token
-				</Link>
-			</div>
+			<EmptyState
+				icon={<CoinsIcon className="size-8" />}
+				title="No tokens yet"
+				description="Deploy your first TIP-20 token to get started."
+				action={
+					<Link href="/create">
+						<Button className="bg-primary text-primary-foreground hover:bg-primary/90">
+							Create your first token
+						</Button>
+					</Link>
+				}
+			/>
 		);
 	}
 
