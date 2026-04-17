@@ -7,6 +7,7 @@ import { indexClaimEvents } from "./index-claims";
 import { indexLaunchEvents } from "./index-launches";
 import { indexLockEvents } from "./index-locks";
 import { indexMultisendEvents } from "./index-multisends";
+import { indexTip20Events } from "./index-tip20";
 import { indexTokenEvents } from "./index-tokens";
 import { indexTransferEvents } from "./index-transfers";
 
@@ -30,11 +31,15 @@ interface ContractIndexer {
 }
 
 const contracts: ContractIndexer[] = [
+	// FORJA factory first so FORJA tokens land in `tokens` table before the
+	// broader TIP20 sweep. Order matters because tip20-factory uses
+	// ON CONFLICT DO NOTHING and must not overwrite forja / launchpad rows.
 	{ name: "token-factory", index: indexTokenEvents },
 	{ name: "multisend", index: indexMultisendEvents },
 	{ name: "locker", index: indexLockEvents },
 	{ name: "claimer", index: indexClaimEvents },
 	{ name: "launchpad", index: indexLaunchEvents },
+	{ name: "tip20-factory", index: indexTip20Events },
 	{ name: "transfers", chunkSize: TRANSFER_CHUNK_SIZE, index: indexTransferEvents },
 ];
 

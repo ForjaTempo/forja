@@ -5,7 +5,32 @@ import {
 	FORJA_MULTISEND_ADDRESS,
 	FORJA_TOKEN_FACTORY_ADDRESS,
 	PATHUSDC_ADDRESS,
+	TIP20_FACTORY_ADDRESS,
 } from "./constants";
+
+/**
+ * Tempo TIP20 factory precompile (0x20Fc...). Emits `TokenCreated` when any wallet
+ * deploys a new TIP-20 via the precompile. Used by Phase Data-1 to discover all
+ * tokens on Tempo (not just FORJA-created ones).
+ *
+ * Source: docs.tempo.xyz/protocol/tip20/spec
+ */
+export const tip20FactoryConfig = {
+	address: TIP20_FACTORY_ADDRESS,
+	abi: [
+		{
+			type: "event",
+			name: "TokenCreated",
+			inputs: [
+				{ name: "token", type: "address", indexed: true },
+				{ name: "creator", type: "address", indexed: true },
+				{ name: "name", type: "string", indexed: false },
+				{ name: "symbol", type: "string", indexed: false },
+				{ name: "decimals", type: "uint8", indexed: false },
+			],
+		},
+	],
+} as const;
 
 export const pathusdcConfig = {
 	address: PATHUSDC_ADDRESS,
