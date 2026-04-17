@@ -129,8 +129,8 @@ export function TokenAnalytics({
 						<AreaChart data={chartData}>
 							<defs>
 								<linearGradient id="holderGradient" x1="0" y1="0" x2="0" y2="1">
-									<stop offset="5%" stopColor="#E8A317" stopOpacity={0.3} />
-									<stop offset="95%" stopColor="#E8A317" stopOpacity={0} />
+									<stop offset="5%" stopColor="#5b6ada" stopOpacity={0.3} />
+									<stop offset="95%" stopColor="#5b6ada" stopOpacity={0} />
 								</linearGradient>
 							</defs>
 							<CartesianGrid strokeDasharray="3 3" stroke="#333" />
@@ -140,8 +140,10 @@ export function TokenAnalytics({
 							<Area
 								type="monotone"
 								dataKey="holders"
-								stroke="#E8A317"
+								stroke="#5b6ada"
 								fill="url(#holderGradient)"
+								animationDuration={1200}
+								animationEasing="ease-out"
 							/>
 						</AreaChart>
 					</ResponsiveContainer>
@@ -154,7 +156,13 @@ export function TokenAnalytics({
 							<XAxis dataKey="date" tick={{ fill: "#6B7280", fontSize: 11 }} />
 							<YAxis tick={{ fill: "#6B7280", fontSize: 11 }} />
 							<Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
-							<Bar dataKey="volume" fill="#D1D5DB" radius={[4, 4, 0, 0]} />
+							<Bar
+								dataKey="volume"
+								fill="#5b6ada"
+								radius={[4, 4, 0, 0]}
+								animationDuration={1000}
+								animationBegin={50}
+							/>
 						</BarChart>
 					</ResponsiveContainer>
 				</ChartWrapper>
@@ -169,9 +177,10 @@ export function TokenAnalytics({
 							<Line
 								type="monotone"
 								dataKey="transfers"
-								stroke="#E8A317"
+								stroke="#5b6ada"
 								name="Transfers"
 								dot={false}
+								animationDuration={800}
 							/>
 						</LineChart>
 					</ResponsiveContainer>

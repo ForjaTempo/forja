@@ -2,7 +2,7 @@
 
 import type { CreatorProfile } from "@forja/db";
 import { GlobeIcon, Loader2Icon, SaveIcon, XIcon } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useDeferredValue, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { upsertCreatorProfile } from "@/actions/profile";
 import { ProfilePreview } from "@/components/profile/profile-preview";
@@ -99,6 +99,16 @@ export function ProfileForm({ address, existing }: ProfileFormProps) {
 		[displayName, bio, website, twitterHandle, telegramHandle],
 	);
 	const hasErrors = Object.keys(errors).length > 0;
+
+	// Defer the preview render so keystroke latency stays snappy while the preview
+	// catches up when the main thread is idle. Avatar + banner URLs come from
+	// ImageUpload which only flips on successful upload (not per-keystroke) — no
+	// need to defer those.
+	const deferredName = useDeferredValue(displayName);
+	const deferredBio = useDeferredValue(bio);
+	const deferredWebsite = useDeferredValue(website);
+	const deferredTwitter = useDeferredValue(twitterHandle);
+	const deferredTelegram = useDeferredValue(telegramHandle);
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -261,18 +271,18 @@ export function ProfileForm({ address, existing }: ProfileFormProps) {
 				</Button>
 			</form>
 
-			{/* Live Preview — sticky on desktop */}
+			{/* Live Preview — sticky on desktop, deferred re-renders for snappy input */}
 			<aside className="lg:col-span-2">
 				<div className="lg:sticky lg:top-20">
 					<ProfilePreview
 						address={address}
-						displayName={displayName}
-						bio={bio}
+						displayName={deferredName}
+						bio={deferredBio}
 						avatarUrl={avatarUrl}
 						bannerUrl={bannerUrl}
-						website={website}
-						twitterHandle={twitterHandle.replace(/^@/, "")}
-						telegramHandle={telegramHandle.replace(/^@/, "")}
+						website={deferredWebsite}
+						twitterHandle={deferredTwitter.replace(/^@/, "")}
+						telegramHandle={deferredTelegram.replace(/^@/, "")}
 					/>
 				</div>
 			</aside>
