@@ -2,15 +2,20 @@
 
 import type { TokenHubCache, TokenTransfer } from "@forja/db";
 import { useQuery } from "@tanstack/react-query";
+import { ChevronRightIcon } from "lucide-react";
+import Link from "next/link";
 import { useCallback, useState } from "react";
 import { getTokenDetail, getTokenHolderDistribution, getTokenTransfers } from "@/actions/token-hub";
 import { getTokenTrustSignals } from "@/actions/trust-signals";
 import { PageContainer } from "@/components/layout/page-container";
 import { ShareButtons } from "@/components/shared/share-buttons";
 import { LiquidityGuidance } from "@/components/token-detail/liquidity-guidance";
+import { ConcentrationWarning } from "@/components/token-hub/concentration-warning";
 import { HolderDistribution } from "@/components/token-hub/holder-distribution";
+import { LaunchpadLink } from "@/components/token-hub/launchpad-link";
 import { TokenActivity } from "@/components/token-hub/token-activity";
 import { TokenOverview } from "@/components/token-hub/token-overview";
+import { TransferVolumeChart } from "@/components/token-hub/transfer-volume-chart";
 import { WatchlistButton } from "@/components/token-hub/watchlist-button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { APP_URL } from "@/lib/constants";
@@ -79,12 +84,32 @@ export function TokenDetailClient({
 	return (
 		<PageContainer className="py-8 sm:py-12">
 			<div className="space-y-8">
+				{/* Breadcrumb */}
+				<nav className="flex items-center gap-1.5 text-xs text-smoke-dark">
+					<Link href="/" className="hover:text-smoke">
+						Home
+					</Link>
+					<ChevronRightIcon className="size-3" />
+					<Link href="/tokens" className="hover:text-smoke">
+						Tokens
+					</Link>
+					<ChevronRightIcon className="size-3" />
+					<span className="font-medium text-steel-white">{token.symbol}</span>
+				</nav>
+
 				<div className="flex items-start justify-between gap-4">
 					<div className="flex-1">
 						<TokenOverview token={token} trustSignals={trustSignals} />
 					</div>
 					<WatchlistButton tokenAddress={token.address} className="mt-1" />
 				</div>
+
+				{/* State signals */}
+				<ConcentrationWarning topHolderPct={token.topHolderPct} />
+				{token.isLaunchpadToken && <LaunchpadLink tokenAddress={token.address} />}
+
+				{/* Transfer activity chart */}
+				<TransferVolumeChart tokenAddress={token.address} />
 
 				<Tabs defaultValue="holders">
 					<TabsList className="border-b border-anvil-gray-light bg-transparent">
