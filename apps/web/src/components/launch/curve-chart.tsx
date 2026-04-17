@@ -94,8 +94,8 @@ export function CurveChart({ realTokensSold, realUsdcRaised, graduated }: CurveC
 						<AreaChart data={data} margin={{ top: 5, right: 5, bottom: 5, left: 5 }}>
 							<defs>
 								<linearGradient id="curveGradient" x1="0" y1="0" x2="0" y2="1">
-									<stop offset="0%" stopColor="#E8A317" stopOpacity={0.4} />
-									<stop offset="100%" stopColor="#E8A317" stopOpacity={0.05} />
+									<stop offset="0%" stopColor="#5b6ada" stopOpacity={0.4} />
+									<stop offset="100%" stopColor="#5b6ada" stopOpacity={0.05} />
 								</linearGradient>
 							</defs>
 							<XAxis
@@ -122,7 +122,7 @@ export function CurveChart({ realTokensSold, realUsdcRaised, graduated }: CurveC
 									return (
 										<div className="rounded border border-anvil-gray-light bg-obsidian-black p-2 text-xs">
 											<p className="text-smoke-dark">{d.percentSold}% sold</p>
-											<p className="text-molten-amber">${d.price.toFixed(6)}</p>
+											<p className="text-indigo">${d.price.toFixed(6)}</p>
 											<p className="text-smoke-dark">${d.usdcRaised.toLocaleString()} raised</p>
 										</div>
 									);
@@ -144,19 +144,19 @@ export function CurveChart({ realTokensSold, realUsdcRaised, graduated }: CurveC
 							)}
 							<ReferenceLine
 								x={Math.round(currentPctSold)}
-								stroke="#E8A317"
+								stroke="#5b6ada"
 								strokeWidth={2}
 								label={{
 									value: `$${currentPrice.toFixed(6)}`,
 									position: "top",
-									fill: "#E8A317",
+									fill: "#5b6ada",
 									fontSize: 10,
 								}}
 							/>
 							<Area
 								type="monotone"
 								dataKey="price"
-								stroke="#E8A317"
+								stroke="#5b6ada"
 								strokeWidth={2}
 								fill="url(#curveGradient)"
 								dot={false}

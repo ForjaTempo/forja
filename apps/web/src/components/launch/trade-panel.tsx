@@ -2,11 +2,12 @@
 
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { ChevronDownIcon, ChevronUpIcon, WalletIcon } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { formatUnits, parseUnits } from "viem";
 import { useAccount, useReadContract, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { triggerConfetti } from "@/components/ui/confetti";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TransactionStatus } from "@/components/ui/transaction-status";
@@ -229,6 +230,22 @@ export function TradePanel({
 		error: sellError,
 		showConfirmedToast: true,
 	});
+
+	const confettiFiredRef = useRef<string | null>(null);
+
+	useEffect(() => {
+		if (isBuySuccess && buyTxHash && confettiFiredRef.current !== buyTxHash) {
+			confettiFiredRef.current = buyTxHash;
+			triggerConfetti();
+		}
+	}, [isBuySuccess, buyTxHash]);
+
+	useEffect(() => {
+		if (isSellSuccess && sellTxHash && confettiFiredRef.current !== sellTxHash) {
+			confettiFiredRef.current = sellTxHash;
+			triggerConfetti();
+		}
+	}, [isSellSuccess, sellTxHash]);
 
 	useEffect(() => {
 		if (isBuySuccess || isSellSuccess) {
