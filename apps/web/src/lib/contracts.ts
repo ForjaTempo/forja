@@ -9,9 +9,9 @@ import {
 } from "./constants";
 
 /**
- * ForjaSwapRouter event ABI — used by the indexer to parse SwapExecuted logs.
- * Full surface (read methods, write methods, errors) lives in the on-chain
- * contract; only the indexed event signature is needed off-chain.
+ * ForjaSwapRouter — event ABI for the indexer + the swap entry point used by
+ * the UI. Owner-only ops (setFee*, pause, rescueToken) are intentionally
+ * omitted; admin actions go through Foundry scripts, not the web app.
  */
 export const swapRouterConfig = {
 	address: FORJA_SWAP_ROUTER_ADDRESS,
@@ -27,6 +27,61 @@ export const swapRouterConfig = {
 				{ name: "amountOut", type: "uint256", indexed: false },
 				{ name: "feeAmount", type: "uint256", indexed: false },
 			],
+		},
+		{
+			type: "function",
+			name: "swapExactInputSingle",
+			stateMutability: "nonpayable",
+			inputs: [
+				{
+					name: "params",
+					type: "tuple",
+					components: [
+						{
+							name: "poolKey",
+							type: "tuple",
+							components: [
+								{ name: "currency0", type: "address" },
+								{ name: "currency1", type: "address" },
+								{ name: "fee", type: "uint24" },
+								{ name: "tickSpacing", type: "int24" },
+								{ name: "hooks", type: "address" },
+							],
+						},
+						{ name: "zeroForOne", type: "bool" },
+						{ name: "amountIn", type: "uint256" },
+						{ name: "minAmountOut", type: "uint256" },
+						{ name: "sqrtPriceLimitX96", type: "uint160" },
+						{ name: "deadline", type: "uint256" },
+						{ name: "hookData", type: "bytes" },
+					],
+				},
+				{
+					name: "permit",
+					type: "tuple",
+					components: [
+						{
+							name: "permitted",
+							type: "tuple",
+							components: [
+								{ name: "token", type: "address" },
+								{ name: "amount", type: "uint256" },
+							],
+						},
+						{ name: "nonce", type: "uint256" },
+						{ name: "deadline", type: "uint256" },
+					],
+				},
+				{ name: "signature", type: "bytes" },
+			],
+			outputs: [{ name: "amountOut", type: "uint256" }],
+		},
+		{
+			type: "function",
+			name: "feeBps",
+			stateMutability: "view",
+			inputs: [],
+			outputs: [{ type: "uint256" }],
 		},
 	],
 } as const;

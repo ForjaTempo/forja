@@ -27,6 +27,7 @@ import { LiveTradeFeed } from "@/components/launch/live-trade-feed";
 import { TerminatedBanner } from "@/components/launch/terminated-banner";
 import { TradePanel } from "@/components/launch/trade-panel";
 import { PageContainer } from "@/components/layout/page-container";
+import { SwapCta } from "@/components/swap/swap-cta";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getExplorerUrl, TEMPO_CHAIN_ID, TIP20_DECIMALS } from "@/lib/constants";
@@ -264,6 +265,22 @@ export function LaunchDetailClient({ initialLaunch, initialTrades }: Props) {
 								failed={launch.failed}
 								onTradeSuccess={handleTradeSuccess}
 							/>
+						)}
+
+						{/* Post-graduation trading flows through the Uniswap v4 router. */}
+						{launch.graduated && (
+							<Card className="border-indigo/30 bg-indigo/5">
+								<CardHeader className="pb-2">
+									<CardTitle className="text-sm text-steel-white">Trade {launch.symbol}</CardTitle>
+								</CardHeader>
+								<CardContent className="space-y-3 text-xs text-smoke">
+									<p>
+										This launch graduated to Uniswap v4. Trade it through the FORJA swap router —
+										best route, transparent 0.25% fee.
+									</p>
+									<SwapCta tokenAddress={launch.tokenAddress} className="w-full justify-center" />
+								</CardContent>
+							</Card>
 						)}
 
 						{/* User Position */}

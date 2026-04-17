@@ -22,6 +22,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuthGate } from "@/contexts/auth-context";
+import { hasSwap } from "@/lib/constants";
 import { hasLaunchpad } from "@/lib/contracts";
 import { ClaimsHistory } from "./claims-history";
 import { DashboardOverview } from "./dashboard-overview";
@@ -29,6 +30,7 @@ import { LockHistory } from "./lock-history";
 import { MultisendHistory } from "./multisend-history";
 import { MyTokens } from "./my-tokens";
 import { NotConnectedHero } from "./not-connected-hero";
+import { SwapsHistory } from "./swaps-history";
 import { TokenAnalytics } from "./token-analytics";
 import { UnlockCalendar } from "./unlock-calendar";
 import { WatchlistTab } from "./watchlist-tab";
@@ -170,6 +172,11 @@ export function DashboardClient() {
 						<TabsTrigger value="claims" className="text-smoke data-[state=active]:text-indigo">
 							Claims ({claims.length})
 						</TabsTrigger>
+						{hasSwap && (
+							<TabsTrigger value="swaps" className="text-smoke data-[state=active]:text-indigo">
+								Swaps
+							</TabsTrigger>
+						)}
 						<TabsTrigger value="watchlist" className="text-smoke data-[state=active]:text-indigo">
 							Watchlist ({watchlistTokens.length})
 						</TabsTrigger>
@@ -241,6 +248,12 @@ export function DashboardClient() {
 					<TabsContent value="claims" className="mt-6">
 						<ClaimsHistory campaigns={claims} />
 					</TabsContent>
+
+					{hasSwap && (
+						<TabsContent value="swaps" className="mt-6">
+							<SwapsHistory />
+						</TabsContent>
+					)}
 
 					<TabsContent value="watchlist" className="mt-6">
 						{needsAuth ? (

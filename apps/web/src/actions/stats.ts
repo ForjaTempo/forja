@@ -13,6 +13,7 @@ export async function getGlobalStats() {
 			[claimResult],
 			[launchResult],
 			[creatorResult],
+			[swapResult],
 		] = await Promise.all([
 			db.select({ value: count() }).from(schema.tokens),
 			db.select({ value: count() }).from(schema.multisends),
@@ -20,6 +21,7 @@ export async function getGlobalStats() {
 			db.select({ value: count() }).from(schema.claimCampaigns),
 			db.select({ value: count() }).from(schema.launches),
 			db.select({ value: countDistinct(schema.tokens.creatorAddress) }).from(schema.tokens),
+			db.select({ value: count() }).from(schema.swaps),
 		]);
 
 		return {
@@ -29,6 +31,7 @@ export async function getGlobalStats() {
 			claimCampaigns: claimResult?.value ?? 0,
 			launchesCount: launchResult?.value ?? 0,
 			uniqueCreators: creatorResult?.value ?? 0,
+			swapsCount: swapResult?.value ?? 0,
 		};
 	} catch (err) {
 		console.error("[actions] getGlobalStats failed:", err);
@@ -39,6 +42,7 @@ export async function getGlobalStats() {
 			claimCampaigns: 0,
 			launchesCount: 0,
 			uniqueCreators: 0,
+			swapsCount: 0,
 		};
 	}
 }

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAccount } from "wagmi";
+import { hasSwap } from "@/lib/constants";
 import { hasClaimer, hasLaunchpad } from "@/lib/contracts";
 import { cn } from "@/lib/utils";
 import { ConnectButton } from "./connect-button";
@@ -15,6 +16,7 @@ const baseNavLinks = [
 	{ href: "/lock", label: "Lock" },
 	...(hasClaimer ? [{ href: "/claim/create", label: "Claim" }] : []),
 	...(hasLaunchpad ? [{ href: "/launch", label: "Launch" }] : []),
+	...(hasSwap ? [{ href: "/swap", label: "Swap" }] : []),
 	{ href: "/tokens", label: "Tokens" },
 ];
 
@@ -50,7 +52,8 @@ export function Header() {
 										(link.href === "/profile" && pathname.startsWith("/profile")) ||
 										(link.href === "/claim/create" && pathname.startsWith("/claim")) ||
 										(link.href === "/launch" && pathname.startsWith("/launch")) ||
-										(link.href === "/tokens" && pathname.startsWith("/tokens"))
+										(link.href === "/tokens" && pathname.startsWith("/tokens")) ||
+										(link.href === "/swap" && pathname.startsWith("/swap"))
 										? "bg-surface-field text-indigo"
 										: "text-smoke hover:text-steel-white",
 								)}
