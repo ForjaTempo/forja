@@ -3,6 +3,8 @@
 import { getDb, schema } from "@forja/db";
 import { and, count, desc, eq, gte, ilike, inArray, or, sql } from "drizzle-orm";
 import { isAddress } from "viem";
+import { LAUNCH_TAG_SET, MAX_LAUNCH_TAGS } from "@/lib/launch-tags";
+import { requireAuth } from "@/lib/session";
 
 // ─── Types ───
 
@@ -13,6 +15,7 @@ interface LaunchListParams {
 	sort?: LaunchSortOption;
 	status?: "active" | "graduated" | "failed";
 	creator?: string;
+	tags?: string[];
 	offset?: number;
 	limit?: number;
 }
@@ -48,6 +51,7 @@ export async function getLaunches({
 	sort = "newest",
 	status,
 	creator,
+	tags,
 	offset = 0,
 	limit = 20,
 }: LaunchListParams = {}): Promise<{ launches: LaunchListItem[]; total: number }> {
@@ -67,6 +71,14 @@ export async function getLaunches({
 
 		if (creator && isAddress(creator)) {
 			conditions.push(eq(schema.launches.creatorAddress, creator.toLowerCase()));
+		}
+
+		// Tag filter: launch tags must contain ALL requested tags (@>)
+		if (tags && tags.length > 0) {
+			const validTags = tags.filter((t) => LAUNCH_TAG_SET.has(t));
+			if (validTags.length > 0) {
+				conditions.push(sql`${schema.launches.tags} @> ${validTags}::text[]`);
+			}
 		}
 
 		if (search?.trim()) {
@@ -445,6 +457,84 @@ export async function getUserLaunchPosition(
 		console.error("[launches] getUserLaunchPosition failed:", err);
 		return null;
 	}
+}
+
+// ─── Save launch social + tags metadata (creator-only, after launch creation) ───
+
+export interface SaveLaunchMetadataInput {
+	launchDbId: number;
+	website?: string;
+	twitterHandle?: string;
+	telegramHandle?: string;
+	discordHandle?: string;
+	tags?: string[];
+}
+
+function normalizeUrl(raw: string | undefined): string | null {
+	if (!raw?.trim()) return null;
+	const trimmed = raw.trim();
+	if (trimmed.length > 200) return null;
+	try {
+		const url = new URL(trimmed.startsWith("http") ? trimmed : `https://${trimmed}`);
+		if (url.protocol !== "http:" && url.protocol !== "https:") return null;
+		return url.toString();
+	} catch {
+		return null;
+	}
+}
+
+function normalizeHandle(raw: string | undefined): string | null {
+	if (!raw?.trim()) return null;
+	const trimmed = raw.trim().replace(/^@/, "");
+	if (trimmed.length > 100) return null;
+	if (!/^[\w.\-/:]+$/.test(trimmed)) return null;
+	return trimmed;
+}
+
+export async function saveLaunchMetadata(
+	input: SaveLaunchMetadataInput,
+): Promise<{ ok: boolean; error?: string }> {
+	if (!Number.isFinite(input.launchDbId) || input.launchDbId <= 0) {
+		return { ok: false, error: "Invalid launch id" };
+	}
+
+	const db = getDb();
+	const [launch] = await db
+		.select({ creatorAddress: schema.launches.creatorAddress })
+		.from(schema.launches)
+		.where(eq(schema.launches.id, input.launchDbId))
+		.limit(1);
+
+	if (!launch) return { ok: false, error: "Launch not found" };
+
+	const auth = await requireAuth(launch.creatorAddress);
+	if (!auth.ok) return auth;
+
+	const website = input.website !== undefined ? normalizeUrl(input.website) : undefined;
+	const twitter =
+		input.twitterHandle !== undefined ? normalizeHandle(input.twitterHandle) : undefined;
+	const telegram =
+		input.telegramHandle !== undefined ? normalizeHandle(input.telegramHandle) : undefined;
+	const discord =
+		input.discordHandle !== undefined ? normalizeHandle(input.discordHandle) : undefined;
+
+	const rawTags = input.tags ?? [];
+	const cleanTags = Array.from(new Set(rawTags.filter((t) => LAUNCH_TAG_SET.has(t)))).slice(
+		0,
+		MAX_LAUNCH_TAGS,
+	);
+
+	const update: Partial<typeof schema.launches.$inferInsert> = {
+		tags: cleanTags,
+	};
+	if (website !== undefined) update.website = website;
+	if (twitter !== undefined) update.twitterHandle = twitter;
+	if (telegram !== undefined) update.telegramHandle = telegram;
+	if (discord !== undefined) update.discordHandle = discord;
+
+	await db.update(schema.launches).set(update).where(eq(schema.launches.id, input.launchDbId));
+
+	return { ok: true };
 }
 
 // ─── On-chain launchId → DB id lookup (for post-create navigation) ───

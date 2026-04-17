@@ -1,7 +1,15 @@
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeftIcon, ExternalLinkIcon, RocketIcon } from "lucide-react";
+import {
+	ArrowLeftIcon,
+	ExternalLinkIcon,
+	GlobeIcon,
+	MessageCircleIcon,
+	RocketIcon,
+	SendIcon,
+	XIcon as TwitterIcon,
+} from "lucide-react";
 import Link from "next/link";
 import { useCallback } from "react";
 import { useAccount, useReadContract } from "wagmi";
@@ -17,6 +25,7 @@ import { GraduationProgress } from "@/components/launch/graduation-progress";
 import { TradeHistory } from "@/components/launch/trade-history";
 import { TradePanel } from "@/components/launch/trade-panel";
 import { PageContainer } from "@/components/layout/page-container";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getExplorerUrl, TEMPO_CHAIN_ID, TIP20_DECIMALS } from "@/lib/constants";
 import { erc20Abi } from "@/lib/contracts";
@@ -122,6 +131,15 @@ export function LaunchDetailClient({ initialLaunch, initialTrades }: Props) {
 								${launch.symbol}
 								{launch.creatorDisplayName && <span> by {launch.creatorDisplayName}</span>}
 							</p>
+							{launch.tags && launch.tags.length > 0 && (
+								<div className="mt-2 flex flex-wrap gap-1.5">
+									{launch.tags.map((tag) => (
+										<Badge key={tag} variant="outline" className="text-xs">
+											{tag}
+										</Badge>
+									))}
+								</div>
+							)}
 						</div>
 					</div>
 
@@ -144,6 +162,8 @@ export function LaunchDetailClient({ initialLaunch, initialTrades }: Props) {
 						</a>
 					</div>
 				</div>
+
+				<SocialLinksRow launch={launch} />
 
 				{/* Main Grid */}
 				<div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -207,8 +227,8 @@ export function LaunchDetailClient({ initialLaunch, initialTrades }: Props) {
 						/>
 					</div>
 
-					{/* Right Column (1/3) */}
-					<div className="space-y-6">
+					{/* Right Column (1/3) — sticky on desktop */}
+					<div className="space-y-6 lg:sticky lg:top-20 lg:self-start">
 						{/* Graduation Progress */}
 						<GraduationProgress
 							realUsdcRaised={launch.realUsdcRaised}
@@ -305,5 +325,62 @@ function InfoRow({ label, value, mono }: { label: string; value: string; mono?: 
 				{mono && value.startsWith("0x") ? shortenAddress(value) : value}
 			</span>
 		</div>
+	);
+}
+
+function SocialLinksRow({ launch }: { launch: LaunchDetail }) {
+	const { website, twitterHandle, telegramHandle, discordHandle } = launch;
+	const hasAny = website || twitterHandle || telegramHandle || discordHandle;
+	if (!hasAny) return null;
+
+	const twitterUrl = twitterHandle ? `https://x.com/${twitterHandle}` : null;
+	const telegramUrl = telegramHandle
+		? telegramHandle.startsWith("http")
+			? telegramHandle
+			: `https://t.me/${telegramHandle.replace(/^@/, "")}`
+		: null;
+	const discordUrl = discordHandle
+		? discordHandle.startsWith("http")
+			? discordHandle
+			: `https://discord.gg/${discordHandle}`
+		: null;
+
+	return (
+		<div className="flex flex-wrap items-center gap-2">
+			{website && (
+				<SocialLink href={website} label="Website" icon={<GlobeIcon className="size-3.5" />} />
+			)}
+			{twitterUrl && (
+				<SocialLink
+					href={twitterUrl}
+					label={`@${twitterHandle}`}
+					icon={<TwitterIcon className="size-3.5" />}
+				/>
+			)}
+			{telegramUrl && (
+				<SocialLink href={telegramUrl} label="Telegram" icon={<SendIcon className="size-3.5" />} />
+			)}
+			{discordUrl && (
+				<SocialLink
+					href={discordUrl}
+					label="Discord"
+					icon={<MessageCircleIcon className="size-3.5" />}
+				/>
+			)}
+		</div>
+	);
+}
+
+function SocialLink({ href, label, icon }: { href: string; label: string; icon: React.ReactNode }) {
+	return (
+		<a
+			href={href}
+			target="_blank"
+			rel="noopener noreferrer"
+			className="inline-flex items-center gap-1.5 rounded-md border border-anvil-gray-light bg-anvil-gray/30 px-2.5 py-1 text-xs text-smoke transition-colors hover:border-indigo/60 hover:text-indigo"
+		>
+			{icon}
+			{label}
+		</a>
 	);
 }

@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import {
 	boolean,
 	index,
@@ -289,12 +290,18 @@ export const launches = pgTable(
 		txHash: text("tx_hash").notNull(),
 		blockNumber: integer("block_number").notNull(),
 		createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+		website: text("website"),
+		twitterHandle: text("twitter_handle"),
+		telegramHandle: text("telegram_handle"),
+		discordHandle: text("discord_handle"),
+		tags: text("tags").array().notNull().default(sql`'{}'::text[]`),
 	},
 	(table) => [
 		unique("launches_contract_launch_id_idx").on(table.contractAddress, table.launchId),
 		index("launches_creator_address_idx").on(table.creatorAddress),
 		index("launches_token_address_idx").on(table.tokenAddress),
 		index("launches_graduated_idx").on(table.graduated),
+		index("launches_tags_gin_idx").using("gin", table.tags),
 	],
 );
 
