@@ -52,7 +52,8 @@ export const CLAIMER_DEPLOY_TIMESTAMP = Number(process.env.CLAIMER_DEPLOY_TIMEST
 export const CANARY_WINDOW_SECONDS = 7 * 24 * 60 * 60;
 
 export const APP_NAME = "FORJA";
-export const APP_DESCRIPTION = "Token toolkit for Tempo blockchain";
+export const APP_DESCRIPTION =
+	"Create, send, lock, claim, and launch tokens on Tempo blockchain — the all-in-one token platform.";
 export const APP_URL = "https://forja.fun";
 
 if (typeof window === "undefined") {
