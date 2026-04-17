@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 
 export const runtime = "nodejs";
-export const alt = "FORJA — Create. Send. Lock. Token Toolkit for Tempo";
+export const alt = "FORJA — Create. Send. Lock. Claim. Launch. Token Platform for Tempo";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -36,7 +36,7 @@ export default function OgImage() {
 					marginTop: 16,
 				}}
 			>
-				Create. Send. Lock.
+				Create. Send. Lock. Claim. Launch.
 			</div>
 			<div
 				style={{
@@ -45,7 +45,7 @@ export default function OgImage() {
 					marginTop: 12,
 				}}
 			>
-				Token Toolkit for Tempo Blockchain
+				All-in-one Token Platform for Tempo
 			</div>
 		</div>,
 		{ ...size },

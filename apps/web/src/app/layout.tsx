@@ -22,13 +22,23 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
 	title: {
 		template: `%s | ${APP_NAME}`,
-		default: `${APP_NAME} — Create. Send. Lock. | Token Toolkit for Tempo`,
+		default: `${APP_NAME} — Create. Send. Lock. Claim. Launch. | Token Platform for Tempo`,
 	},
 	description: APP_DESCRIPTION,
 	metadataBase: new URL(APP_URL),
-	keywords: ["tempo", "blockchain", "token", "TIP-20", "multisend", "token lock", "vesting"],
+	keywords: [
+		"tempo",
+		"blockchain",
+		"token",
+		"TIP-20",
+		"multisend",
+		"token lock",
+		"vesting",
+		"claim",
+		"launchpad",
+	],
 	openGraph: {
-		title: `${APP_NAME} — Create. Send. Lock.`,
+		title: `${APP_NAME} — Create. Send. Lock. Claim. Launch.`,
 		description: APP_DESCRIPTION,
 		url: APP_URL,
 		siteName: APP_NAME,
@@ -36,7 +46,7 @@ export const metadata: Metadata = {
 	},
 	twitter: {
 		card: "summary_large_image",
-		title: `${APP_NAME} — Create. Send. Lock.`,
+		title: `${APP_NAME} — Create. Send. Lock. Claim. Launch.`,
 		description: APP_DESCRIPTION,
 	},
 };
