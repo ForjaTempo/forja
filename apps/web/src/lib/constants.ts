@@ -31,6 +31,17 @@ export const FORJA_LAUNCHPAD_ADDRESS = (process.env.NEXT_PUBLIC_FORJA_LAUNCHPAD 
 export const hasLaunchpad =
 	FORJA_LAUNCHPAD_ADDRESS !== "0x" && process.env.NEXT_PUBLIC_LAUNCHPAD_ENABLED === "true";
 
+export const FORJA_SWAP_ROUTER_ADDRESS = (process.env.NEXT_PUBLIC_FORJA_SWAP_ROUTER ??
+	"0x") as `0x${string}`;
+export const hasSwap =
+	FORJA_SWAP_ROUTER_ADDRESS !== "0x" && process.env.NEXT_PUBLIC_SWAP_ENABLED === "true";
+
+// Tempo Uniswap v4 + Permit2 (used by ForjaSwapRouter and the off-chain quoter)
+export const POOL_MANAGER_ADDRESS = "0x33620f62c5b9b2086dd6b62f4a297a9f30347029" as const;
+export const PERMIT2_ADDRESS = "0x000000000022D473030F116dDEE9F6B43aC78BA3" as const;
+/** Protocol fee skimmed by ForjaSwapRouter, in basis points (10000 = 100%). */
+export const SWAP_FEE_BPS = 25;
+
 export const TIP20_DECIMALS = 6;
 
 export const FEES = {
