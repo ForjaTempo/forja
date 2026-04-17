@@ -8,8 +8,12 @@ const transferEvent = parseAbiItem(
 	"event Transfer(address indexed from, address indexed to, uint256 value)",
 );
 
-/** Max token addresses per getLogs call. */
-const ADDRESS_BATCH_SIZE = 50;
+/** Max token addresses per getLogs call.
+ *  Tempo RPC returns "Request exceeds defined limit" around 50 addresses —
+ *  likely a response-size cap on aggregated logs across a 10k block range.
+ *  10 is the safe ceiling; tuning lower further would multiply RPC calls
+ *  for no gain. */
+const ADDRESS_BATCH_SIZE = 10;
 
 /** Max transfer rows per DB insert batch. */
 const INSERT_BATCH_SIZE = 500;
