@@ -105,6 +105,7 @@ export async function syncTokenList(): Promise<{ synced: number }> {
 			topHolderPct: topHolderPctMap.get(addr) ?? 0,
 			logoUri: t.logoURI ?? null,
 			isForjaCreated: isForja,
+			source: isForja ? "forja" : "token_list",
 			lastSyncedAt: now,
 			createdAt: forjaToken?.createdAt ?? now,
 		});
@@ -128,6 +129,7 @@ export async function syncTokenList(): Promise<{ synced: number }> {
 			topHolderPct: topHolderPctMap.get(addr) ?? 0,
 			logoUri: null,
 			isForjaCreated: true,
+			source: "forja",
 			lastSyncedAt: now,
 			createdAt: ft.createdAt,
 		});
@@ -154,6 +156,9 @@ export async function syncTokenList(): Promise<{ synced: number }> {
 					logoUri: sql`CASE WHEN token_hub_cache.logo_source = 'user_upload' THEN token_hub_cache.logo_uri ELSE EXCLUDED.logo_uri END`,
 					logoSource: sql`CASE WHEN token_hub_cache.logo_source = 'user_upload' THEN token_hub_cache.logo_source WHEN EXCLUDED.logo_uri IS NOT NULL THEN 'token_list' ELSE token_hub_cache.logo_source END`,
 					isForjaCreated: sql`EXCLUDED.is_forja_created`,
+					// Preserve authoritative sources (forja/launchpad/tip20_factory);
+					// only fill in when previous source is NULL or a less-specific value.
+					source: sql`CASE WHEN token_hub_cache.source IN ('forja', 'launchpad', 'tip20_factory') THEN token_hub_cache.source ELSE EXCLUDED.source END`,
 					lastSyncedAt: sql`EXCLUDED.last_synced_at`,
 				},
 			});

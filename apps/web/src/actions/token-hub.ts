@@ -13,7 +13,7 @@ export type SortOption =
 	| "transfers"
 	| "recent_activity";
 
-export type SourceFilter = "all" | "forja" | "launchpad";
+export type SourceFilter = "all" | "forja" | "launchpad" | "external";
 export type StatusFilter = "all" | "new" | "active" | "dormant" | "concentrated";
 
 interface TokenListParams {
@@ -73,6 +73,11 @@ export async function getTokenList({
 			conditions.push(eq(schema.tokenHubCache.isForjaCreated, true));
 		} else if (effectiveSource === "launchpad") {
 			conditions.push(eq(schema.tokenHubCache.isLaunchpadToken, true));
+		} else if (effectiveSource === "external") {
+			// Anything not FORJA-created and not Launchpad-native (covers tip20_factory,
+			// token_list, and other external-origin rows).
+			conditions.push(eq(schema.tokenHubCache.isForjaCreated, false));
+			conditions.push(eq(schema.tokenHubCache.isLaunchpadToken, false));
 		}
 
 		// Status filter
