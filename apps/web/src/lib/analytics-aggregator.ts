@@ -31,19 +31,37 @@ export async function aggregateAnalytics() {
 			.orderBy(sql`${schema.tokenDailyStats.date} DESC`)
 			.limit(1);
 
-		// Start from the day after the last aggregate (or token creation date)
-		const startDate = latest
-			? new Date(new Date(latest.date).getTime() + 86_400_000)
-			: startOfDay(token.createdAt);
+		let startDate: Date;
+		if (latest) {
+			// Resume from the day after the last aggregate we wrote.
+			startDate = new Date(new Date(latest.date).getTime() + 86_400_000);
+		} else {
+			// First pass for this token: start from the earliest transfer we actually
+			// indexed, not from token.createdAt. Tokens discovered via the TIP-20
+			// factory have createdAt set to their on-chain creation block (can be
+			// months ago), but we only indexed transfers in a recent window. Using
+			// createdAt produced rows full of zeros for every day in between.
+			const [firstTransfer] = await db
+				.select({
+					date: sql<Date>`MIN(${schema.tokenTransfers.createdAt})`,
+				})
+				.from(schema.tokenTransfers)
+				.where(eq(schema.tokenTransfers.tokenAddress, token.address));
 
-		// End at start of today (don't aggregate incomplete day)
-		const today = startOfDay(new Date());
+			if (!firstTransfer?.date) continue; // no transfers indexed → skip
+			startDate = startOfDay(firstTransfer.date);
+		}
 
-		if (startDate >= today) continue;
+		// End one day AFTER today so the current day gets aggregated too. Upsert
+		// means re-running the cron safely overwrites today's partial row as more
+		// transfers come in during the day.
+		const tomorrow = new Date(startOfDay(new Date()).getTime() + 86_400_000);
 
-		// Aggregate each missing day
+		if (startDate >= tomorrow) continue;
+
+		// Aggregate each missing day (inclusive of today)
 		const current = new Date(startDate);
-		while (current < today) {
+		while (current < tomorrow) {
 			const dayStart = new Date(current);
 			const dayEnd = new Date(current.getTime() + 86_400_000);
 			// ISO string for raw SQL parameterized queries (Date objects don't serialize correctly in raw sql``)
