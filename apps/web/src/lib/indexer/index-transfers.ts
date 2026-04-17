@@ -83,8 +83,13 @@ export async function indexTransferEvents(
 	fromBlock: bigint,
 	toBlock: bigint,
 ) {
-	// 1. Get all known token addresses from DB
-	const knownTokens = await db.select({ address: schema.tokens.address }).from(schema.tokens);
+	// 1. Get all known token addresses — covers FORJA tokens, launchpad tokens,
+	// and every TIP-20 discovered via the factory indexer. Without this we'd miss
+	// transfers (and therefore holder counts, daily stats, trending score) for
+	// anything that isn't FORJA-created.
+	const knownTokens = await db
+		.select({ address: schema.tokenHubCache.address })
+		.from(schema.tokenHubCache);
 
 	if (knownTokens.length === 0) return 0;
 

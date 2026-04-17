@@ -179,6 +179,13 @@ export const erc20Abi = [
 		],
 		outputs: [{ name: "", type: "bool" }],
 	},
+	{
+		name: "totalSupply",
+		type: "function",
+		stateMutability: "view",
+		inputs: [],
+		outputs: [{ name: "", type: "uint256" }],
+	},
 ] as const;
 
 export const lockerConfig = {

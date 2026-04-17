@@ -5,21 +5,24 @@ import { and, count, eq, gte, lt, sql } from "drizzle-orm";
 export async function aggregateAnalytics() {
 	const db = getDb();
 
-	// Get all FORJA-created tokens
-	const forjaTokens = await db
+	// Aggregate for every token in the hub — FORJA, launchpad, and anything
+	// discovered via the TIP-20 factory indexer. Previously only FORJA tokens
+	// had daily stats, which left the TransferVolumeChart empty for every
+	// external token.
+	const tokens = await db
 		.select({
-			address: schema.tokens.address,
-			createdAt: schema.tokens.createdAt,
+			address: schema.tokenHubCache.address,
+			createdAt: schema.tokenHubCache.createdAt,
 		})
-		.from(schema.tokens);
+		.from(schema.tokenHubCache);
 
-	if (forjaTokens.length === 0) {
+	if (tokens.length === 0) {
 		return { tokensProcessed: 0, daysAggregated: 0 };
 	}
 
 	let totalDays = 0;
 
-	for (const token of forjaTokens) {
+	for (const token of tokens) {
 		// Find the latest aggregated date for this token
 		const [latest] = await db
 			.select({ date: schema.tokenDailyStats.date })
@@ -123,7 +126,7 @@ export async function aggregateAnalytics() {
 		}
 	}
 
-	return { tokensProcessed: forjaTokens.length, daysAggregated: totalDays };
+	return { tokensProcessed: tokens.length, daysAggregated: totalDays };
 }
 
 function startOfDay(date: Date): Date {
