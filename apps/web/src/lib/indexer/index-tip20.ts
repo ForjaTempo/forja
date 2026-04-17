@@ -1,5 +1,6 @@
 import "server-only";
 import { type getDb, schema } from "@forja/db";
+import { and, eq, isNull } from "drizzle-orm";
 import type { PublicClient } from "viem";
 import { TIP20_FACTORY_ADDRESS } from "../constants";
 import { erc20Abi } from "../contracts";
@@ -18,6 +19,10 @@ import { fetchBlockTimestamps } from "./utils";
 const TOKEN_CREATED_TOPIC = "0x44f7b8011db3e3647a530b4ff635726de5fafc8fa8ad10f0f31c0eb9dd52fc65";
 
 const METADATA_BATCH = 8;
+
+/** Max rows per run for the NULL-supply backfill pass. Capped to keep a single
+ *  indexer run bounded — successive runs eventually cover all rows. */
+const SUPPLY_BACKFILL_PER_RUN = 100;
 
 /**
  * Fetch name / symbol / decimals / totalSupply for a freshly discovered token
@@ -146,5 +151,56 @@ export async function indexTip20Events(
 		.values(rows)
 		.onConflictDoNothing({ target: schema.tokenHubCache.address });
 
+	// Backfill totalSupply for rows that existed before the RPC-metadata fetch
+	// was added. These are the 900+ tokens that got ingested in the first
+	// Data-1 pass without a supply read. Capped per run; subsequent runs
+	// continue chipping away.
+	await backfillMissingSupply(db, client);
+
 	return rows.length;
+}
+
+/**
+ * Fetch totalSupply() for tokenHubCache rows where it is currently NULL.
+ * Runs after the main indexer pass — bounded by SUPPLY_BACKFILL_PER_RUN so
+ * one run never starves the other contract indexers.
+ */
+async function backfillMissingSupply(db: ReturnType<typeof getDb>, client: PublicClient) {
+	const candidates = await db
+		.select({ address: schema.tokenHubCache.address })
+		.from(schema.tokenHubCache)
+		.where(
+			and(
+				isNull(schema.tokenHubCache.totalSupply),
+				eq(schema.tokenHubCache.isLaunchpadToken, false),
+			),
+		)
+		.limit(SUPPLY_BACKFILL_PER_RUN);
+
+	if (candidates.length === 0) return;
+
+	for (let i = 0; i < candidates.length; i += METADATA_BATCH) {
+		const batch = candidates.slice(i, i + METADATA_BATCH);
+		const supplies = await Promise.allSettled(
+			batch.map((c) =>
+				client.readContract({
+					address: c.address as `0x${string}`,
+					abi: erc20Abi,
+					functionName: "totalSupply",
+				}),
+			),
+		);
+
+		for (let j = 0; j < batch.length; j++) {
+			const row = batch[j];
+			const res = supplies[j];
+			if (!row || !res || res.status !== "fulfilled") continue;
+			if (typeof res.value !== "bigint") continue;
+
+			await db
+				.update(schema.tokenHubCache)
+				.set({ totalSupply: res.value.toString() })
+				.where(eq(schema.tokenHubCache.address, row.address));
+		}
+	}
 }
