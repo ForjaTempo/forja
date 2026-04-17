@@ -105,7 +105,12 @@ export async function indexTip20Events(
 			blockNumber: l.blockNumber,
 		}));
 
-	if (candidates.length === 0) return 0;
+	if (candidates.length === 0) {
+		// Still run the supply backfill — the only way to make forward progress on
+		// the 900+ historical rows whose totalSupply was NULL at ingestion time.
+		await backfillMissingSupply(db, client);
+		return 0;
+	}
 
 	// Deduplicate within this batch.
 	const uniqueAddresses = Array.from(new Map(candidates.map((c) => [c.address, c])).values());
