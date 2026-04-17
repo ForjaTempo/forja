@@ -1,63 +1,113 @@
 "use client";
 
-import type { TokenHubCache } from "@forja/db";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useState, useTransition } from "react";
-import { getTokenHubStats, getTokenList } from "@/actions/token-hub";
+import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
+import {
+	getTokenHubStats,
+	getTokenList,
+	type SortOption,
+	type SourceFilter,
+	type StatusFilter,
+	type TokenEnriched,
+} from "@/actions/token-hub";
 import { PageContainer } from "@/components/layout/page-container";
 import { TokenFilters } from "@/components/token-hub/token-filters";
 import { TokenGrid } from "@/components/token-hub/token-grid";
 import { TokenSearch } from "@/components/token-hub/token-search";
+import { TrendingRow } from "@/components/token-hub/trending-row";
 import { AnimatedCounter } from "@/components/ui/animated-counter";
 import { PageHeader } from "@/components/ui/page-header";
-
-type SortOption = "newest" | "oldest" | "holders" | "transfers";
+import { LAUNCH_TAG_SET } from "@/lib/launch-tags";
 
 const LIMIT = 20;
-const VALID_SORTS = new Set<string>(["newest", "oldest", "holders", "transfers"]);
 
-function parseSortParam(value: string | null): SortOption {
-	return VALID_SORTS.has(value ?? "") ? (value as SortOption) : "newest";
+const VALID_SORTS = new Set<SortOption>([
+	"trending",
+	"newest",
+	"oldest",
+	"holders",
+	"transfers",
+	"recent_activity",
+]);
+const VALID_SOURCES = new Set<SourceFilter>(["all", "forja", "launchpad"]);
+const VALID_STATUSES = new Set<StatusFilter>(["all", "new", "active", "dormant", "concentrated"]);
+
+function parseSort(value: string | null): SortOption {
+	return VALID_SORTS.has(value as SortOption) ? (value as SortOption) : "newest";
+}
+function parseSource(value: string | null, legacyForja: boolean): SourceFilter {
+	if (VALID_SOURCES.has(value as SourceFilter)) return value as SourceFilter;
+	return legacyForja ? "forja" : "all";
+}
+function parseStatus(value: string | null): StatusFilter {
+	return VALID_STATUSES.has(value as StatusFilter) ? (value as StatusFilter) : "all";
+}
+function parseTags(raw: string | null): string[] {
+	if (!raw) return [];
+	return raw
+		.split(",")
+		.map((t) => t.trim())
+		.filter((t) => LAUNCH_TAG_SET.has(t));
 }
 
 interface TokensPageClientProps {
-	initialData: { tokens: TokenHubCache[]; total: number };
+	initialData: { tokens: TokenEnriched[]; total: number };
 	initialStats: { totalTokens: number; forjaTokens: number; totalHolders: number };
+	initialTrending: TokenEnriched[];
 }
 
-export function TokensPageClient({ initialData, initialStats }: TokensPageClientProps) {
+export function TokensPageClient({
+	initialData,
+	initialStats,
+	initialTrending,
+}: TokensPageClientProps) {
 	const router = useRouter();
 	const searchParams = useSearchParams();
 	const [, startTransition] = useTransition();
 
-	// URL is source of truth for sort and forjaOnly
-	const sort = parseSortParam(searchParams.get("sort"));
-	const forjaOnly = searchParams.get("forja") === "1";
+	const sort = parseSort(searchParams.get("sort"));
+	const legacyForja = searchParams.get("forja") === "1";
+	const source = parseSource(searchParams.get("source"), legacyForja);
+	const status = parseStatus(searchParams.get("status"));
+	const tags = useMemo(() => parseTags(searchParams.get("tags")), [searchParams]);
 	const urlSearch = searchParams.get("q") ?? "";
 
-	// Search: local state for input responsiveness, synced with URL
 	const [search, setSearch] = useState(urlSearch);
 	const [page, setPage] = useState(1);
 
-	// Sync search from URL on external navigation (back/forward)
 	useEffect(() => {
 		setSearch(urlSearch);
 		setPage(1);
 	}, [urlSearch]);
 
 	const updateUrl = useCallback(
-		(newSearch: string, newSort: SortOption, newForjaOnly: boolean) => {
+		(overrides: {
+			search?: string;
+			sort?: SortOption;
+			source?: SourceFilter;
+			status?: StatusFilter;
+			tags?: string[];
+		}) => {
 			const params = new URLSearchParams();
-			if (newSearch) params.set("q", newSearch);
-			if (newSort !== "newest") params.set("sort", newSort);
-			if (newForjaOnly) params.set("forja", "1");
+			const nextSearch = overrides.search ?? search;
+			const nextSort = overrides.sort ?? sort;
+			const nextSource = overrides.source ?? source;
+			const nextStatus = overrides.status ?? status;
+			const nextTags = overrides.tags ?? tags;
+
+			if (nextSearch) params.set("q", nextSearch);
+			if (nextSort !== "newest") params.set("sort", nextSort);
+			if (nextSource !== "all") params.set("source", nextSource);
+			if (nextStatus !== "all") params.set("status", nextStatus);
+			if (nextTags.length > 0) params.set("tags", nextTags.join(","));
+
 			const qs = params.toString();
 			startTransition(() => {
 				router.replace(qs ? `/tokens?${qs}` : "/tokens", { scroll: false });
 			});
 		},
-		[router],
+		[router, search, sort, source, status, tags],
 	);
 
 	const { data: stats } = useQuery({
@@ -68,36 +118,74 @@ export function TokensPageClient({ initialData, initialStats }: TokensPageClient
 	});
 
 	const { data, isLoading } = useQuery({
-		queryKey: ["token-list", search, sort, forjaOnly, page],
-		queryFn: () => getTokenList({ search, sort, forjaOnly, offset: 0, limit: page * LIMIT }),
+		queryKey: ["token-list", search, sort, source, status, tags.join(","), page],
+		queryFn: () =>
+			getTokenList({
+				search,
+				sort,
+				source,
+				status,
+				tags: tags.length > 0 ? tags : undefined,
+				offset: 0,
+				limit: page * LIMIT,
+			}),
 		staleTime: 30_000,
-		initialData: page === 1 ? initialData : undefined,
+		initialData:
+			page === 1 &&
+			!search &&
+			sort === "newest" &&
+			source === "all" &&
+			status === "all" &&
+			tags.length === 0
+				? initialData
+				: undefined,
 	});
 
 	const handleSearchChange = useCallback(
 		(value: string) => {
 			setSearch(value);
 			setPage(1);
-			updateUrl(value, sort, forjaOnly);
+			updateUrl({ search: value });
 		},
-		[sort, forjaOnly, updateUrl],
+		[updateUrl],
 	);
 
+	const handleSourceChange = useCallback(
+		(value: SourceFilter) => {
+			setPage(1);
+			updateUrl({ source: value });
+		},
+		[updateUrl],
+	);
+	const handleStatusChange = useCallback(
+		(value: StatusFilter) => {
+			setPage(1);
+			updateUrl({ status: value });
+		},
+		[updateUrl],
+	);
 	const handleSortChange = useCallback(
 		(value: SortOption) => {
 			setPage(1);
-			updateUrl(search, value, forjaOnly);
+			updateUrl({ sort: value });
 		},
-		[search, forjaOnly, updateUrl],
+		[updateUrl],
 	);
-
-	const handleForjaOnlyChange = useCallback(
-		(value: boolean) => {
+	const handleToggleTag = useCallback(
+		(tag: string) => {
 			setPage(1);
-			updateUrl(search, sort, value);
+			const next = tags.includes(tag) ? tags.filter((t) => t !== tag) : [...tags, tag];
+			updateUrl({ tags: next });
 		},
-		[search, sort, updateUrl],
+		[tags, updateUrl],
 	);
+	const handleClearAll = useCallback(() => {
+		setSearch("");
+		setPage(1);
+		startTransition(() => {
+			router.replace("/tokens", { scroll: false });
+		});
+	}, [router]);
 
 	const handleLoadMore = useCallback(() => {
 		setPage((prev) => prev + 1);
@@ -110,6 +198,8 @@ export function TokensPageClient({ initialData, initialStats }: TokensPageClient
 		<PageContainer className="py-8 sm:py-12">
 			<div className="space-y-8">
 				<PageHeader title="Token Hub" description="Discover and explore tokens on Tempo" />
+
+				{initialTrending.length > 0 && <TrendingRow tokens={initialTrending} />}
 
 				{stats && (
 					<div className="grid grid-cols-3 gap-4">
@@ -141,13 +231,19 @@ export function TokensPageClient({ initialData, initialStats }: TokensPageClient
 					<div className="flex-1 sm:max-w-md">
 						<TokenSearch value={search} onChange={handleSearchChange} />
 					</div>
-					<TokenFilters
-						sort={sort}
-						onSortChange={handleSortChange}
-						forjaOnly={forjaOnly}
-						onForjaOnlyChange={handleForjaOnlyChange}
-					/>
 				</div>
+
+				<TokenFilters
+					source={source}
+					status={status}
+					tags={tags}
+					sort={sort}
+					onSourceChange={handleSourceChange}
+					onStatusChange={handleStatusChange}
+					onToggleTag={handleToggleTag}
+					onSortChange={handleSortChange}
+					onClearAll={handleClearAll}
+				/>
 
 				<TokenGrid
 					tokens={tokens}

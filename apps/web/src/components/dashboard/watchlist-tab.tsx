@@ -9,11 +9,24 @@ import {
 	UsersIcon,
 } from "lucide-react";
 import Link from "next/link";
+import type { TokenEnriched } from "@/actions/token-hub";
 import { TokenCard } from "@/components/token-hub/token-card";
 import { WatchlistButton } from "@/components/token-hub/watchlist-button";
 import { Button } from "@/components/ui/button";
 
 type WatchlistToken = TokenHubCache & { holderDelta: number; transfers7d: number };
+
+function toEnriched(token: WatchlistToken): TokenEnriched {
+	return {
+		...token,
+		creatorDisplayName: null,
+		holderDelta7d: token.holderDelta,
+		transfers24h: 0,
+		currentPrice: null,
+		trendingScore: 0,
+		launchDbId: null,
+	};
+}
 
 interface WatchlistTabProps {
 	tokens: WatchlistToken[];
@@ -44,7 +57,10 @@ export function WatchlistTab({ tokens }: WatchlistTabProps) {
 		<div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
 			{tokens.map((token) => (
 				<div key={token.address} className="space-y-0">
-					<TokenCard token={token} action={<WatchlistButton tokenAddress={token.address} />} />
+					<TokenCard
+						token={toEnriched(token)}
+						action={<WatchlistButton tokenAddress={token.address} />}
+					/>
 					<div className="flex items-center gap-4 rounded-b-lg border border-t-0 border-anvil-gray-light bg-deep-charcoal/50 px-4 py-2 text-xs text-smoke-dark">
 						<span className="inline-flex items-center gap-1">
 							<UsersIcon className="size-3" />
