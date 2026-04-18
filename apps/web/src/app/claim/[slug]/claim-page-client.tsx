@@ -14,8 +14,9 @@ import { ClaimAction } from "@/components/claim/claim-action";
 import { ClaimHero } from "@/components/claim/claim-hero";
 import { ClaimStats } from "@/components/claim/claim-stats";
 import { ConnectButton } from "@/components/layout/connect-button";
-import { PageContainer } from "@/components/layout/page-container";
+import { CursorGlow } from "@/components/shared/cursor-glow";
 import { ShareButtons } from "@/components/shared/share-buttons";
+import { useReveal } from "@/components/shared/use-reveal";
 import { useTokenInfo } from "@/hooks/use-token-info";
 import { APP_URL, getExplorerUrl, TIP20_DECIMALS } from "@/lib/constants";
 
@@ -25,6 +26,7 @@ interface ClaimPageClientProps {
 }
 
 export function ClaimPageClient({ initialCampaign, initialStats }: ClaimPageClientProps) {
+	useReveal();
 	const { address: walletAddress, isConnected } = useAccount();
 	const chainId = useChainId();
 	const explorerUrl = getExplorerUrl(chainId);
@@ -75,50 +77,82 @@ export function ClaimPageClient({ initialCampaign, initialStats }: ClaimPageClie
 	}, [now, startSec, endSec]);
 
 	return (
-		<PageContainer className="py-8 sm:py-12">
-			<div className="mx-auto max-w-3xl space-y-8">
-				<ClaimHero campaign={initialCampaign} tokenSymbol={tokenSymbol} />
+		<div className="noise relative min-h-screen overflow-hidden bg-bg-page">
+			<CursorGlow color="rgba(255,107,61,0.06)" size={520} />
 
-				<ClaimStats
-					stats={stats}
-					decimals={decimals}
-					tokenSymbol={tokenSymbol}
-					sweepEnabled={initialCampaign.sweepEnabled}
-					swept={initialCampaign.swept}
+			<div className="pointer-events-none absolute inset-0 z-0">
+				<div
+					className="absolute top-[8%] right-[-15%] h-[600px] w-[600px] rounded-full"
+					style={{
+						background: "radial-gradient(circle, rgba(255,107,61,0.08) 0%, transparent 55%)",
+						filter: "blur(60px)",
+					}}
 				/>
+				<div
+					className="absolute bottom-[10%] left-[-10%] h-[500px] w-[500px] rounded-full"
+					style={{
+						background: "radial-gradient(circle, rgba(240,211,138,0.05) 0%, transparent 55%)",
+						filter: "blur(60px)",
+					}}
+				/>
+			</div>
 
-				{!isConnected ? (
-					<div className="flex flex-col items-center gap-3 rounded-lg border border-border bg-card p-6">
-						<p className="text-sm text-smoke-dark">Connect your wallet to check eligibility.</p>
-						<ConnectButton />
-					</div>
-				) : (
-					<ClaimAction
-						campaign={initialCampaign}
-						proof={proof ?? null}
+			<main className="relative z-[5] mx-auto w-full max-w-3xl px-6 pt-16 pb-20 sm:px-8 sm:pt-20 sm:pb-24">
+				<div className="reveal mb-5 inline-flex items-center gap-2.5 rounded-full border border-[rgba(255,107,61,0.2)] bg-[rgba(255,107,61,0.08)] py-1 pl-1 pr-3 text-xs text-ember">
+					<span className="rounded-sm bg-ember px-1.5 py-0.5 font-mono text-[10px] font-semibold tracking-[0.08em] text-[#1a0a00]">
+						/04
+					</span>
+					Merkle claim
+				</div>
+
+				<div className="reveal space-y-8">
+					<ClaimHero campaign={initialCampaign} tokenSymbol={tokenSymbol} />
+
+					<ClaimStats
+						stats={stats}
 						decimals={decimals}
 						tokenSymbol={tokenSymbol}
-						phase={phase}
-						startSec={startSec}
-						endSec={endSec}
-						now={now}
-						explorerUrl={explorerUrl}
-						onClaimed={handleClaimed}
+						sweepEnabled={initialCampaign.sweepEnabled}
+						swept={initialCampaign.swept}
 					/>
-				)}
 
-				<div className="space-y-2">
-					<h3 className="text-sm font-medium text-smoke">Share</h3>
-					<ShareButtons
-						url={`${APP_URL}/claim/${initialCampaign.slug}`}
-						title={`${initialCampaign.title} on FORJA`}
-						description={
-							initialCampaign.description ??
-							`Claim your share of this airdrop. ${initialCampaign.recipientCount} eligible recipients.`
-						}
-					/>
+					{!isConnected ? (
+						<div className="flex flex-col items-center gap-3 rounded-xl border border-border-hair bg-bg-card p-8">
+							<p className="text-sm text-text-secondary">
+								Connect your wallet to check eligibility.
+							</p>
+							<ConnectButton />
+						</div>
+					) : (
+						<ClaimAction
+							campaign={initialCampaign}
+							proof={proof ?? null}
+							decimals={decimals}
+							tokenSymbol={tokenSymbol}
+							phase={phase}
+							startSec={startSec}
+							endSec={endSec}
+							now={now}
+							explorerUrl={explorerUrl}
+							onClaimed={handleClaimed}
+						/>
+					)}
+
+					<div className="space-y-2">
+						<h3 className="font-mono text-[11px] uppercase tracking-[0.14em] text-text-tertiary">
+							Share
+						</h3>
+						<ShareButtons
+							url={`${APP_URL}/claim/${initialCampaign.slug}`}
+							title={`${initialCampaign.title} on FORJA`}
+							description={
+								initialCampaign.description ??
+								`Claim your share of this airdrop. ${initialCampaign.recipientCount} eligible recipients.`
+							}
+						/>
+					</div>
 				</div>
-			</div>
-		</PageContainer>
+			</main>
+		</div>
 	);
 }

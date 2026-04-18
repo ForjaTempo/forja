@@ -71,9 +71,9 @@ function FooterLink({ label, href, external }: FooterLink) {
 
 export function Footer() {
 	return (
-		<footer className="relative mt-32 border-t border-border-hair">
-			<div className="mx-auto max-w-[1400px] px-6 py-20 lg:px-10">
-				<div className="grid gap-12 lg:grid-cols-[2fr_1fr_1fr_1fr_1fr]">
+		<footer className="relative mt-24 overflow-hidden border-t border-border-hair">
+			<div className="mx-auto max-w-[1400px] px-4 py-16 sm:px-6 sm:py-20 lg:px-10">
+				<div className="grid gap-10 sm:gap-12 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1fr_1fr]">
 					<div>
 						<div className="mb-5 flex items-center gap-2.5">
 							<ForjaLogo size={32} />
@@ -100,10 +100,10 @@ export function Footer() {
 					))}
 				</div>
 
-				<div className="mt-20 flex items-end justify-between border-border-hair border-t pt-10">
+				<div className="mt-16 flex flex-col items-start gap-6 border-border-hair border-t pt-10 sm:mt-20 sm:flex-row sm:items-end sm:justify-between">
 					<div
 						aria-hidden
-						className="select-none font-display text-[clamp(80px,18vw,260px)] leading-[0.85] tracking-[-0.05em]"
+						className="pointer-events-none flex-1 select-none overflow-hidden font-display text-[clamp(64px,14vw,200px)] leading-[0.85] tracking-[-0.05em]"
 						style={{
 							background:
 								"linear-gradient(180deg, rgba(240,211,138,0.9) 0%, rgba(240,211,138,0.1) 70%, transparent 100%)",
@@ -114,7 +114,7 @@ export function Footer() {
 					>
 						Forja
 					</div>
-					<div className="flex flex-col items-end gap-2 pb-5">
+					<div className="flex shrink-0 flex-col items-start gap-2 sm:items-end sm:pb-5">
 						<div className="font-mono text-[12px] text-text-tertiary">
 							© 2026 — All rights forged
 						</div>

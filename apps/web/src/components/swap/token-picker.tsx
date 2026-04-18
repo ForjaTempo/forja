@@ -168,7 +168,7 @@ export function TokenPicker({
 				</DialogHeader>
 
 				<div className="relative">
-					<SearchIcon className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-smoke-dark" />
+					<SearchIcon className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-text-tertiary" />
 					<Input
 						autoFocus
 						value={search}
@@ -180,10 +180,10 @@ export function TokenPicker({
 
 				<div className="-mx-1 max-h-[60vh] overflow-y-auto pr-1">
 					{isLoading && filtered.length === 0 && !importCandidate && (
-						<p className="py-8 text-center text-sm text-smoke-dark">Loading…</p>
+						<p className="py-8 text-center text-sm text-text-tertiary">Loading…</p>
 					)}
 					{!isLoading && filtered.length === 0 && !importCandidate && (
-						<p className="py-8 text-center text-sm text-smoke-dark">
+						<p className="py-8 text-center text-sm text-text-tertiary">
 							{importStatus === "loading"
 								? "Fetching token…"
 								: importStatus === "error"
@@ -201,16 +201,16 @@ export function TokenPicker({
 								onSelect(importCandidate);
 								onOpenChange(false);
 							}}
-							className="mb-1 flex w-full items-center gap-3 rounded-lg border border-dashed border-indigo/40 bg-indigo/5 px-3 py-2.5 text-left transition-colors hover:bg-indigo/10"
+							className="mb-1 flex w-full items-center gap-3 rounded-xl border border-dashed border-gold/40 bg-gold/5 px-3 py-2.5 text-left transition-colors hover:bg-gold/10"
 						>
 							<ImageFallback name={importCandidate.symbol} size={36} variant="circle" />
 							<div className="min-w-0 flex-1">
 								<div className="flex items-center gap-2">
-									<span className="font-medium text-steel-white">{importCandidate.symbol}</span>
-									<PlusIcon className="size-4 text-indigo" />
-									<span className="text-xs text-indigo">Import</span>
+									<span className="font-medium text-text-primary">{importCandidate.symbol}</span>
+									<PlusIcon className="size-4 text-gold" />
+									<span className="text-xs text-gold">Import</span>
 								</div>
-								<p className="truncate text-xs text-smoke-dark">{importCandidate.name}</p>
+								<p className="truncate text-xs text-text-tertiary">{importCandidate.name}</p>
 							</div>
 						</button>
 					)}
@@ -225,8 +225,8 @@ export function TokenPicker({
 									onOpenChange(false);
 								}}
 								className={cn(
-									"flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors hover:bg-surface-field",
-									isSelected && "bg-surface-field",
+									"flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-bg-field",
+									isSelected && "bg-bg-field",
 								)}
 							>
 								{token.logoUrl ? (
@@ -235,7 +235,7 @@ export function TokenPicker({
 										alt={token.symbol}
 										width={36}
 										height={36}
-										className="size-9 rounded-full bg-anvil-gray-light object-cover"
+										className="size-9 rounded-full bg-bg-field object-cover"
 										unoptimized
 									/>
 								) : (
@@ -243,7 +243,7 @@ export function TokenPicker({
 								)}
 								<div className="min-w-0 flex-1">
 									<div className="flex items-center gap-2">
-										<span className="font-medium text-steel-white">{token.symbol}</span>
+										<span className="font-medium text-text-primary">{token.symbol}</span>
 										{isSwappable(token.address) && (
 											<span
 												title="Has a Uniswap v4 pool"
@@ -253,9 +253,9 @@ export function TokenPicker({
 												Pool
 											</span>
 										)}
-										{isSelected && <CheckIcon className="size-4 text-indigo" />}
+										{isSelected && <CheckIcon className="size-4 text-gold" />}
 									</div>
-									<p className="truncate text-xs text-smoke-dark">{token.name}</p>
+									<p className="truncate text-xs text-text-tertiary">{token.name}</p>
 								</div>
 							</button>
 						);

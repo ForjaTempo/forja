@@ -5,7 +5,6 @@ import { useCallback, useEffect, useState } from "react";
 import { formatUnits } from "viem";
 import { useAccount } from "wagmi";
 import { getSwapHistory, type SwapRow } from "@/actions/swaps";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useExplorerUrl } from "@/hooks/use-explorer-url";
 import { TIP20_DECIMALS } from "@/lib/constants";
 import { estimateSwapUsdValue, formatUsd } from "@/lib/swap/usd-value";
@@ -59,50 +58,52 @@ export function SwapHistory({ scope = "user", limit = 10, refreshKey = 0 }: Swap
 	if (scope === "user" && !address) return null;
 
 	return (
-		<Card className="border-border-subtle bg-surface-card">
-			<CardHeader className="flex flex-row items-center justify-between space-y-0">
-				<CardTitle className="text-sm">
+		<div className="overflow-hidden rounded-2xl border border-border-hair bg-bg-elevated">
+			<div className="flex items-center justify-between border-b border-border-hair px-4 py-3">
+				<div className="font-display text-[15px] tracking-[-0.01em] text-text-primary">
 					{scope === "user" ? "Your recent swaps" : "Recent swaps"}
-				</CardTitle>
+				</div>
 				<button
 					type="button"
 					onClick={() => refetch(true)}
 					disabled={isLoading || isRefreshing}
-					className="text-smoke-dark transition-colors hover:text-indigo disabled:opacity-40"
+					className="text-text-tertiary transition-colors hover:text-gold disabled:opacity-40"
 					title="Refresh"
 				>
 					<RefreshCwIcon className={cn("size-3.5", isRefreshing && "animate-spin")} />
 				</button>
-			</CardHeader>
-			<CardContent>
-				{isLoading && <p className="py-4 text-center text-xs text-smoke-dark">Loading…</p>}
+			</div>
+			<div className="px-4 py-2">
+				{isLoading && <p className="py-4 text-center text-xs text-text-tertiary">Loading…</p>}
 				{!isLoading && swaps.length === 0 && (
-					<p className="py-4 text-center text-xs text-smoke-dark">No swaps yet.</p>
+					<p className="py-4 text-center text-xs text-text-tertiary">No swaps yet.</p>
 				)}
 				{!isLoading && swaps.length > 0 && (
-					<ul className="divide-y divide-border-subtle">
+					<ul className="divide-y divide-border-hair">
 						{swaps.map((s) => {
 							const usd = estimateSwapUsdValue(s);
 							return (
 								<li
 									key={`${s.txHash}-${s.logIndex}`}
-									className="flex items-center justify-between py-2 text-xs"
+									className="flex items-center justify-between py-2.5 text-xs"
 								>
 									<div className="min-w-0">
-										<p className="truncate text-steel-white">
+										<p className="truncate font-mono text-text-primary">
 											{formatUnits(BigInt(s.amountIn), TIP20_DECIMALS)} {TRUNCATE(s.tokenIn)} →{" "}
 											{formatUnits(BigInt(s.amountOut), TIP20_DECIMALS)} {TRUNCATE(s.tokenOut)}
 										</p>
-										<p className="text-smoke-dark">
+										<p className="font-mono text-text-tertiary">
 											{new Date(s.createdAt).toLocaleString()}
-											{usd !== null && <span className="ml-2 text-smoke">≈ {formatUsd(usd)}</span>}
+											{usd !== null && (
+												<span className="ml-2 text-text-secondary">≈ {formatUsd(usd)}</span>
+											)}
 										</p>
 									</div>
 									<a
 										href={`${explorer}/tx/${s.txHash}`}
 										target="_blank"
 										rel="noopener noreferrer"
-										className="ml-3 shrink-0 text-smoke-dark hover:text-indigo"
+										className="ml-3 shrink-0 text-text-tertiary hover:text-gold"
 									>
 										<ExternalLinkIcon className="size-3.5" />
 									</a>
@@ -111,7 +112,7 @@ export function SwapHistory({ scope = "user", limit = 10, refreshKey = 0 }: Swap
 						})}
 					</ul>
 				)}
-			</CardContent>
-		</Card>
+			</div>
+		</div>
 	);
 }
