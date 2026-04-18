@@ -1,7 +1,7 @@
 "use client";
 
-import { ArrowLeftRightIcon, ExternalLinkIcon } from "lucide-react";
-import { useEffect, useState } from "react";
+import { ArrowLeftRightIcon, ExternalLinkIcon, RefreshCwIcon } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import { formatUnits } from "viem";
 import { useAccount } from "wagmi";
 import { getSwapHistory, type SwapRow } from "@/actions/swaps";
@@ -11,35 +11,42 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useExplorerUrl } from "@/hooks/use-explorer-url";
 import { TIP20_DECIMALS } from "@/lib/constants";
 import { estimateSwapUsdValue, formatUsd } from "@/lib/swap/usd-value";
+import { cn } from "@/lib/utils";
 
 const TRUNCATE = (addr: string) => `${addr.slice(0, 6)}…${addr.slice(-4)}`;
+const POLL_INTERVAL_MS = 20_000;
 
 export function SwapsHistory() {
 	const { address } = useAccount();
 	const explorer = useExplorerUrl();
 	const [swaps, setSwaps] = useState<SwapRow[]>([]);
 	const [isLoading, setIsLoading] = useState(true);
+	const [isRefreshing, setIsRefreshing] = useState(false);
 
-	useEffect(() => {
-		if (!address) {
-			setSwaps([]);
-			setIsLoading(false);
-			return;
-		}
-		let cancelled = false;
-		(async () => {
-			setIsLoading(true);
+	const refetch = useCallback(
+		async (showSpinner = false) => {
+			if (!address) {
+				setSwaps([]);
+				setIsLoading(false);
+				return;
+			}
+			if (showSpinner) setIsRefreshing(true);
 			try {
 				const result = await getSwapHistory({ user: address, limit: 50 });
-				if (!cancelled) setSwaps(result.swaps);
+				setSwaps(result.swaps);
 			} finally {
-				if (!cancelled) setIsLoading(false);
+				setIsLoading(false);
+				setIsRefreshing(false);
 			}
-		})();
-		return () => {
-			cancelled = true;
-		};
-	}, [address]);
+		},
+		[address],
+	);
+
+	useEffect(() => {
+		refetch();
+		const handle = setInterval(() => refetch(), POLL_INTERVAL_MS);
+		return () => clearInterval(handle);
+	}, [refetch]);
 
 	if (isLoading) {
 		return (
@@ -78,6 +85,18 @@ export function SwapsHistory() {
 
 	return (
 		<div className="space-y-3">
+			<div className="flex items-center justify-between">
+				<div />
+				<button
+					type="button"
+					onClick={() => refetch(true)}
+					disabled={isRefreshing}
+					className="flex items-center gap-1 text-xs text-smoke-dark transition-colors hover:text-indigo disabled:opacity-40"
+				>
+					<RefreshCwIcon className={cn("size-3.5", isRefreshing && "animate-spin")} />
+					Refresh
+				</button>
+			</div>
 			<div className="grid grid-cols-3 gap-3 text-xs">
 				<StatCard label="Total swaps" value={swaps.length.toString()} />
 				<StatCard label="Volume (USD)" value={formatUsd(usdVolume)} />

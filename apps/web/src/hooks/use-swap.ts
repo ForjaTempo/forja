@@ -127,6 +127,12 @@ export function useSwap(): UseSwapReturn {
 				deadline,
 			};
 
+			// Some wallets (notably OKX) queue wallet prompts and won't surface
+			// a second request if it fires immediately after signTypedData
+			// resolves. A short yield lets the wallet UI settle before we ask
+			// for the actual swap transaction.
+			await new Promise((r) => setTimeout(r, 300));
+
 			if (quote.venue === "enshrined") {
 				await writeContractAsync({
 					address: routerAddress,
