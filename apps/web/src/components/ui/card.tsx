@@ -11,7 +11,7 @@ const cardVariants = cva(
 				default: "",
 				interactive:
 					"hover:-translate-y-0.5 hover:shadow-lg hover:border-border-strong transition-all duration-200",
-				glass: "backdrop-blur-xl bg-surface-elevated/80 border-white/[0.08]",
+				glass: "backdrop-blur-xl bg-bg-elevated/80 border-white/[0.08]",
 			},
 		},
 		defaultVariants: {

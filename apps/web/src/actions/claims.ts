@@ -12,6 +12,7 @@ import {
 	TIP20_DECIMALS,
 } from "@/lib/constants";
 import { isValidSlug, normalizeSlug } from "@/lib/merkle";
+import { requireAuth } from "@/lib/session";
 
 const BANNER_URL_RE = /^https:\/\/[^\s]+$/i;
 const TX_HASH_RE = /^0x[a-fA-F0-9]{64}$/;
@@ -123,6 +124,14 @@ export async function storeCampaign(input: StoreCampaignInput): Promise<StoreCam
 	if (!input || typeof input !== "object") return { ok: false, error: "Invalid input" };
 	if (!isAddress(input.creatorAddress)) return { ok: false, error: "Invalid creator address" };
 	if (!isAddress(input.tokenAddress)) return { ok: false, error: "Invalid token address" };
+
+	// Auth guard: the caller must hold a session proving they own the creatorAddress.
+	// Without this, anyone could insert a campaign row under someone else's wallet
+	// (slug squatting, attribution fraud, DB noise). requireAuth lowercases internally.
+	const authCheck = await requireAuth(input.creatorAddress);
+	if (!authCheck.ok) {
+		return { ok: false, error: "Wallet authentication required" };
+	}
 	if (!TX_HASH_RE.test(input.createdTxHash)) return { ok: false, error: "Invalid tx hash" };
 	if (!input.merkleRoot.startsWith("0x") || input.merkleRoot.length !== 66) {
 		return { ok: false, error: "Invalid merkle root" };

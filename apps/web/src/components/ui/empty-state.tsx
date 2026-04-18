@@ -14,14 +14,16 @@ function EmptyState({ icon, title, description, action, className }: EmptyStateP
 	return (
 		<div
 			className={cn(
-				"flex flex-col items-center justify-center rounded-xl border border-dashed border-border-subtle px-6 py-12 text-center",
+				"flex flex-col items-center justify-center rounded-2xl border border-dashed border-border-subtle bg-bg-elevated/50 px-6 py-12 text-center",
 				className,
 			)}
 		>
-			{icon && <div className="mb-3 text-smoke-dark">{icon}</div>}
-			<h3 className="text-sm font-medium text-steel-white">{title}</h3>
-			{description && <p className="mt-1 max-w-sm text-sm text-smoke-dark">{description}</p>}
-			{action && <div className="mt-4">{action}</div>}
+			{icon && <div className="mb-3 text-text-tertiary">{icon}</div>}
+			<h3 className="font-display text-[18px] tracking-[-0.01em] text-text-primary">{title}</h3>
+			{description && (
+				<p className="mt-1.5 max-w-sm text-[13px] text-text-tertiary">{description}</p>
+			)}
+			{action && <div className="mt-5">{action}</div>}
 		</div>
 	);
 }

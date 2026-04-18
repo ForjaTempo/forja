@@ -17,18 +17,16 @@ import Link from "next/link";
 import { useMemo } from "react";
 import { useAccount } from "wagmi";
 import { markAlertAsRead, markAllAlertsAsRead } from "@/actions/alerts";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { useWalletAuth } from "@/hooks/use-wallet-auth";
 import { DATE_GROUP_LABELS, DATE_GROUP_ORDER, groupByDate } from "@/lib/date-groups";
 import { cn } from "@/lib/utils";
 
 const TYPE_ICONS: Record<string, React.ReactNode> = {
-	holder_spike: <TrendingUpIcon className="size-4 text-emerald-400" />,
-	large_transfer: <ArrowRightLeftIcon className="size-4 text-yellow-400" />,
-	unlock_soon: <UnlockIcon className="size-4 text-blue-400" />,
-	milestone: <UsersIcon className="size-4 text-molten-amber" />,
-	campaign_live: <SparklesIcon className="size-4 text-purple-400" />,
+	holder_spike: <TrendingUpIcon className="size-4 text-green" />,
+	large_transfer: <ArrowRightLeftIcon className="size-4 text-gold" />,
+	unlock_soon: <UnlockIcon className="size-4 text-indigo" />,
+	milestone: <UsersIcon className="size-4 text-ember" />,
+	campaign_live: <SparklesIcon className="size-4 text-gold" />,
 };
 
 function getAlertLink(alert: Alert): string {
@@ -88,12 +86,14 @@ export function AlertPanel({ alerts, onClose }: AlertPanelProps) {
 	if (alerts.length === 0) {
 		return (
 			<div className="flex flex-col items-center justify-center gap-3 px-4 py-12 text-center">
-				<div className="flex size-12 items-center justify-center rounded-full bg-forge-green/10 text-forge-green">
+				<div className="flex size-12 items-center justify-center rounded-full bg-green/10 text-green">
 					<CheckCircle2Icon className="size-6" />
 				</div>
 				<div>
-					<p className="text-sm font-medium text-steel-white">All caught up</p>
-					<p className="mt-1 text-xs text-smoke-dark">
+					<p className="font-display text-[16px] tracking-[-0.01em] text-text-primary">
+						All caught up
+					</p>
+					<p className="mt-1 text-[12.5px] text-text-tertiary">
 						You're up to date. We'll let you know when something new happens.
 					</p>
 				</div>
@@ -103,31 +103,30 @@ export function AlertPanel({ alerts, onClose }: AlertPanelProps) {
 
 	return (
 		<div className="flex flex-col">
-			{/* Header */}
-			<div className="flex items-center justify-between border-b border-anvil-gray-light px-4 py-3">
+			<div className="flex items-center justify-between border-border-hair border-b px-4 py-3">
 				<div className="flex items-center gap-2">
-					<h3 className="text-sm font-semibold text-steel-white">Notifications</h3>
+					<h3 className="font-mono text-[10px] text-text-tertiary uppercase tracking-[0.14em]">
+						Notifications
+					</h3>
 					{unreadCount > 0 && (
-						<Badge variant="default" className="h-5 min-w-[1.25rem] px-1.5 text-[10px]">
+						<span className="inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full border border-gold/40 bg-gold/10 px-1.5 font-mono text-[10px] text-gold">
 							{unreadCount}
-						</Badge>
+						</span>
 					)}
 				</div>
 				{unreadCount > 0 && (
-					<Button
-						variant="ghost"
-						size="sm"
+					<button
+						type="button"
 						onClick={() => markAllMutation.mutate()}
 						disabled={markAllMutation.isPending}
-						className="text-xs text-smoke hover:text-steel-white"
+						className="inline-flex items-center gap-1 rounded-lg px-2 py-1 font-mono text-[11px] text-text-tertiary transition-colors hover:bg-bg-field hover:text-text-primary disabled:opacity-50"
 					>
-						<CheckCheckIcon className="mr-1 size-3" />
-						Mark all as read
-					</Button>
+						<CheckCheckIcon className="size-3" />
+						Mark all read
+					</button>
 				)}
 			</div>
 
-			{/* Grouped alert list */}
 			<div className="max-h-[32rem] overflow-y-auto">
 				<AnimatePresence initial={true}>
 					{DATE_GROUP_ORDER.map((groupKey) => {
@@ -141,8 +140,8 @@ export function AlertPanel({ alerts, onClose }: AlertPanelProps) {
 								animate={{ opacity: 1, x: 0 }}
 								transition={{ duration: 0.2, ease: "easeOut" }}
 							>
-								<div className="sticky top-0 z-10 border-b border-anvil-gray-light/50 bg-deep-charcoal/95 px-4 py-2 backdrop-blur">
-									<p className="text-[11px] font-medium uppercase tracking-wider text-smoke-dark">
+								<div className="sticky top-0 z-10 border-border-hair/50 border-b bg-bg-elevated/95 px-4 py-2 backdrop-blur">
+									<p className="font-mono text-[10px] text-text-tertiary uppercase tracking-[0.14em]">
 										{DATE_GROUP_LABELS[groupKey]}
 									</p>
 								</div>
@@ -156,31 +155,33 @@ export function AlertPanel({ alerts, onClose }: AlertPanelProps) {
 												onClose?.();
 											}}
 											className={cn(
-												"flex items-start gap-3 border-b border-anvil-gray-light/50 px-4 py-3 transition-colors hover:bg-anvil-gray-light/30",
-												!alert.isRead && "bg-anvil-gray-light/10",
+												"flex items-start gap-3 border-border-hair/50 border-b px-4 py-3 transition-colors hover:bg-bg-field/60",
+												!alert.isRead && "bg-bg-field/30",
 											)}
 										>
 											<div className="mt-0.5 shrink-0">
-												{TYPE_ICONS[alert.type] ?? <BellIcon className="size-4 text-smoke-dark" />}
+												{TYPE_ICONS[alert.type] ?? (
+													<BellIcon className="size-4 text-text-tertiary" />
+												)}
 											</div>
 											<div className="min-w-0 flex-1">
 												<div className="flex items-center gap-2">
 													<p
 														className={cn(
-															"text-sm font-medium",
-															alert.isRead ? "text-smoke" : "text-steel-white",
+															"text-[13.5px] font-medium",
+															alert.isRead ? "text-text-secondary" : "text-text-primary",
 														)}
 													>
 														{alert.title}
 													</p>
 													{!alert.isRead && (
-														<span className="size-2 shrink-0 rounded-full bg-indigo" />
+														<span className="size-1.5 shrink-0 rounded-full bg-gold shadow-[0_0_8px_var(--color-gold-glow)]" />
 													)}
 												</div>
-												<p className="mt-0.5 text-xs text-smoke-dark line-clamp-2">
+												<p className="mt-0.5 line-clamp-2 text-[12.5px] text-text-tertiary">
 													{alert.message}
 												</p>
-												<p className="mt-1 text-xs text-smoke-dark/60">
+												<p className="mt-1 font-mono text-[10.5px] text-text-tertiary/70">
 													{timeAgo(alert.createdAt)}
 												</p>
 											</div>

@@ -30,7 +30,7 @@ const features = [
 
 export function Features() {
 	return (
-		<section className="border-y border-anvil-gray-light/40 bg-anvil-gray/30 py-20 sm:py-24">
+		<section className="border-y border-border-hair/40 bg-bg-field/30 py-20 sm:py-24">
 			<div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 				<ScrollReveal>
 					<div className="text-center">
@@ -50,11 +50,13 @@ export function Features() {
 				>
 					{features.map((feature) => (
 						<motion.div key={feature.title} variants={fadeInUp} className="group text-center">
-							<div className="mx-auto flex size-12 items-center justify-center rounded-xl border border-anvil-gray-light bg-anvil-gray transition-colors group-hover:border-indigo/30 group-hover:bg-anvil-gray-light">
-								<feature.icon className="size-5 text-smoke transition-colors group-hover:text-indigo" />
+							<div className="mx-auto flex size-12 items-center justify-center rounded-xl border border-border-hair bg-bg-field transition-colors group-hover:border-indigo/30 group-hover:bg-bg-field">
+								<feature.icon className="size-5 text-text-secondary transition-colors group-hover:text-indigo" />
 							</div>
-							<h3 className="mt-4 text-base font-semibold text-steel-white">{feature.title}</h3>
-							<p className="mt-2 text-sm leading-relaxed text-smoke-dark">{feature.description}</p>
+							<h3 className="mt-4 text-base font-semibold text-text-primary">{feature.title}</h3>
+							<p className="mt-2 text-sm leading-relaxed text-text-tertiary">
+								{feature.description}
+							</p>
 						</motion.div>
 					))}
 				</motion.div>

@@ -52,17 +52,17 @@ export function HowItWorks() {
 							{i < steps.length - 1 && (
 								<div
 									aria-hidden="true"
-									className="absolute right-0 top-8 hidden h-px w-[calc(100%-3rem)] translate-x-1/2 bg-gradient-to-r from-anvil-gray-light to-transparent md:block"
+									className="absolute right-0 top-8 hidden h-px w-[calc(100%-3rem)] translate-x-1/2 bg-gradient-to-r from-border-hair to-transparent md:block"
 								/>
 							)}
 
-							<div className="mx-auto flex size-16 items-center justify-center rounded-2xl border border-anvil-gray-light bg-anvil-gray">
+							<div className="mx-auto flex size-16 items-center justify-center rounded-2xl border border-border-hair bg-bg-field">
 								<step.icon className="size-6 text-indigo" />
 							</div>
 
-							<p className="mt-1 font-mono text-xs text-smoke-dark">{step.step}</p>
+							<p className="mt-1 font-mono text-xs text-text-tertiary">{step.step}</p>
 							<h3 className="mt-2 text-lg font-semibold">{step.title}</h3>
-							<p className="mt-2 text-sm leading-relaxed text-smoke-dark">{step.description}</p>
+							<p className="mt-2 text-sm leading-relaxed text-text-tertiary">{step.description}</p>
 						</motion.div>
 					))}
 				</motion.div>

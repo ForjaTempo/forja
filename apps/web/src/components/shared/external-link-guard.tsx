@@ -92,8 +92,8 @@ export function ExternalLinkGuard({ href, children, className }: ExternalLinkGua
 							trust the source.
 						</DialogDescription>
 					</DialogHeader>
-					<div className="rounded-md border border-anvil-gray-light bg-obsidian-black/50 p-3">
-						<code className="break-all font-mono text-xs text-smoke">{href}</code>
+					<div className="rounded-md border border-border-hair bg-bg-field/50 p-3">
+						<code className="break-all font-mono text-xs text-text-secondary">{href}</code>
 					</div>
 					<DialogFooter>
 						<Button variant="outline" onClick={() => setOpen(false)}>

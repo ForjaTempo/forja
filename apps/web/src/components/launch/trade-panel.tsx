@@ -313,10 +313,10 @@ export function TradePanel({
 
 	if (!isConnected) {
 		return (
-			<Card className="border-anvil-gray-light bg-deep-charcoal">
+			<Card className="border-border-hair bg-bg-elevated">
 				<CardContent className="flex flex-col items-center gap-4 p-6">
-					<WalletIcon className="size-8 text-smoke-dark" />
-					<p className="text-sm text-smoke-dark">Connect wallet to trade</p>
+					<WalletIcon className="size-8 text-text-tertiary" />
+					<p className="text-sm text-text-tertiary">Connect wallet to trade</p>
 					<ConnectButton />
 				</CardContent>
 			</Card>
@@ -325,9 +325,9 @@ export function TradePanel({
 
 	if (isDisabled) {
 		return (
-			<Card className="border-anvil-gray-light bg-deep-charcoal">
+			<Card className="border-border-hair bg-bg-elevated">
 				<CardContent className="p-6 text-center">
-					<p className="text-sm text-smoke-dark">This token has graduated to Uniswap v4.</p>
+					<p className="text-sm text-text-tertiary">This token has graduated to Uniswap v4.</p>
 				</CardContent>
 			</Card>
 		);
@@ -337,13 +337,13 @@ export function TradePanel({
 	const effectiveTab = sellOnly ? "sell" : tab;
 
 	return (
-		<Card className="border-anvil-gray-light bg-deep-charcoal">
+		<Card className="border-border-hair bg-bg-elevated">
 			<CardHeader className="pb-2">
-				<CardTitle className="text-sm text-steel-white">
+				<CardTitle className="text-sm text-text-primary">
 					{sellOnly ? "Exit Position" : "Trade"}
 				</CardTitle>
 				{sellOnly && (
-					<p className="text-xs text-red-400/80">
+					<p className="text-xs text-red/80">
 						This launch is no longer active. You can sell your tokens to exit.
 					</p>
 				)}
@@ -351,16 +351,16 @@ export function TradePanel({
 			<CardContent>
 				<Tabs value={effectiveTab} onValueChange={(v) => !sellOnly && setTab(v as "buy" | "sell")}>
 					{!sellOnly && (
-						<TabsList className="w-full border-b border-anvil-gray-light bg-transparent">
+						<TabsList className="w-full border-b border-border-hair bg-transparent">
 							<TabsTrigger
 								value="buy"
-								className="flex-1 text-smoke data-[state=active]:text-emerald-400"
+								className="flex-1 text-text-secondary data-[state=active]:text-green"
 							>
 								Buy
 							</TabsTrigger>
 							<TabsTrigger
 								value="sell"
-								className="flex-1 text-smoke data-[state=active]:text-red-400"
+								className="flex-1 text-text-secondary data-[state=active]:text-red"
 							>
 								Sell
 							</TabsTrigger>
@@ -374,7 +374,7 @@ export function TradePanel({
 						/>
 
 						<div className="space-y-2">
-							<label htmlFor="buy-usdc-amount" className="text-sm font-medium text-smoke">
+							<label htmlFor="buy-usdc-amount" className="text-sm font-medium text-text-secondary">
 								USDC Amount
 							</label>
 							<Input
@@ -389,7 +389,7 @@ export function TradePanel({
 								}}
 								min="0"
 								step="1"
-								className="border-anvil-gray-light bg-obsidian-black/50 text-smoke"
+								className="border-border-hair bg-bg-field/50 text-text-secondary"
 							/>
 							<PresetRow
 								onPreset={applyBuyPreset}
@@ -398,10 +398,10 @@ export function TradePanel({
 						</div>
 
 						{buyQuote !== undefined && buyAmountRaw > 0n && (
-							<div className="rounded-lg border border-anvil-gray-light bg-obsidian-black/30 p-3">
-								<div className="flex items-center justify-between text-xs text-smoke-dark">
+							<div className="rounded-lg border border-border-hair bg-bg-field/30 p-3">
+								<div className="flex items-center justify-between text-xs text-text-tertiary">
 									<span>You receive</span>
-									<span className="font-mono text-sm text-steel-white">
+									<span className="font-mono text-sm text-text-primary">
 										~{formatAmount(buyQuote)} {tokenSymbol}
 									</span>
 								</div>
@@ -424,9 +424,9 @@ export function TradePanel({
 						<SlippageSelector value={slippage} onChange={setSlippage} />
 
 						{buyApproveError && (
-							<p className="text-xs text-red-400">{formatErrorMessage(buyApproveError)}</p>
+							<p className="text-xs text-red">{formatErrorMessage(buyApproveError)}</p>
 						)}
-						{buyError && <p className="text-xs text-red-400">{formatErrorMessage(buyError)}</p>}
+						{buyError && <p className="text-xs text-red">{formatErrorMessage(buyError)}</p>}
 
 						{needsBuyApproval && !isBuyApprovalConfirmed ? (
 							<Button
@@ -466,7 +466,10 @@ export function TradePanel({
 						/>
 
 						<div className="space-y-2">
-							<label htmlFor="sell-token-amount" className="text-sm font-medium text-smoke">
+							<label
+								htmlFor="sell-token-amount"
+								className="text-sm font-medium text-text-secondary"
+							>
 								{tokenSymbol} Amount
 							</label>
 							<Input
@@ -480,7 +483,7 @@ export function TradePanel({
 									resetSell();
 								}}
 								min="0"
-								className="border-anvil-gray-light bg-obsidian-black/50 text-smoke"
+								className="border-border-hair bg-bg-field/50 text-text-secondary"
 							/>
 							<PresetRow
 								onPreset={applySellPreset}
@@ -489,10 +492,10 @@ export function TradePanel({
 						</div>
 
 						{sellQuote !== undefined && sellAmountRaw > 0n && (
-							<div className="rounded-lg border border-anvil-gray-light bg-obsidian-black/30 p-3">
-								<div className="flex items-center justify-between text-xs text-smoke-dark">
+							<div className="rounded-lg border border-border-hair bg-bg-field/30 p-3">
+								<div className="flex items-center justify-between text-xs text-text-tertiary">
 									<span>You receive</span>
-									<span className="font-mono text-sm text-steel-white">
+									<span className="font-mono text-sm text-text-primary">
 										~${formatAmount(sellQuote)} USDC
 									</span>
 								</div>
@@ -515,9 +518,9 @@ export function TradePanel({
 						<SlippageSelector value={slippage} onChange={setSlippage} />
 
 						{tokenApproveError && (
-							<p className="text-xs text-red-400">{formatErrorMessage(tokenApproveError)}</p>
+							<p className="text-xs text-red">{formatErrorMessage(tokenApproveError)}</p>
 						)}
-						{sellError && <p className="text-xs text-red-400">{formatErrorMessage(sellError)}</p>}
+						{sellError && <p className="text-xs text-red">{formatErrorMessage(sellError)}</p>}
 
 						{needsSellApproval && !isTokenApprovalConfirmed ? (
 							<Button
@@ -555,9 +558,9 @@ export function TradePanel({
 
 function BalanceDisplay({ label, value }: { label: string; value: string }) {
 	return (
-		<div className="flex items-center justify-between rounded-md bg-obsidian-black/40 px-3 py-2">
-			<span className="text-xs text-smoke-dark">{label}</span>
-			<span className="font-mono text-xs text-steel-white">{value}</span>
+		<div className="flex items-center justify-between rounded-md bg-bg-void/40 px-3 py-2">
+			<span className="text-xs text-text-tertiary">{label}</span>
+			<span className="font-mono text-xs text-text-primary">{value}</span>
 		</div>
 	);
 }
@@ -578,9 +581,9 @@ function PresetRow({
 					disabled={disabled}
 					onClick={() => onPreset(preset.fraction)}
 					className={cn(
-						"rounded-md border border-anvil-gray-light px-2 py-1 text-xs font-medium text-smoke transition-colors",
+						"rounded-md border border-border-hair px-2 py-1 text-xs font-medium text-text-secondary transition-colors",
 						"hover:border-indigo hover:bg-indigo/10 hover:text-indigo",
-						"disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-anvil-gray-light disabled:hover:bg-transparent disabled:hover:text-smoke",
+						"disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-border-hair disabled:hover:bg-transparent disabled:hover:text-text-secondary",
 					)}
 				>
 					{preset.label}
@@ -606,11 +609,11 @@ function FeeBreakdown({
 	currency: string;
 }) {
 	return (
-		<div className="rounded-md border border-anvil-gray-light bg-obsidian-black/30">
+		<div className="rounded-md border border-border-hair bg-bg-field/30">
 			<button
 				type="button"
 				onClick={onToggle}
-				className="flex w-full items-center justify-between px-3 py-2 text-xs text-smoke-dark hover:text-smoke"
+				className="flex w-full items-center justify-between px-3 py-2 text-xs text-text-tertiary hover:text-text-secondary"
 			>
 				<span>
 					Fee: ~{formatAmount(total)} {currency} (1%)
@@ -618,16 +621,16 @@ function FeeBreakdown({
 				{open ? <ChevronUpIcon className="size-3" /> : <ChevronDownIcon className="size-3" />}
 			</button>
 			{open && (
-				<div className="space-y-1 border-t border-anvil-gray-light px-3 py-2 text-xs text-smoke-dark">
+				<div className="space-y-1 border-t border-border-hair px-3 py-2 text-xs text-text-tertiary">
 					<div className="flex items-center justify-between">
 						<span>Creator share (0.5%)</span>
-						<span className="font-mono text-smoke">
+						<span className="font-mono text-text-secondary">
 							{formatAmount(creator)} {currency}
 						</span>
 					</div>
 					<div className="flex items-center justify-between">
 						<span>Protocol share (0.5%)</span>
-						<span className="font-mono text-smoke">
+						<span className="font-mono text-text-secondary">
 							{formatAmount(protocol)} {currency}
 						</span>
 					</div>
@@ -642,7 +645,7 @@ function PriceImpactWarning({ impact }: { impact: number }) {
 	const isHigh = impact > 15;
 	return (
 		<div
-			className={`rounded p-2 text-xs ${isHigh ? "bg-red-500/10 text-red-400" : "bg-yellow-500/10 text-yellow-400"}`}
+			className={`rounded p-2 text-xs ${isHigh ? "bg-red-500/10 text-red" : "bg-yellow-500/10 text-gold"}`}
 		>
 			Price impact: {impact.toFixed(2)}% —{" "}
 			{isHigh ? "Very high impact, consider a smaller trade" : "Consider a smaller trade"}
@@ -653,7 +656,7 @@ function PriceImpactWarning({ impact }: { impact: number }) {
 function SlippageSelector({ value, onChange }: { value: number; onChange: (v: number) => void }) {
 	return (
 		<div className="flex items-center gap-2">
-			<span className="text-xs text-smoke-dark">Slippage:</span>
+			<span className="text-xs text-text-tertiary">Slippage:</span>
 			{SLIPPAGE_OPTIONS.map((opt) => (
 				<button
 					key={opt}
@@ -661,7 +664,9 @@ function SlippageSelector({ value, onChange }: { value: number; onChange: (v: nu
 					onClick={() => onChange(opt)}
 					className={cn(
 						"rounded px-2 py-1 text-xs transition-colors",
-						value === opt ? "bg-indigo/20 text-indigo" : "text-smoke-dark hover:text-smoke",
+						value === opt
+							? "bg-indigo/20 text-indigo"
+							: "text-text-tertiary hover:text-text-secondary",
 					)}
 				>
 					{opt}%

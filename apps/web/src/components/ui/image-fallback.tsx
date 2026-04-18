@@ -15,7 +15,7 @@ interface ImageFallbackProps {
 // white text contrast >= 4.5:1 (WCAG AA).
 const PALETTE = [
 	"from-indigo to-indigo-dimmed",
-	"from-forge-green/80 to-forge-green/40",
+	"from-green/80 to-green/40",
 	"from-purple-500 to-purple-800",
 	"from-sky-500 to-blue-800",
 	"from-orange-500/80 to-amber-700",

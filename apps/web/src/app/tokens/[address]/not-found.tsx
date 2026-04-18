@@ -4,8 +4,8 @@ import { PageContainer } from "@/components/layout/page-container";
 export default function TokenNotFound() {
 	return (
 		<PageContainer className="py-16 text-center">
-			<h1 className="text-2xl font-bold text-steel-white">Token Not Found</h1>
-			<p className="mt-2 text-sm text-smoke-dark">
+			<h1 className="text-2xl font-bold text-text-primary">Token Not Found</h1>
+			<p className="mt-2 text-sm text-text-tertiary">
 				The token you&apos;re looking for doesn&apos;t exist or hasn&apos;t been indexed yet.
 			</p>
 			<Link
