@@ -216,37 +216,95 @@ export default function LockPage() {
 					})}
 				</div>
 
-				<div className="reveal mx-auto max-w-2xl">
-					{activeTab === "single" && (
-						<LockForm
-							key={`single-${formKey}`}
-							onSuccess={handleSuccess}
-							initialToken={initialToken}
-						/>
-					)}
-					{activeTab === "batch" && hasLockerV2 && (
-						<BatchLockForm
-							key={`batch-${formKey}`}
-							onSuccess={handleBatchSuccess}
-							initialToken={initialToken}
-						/>
-					)}
-					{activeTab === "my-locks" && (
-						<LocksList
-							locks={createdLocks}
-							viewRole="creator"
-							isLoading={isLoading}
-							onActionComplete={handleActionComplete}
-						/>
-					)}
-					{activeTab === "claim" && (
-						<LocksList
-							locks={beneficiaryLocks}
-							viewRole="beneficiary"
-							isLoading={isLoading}
-							onActionComplete={handleActionComplete}
-						/>
-					)}
+				<div className="grid gap-10 lg:grid-cols-[1.1fr_1fr] lg:items-start">
+					<div className="reveal">
+						{activeTab === "single" && (
+							<LockForm
+								key={`single-${formKey}`}
+								onSuccess={handleSuccess}
+								initialToken={initialToken}
+							/>
+						)}
+						{activeTab === "batch" && hasLockerV2 && (
+							<BatchLockForm
+								key={`batch-${formKey}`}
+								onSuccess={handleBatchSuccess}
+								initialToken={initialToken}
+							/>
+						)}
+						{activeTab === "my-locks" && (
+							<LocksList
+								locks={createdLocks}
+								viewRole="creator"
+								isLoading={isLoading}
+								onActionComplete={handleActionComplete}
+							/>
+						)}
+						{activeTab === "claim" && (
+							<LocksList
+								locks={beneficiaryLocks}
+								viewRole="beneficiary"
+								isLoading={isLoading}
+								onActionComplete={handleActionComplete}
+							/>
+						)}
+					</div>
+
+					<aside
+						className="reveal flex flex-col gap-6 lg:sticky lg:top-24"
+						style={{ transitionDelay: "0.15s" }}
+					>
+						<div
+							className="relative overflow-hidden rounded-2xl border border-border-hair p-6"
+							style={{
+								background:
+									"radial-gradient(circle at 50% 0%, rgba(129,140,248,0.1), transparent 60%), var(--color-bg-elevated)",
+							}}
+						>
+							<div className="mb-4 font-mono text-[10px] text-text-tertiary uppercase tracking-[0.14em]">
+								How it works
+							</div>
+							<ol className="space-y-4 text-sm text-text-secondary">
+								<li className="flex gap-3">
+									<span
+										className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-[rgba(129,140,248,0.3)] font-mono text-[10px]"
+										style={{ color: "var(--color-indigo)" }}
+									>
+										1
+									</span>
+									<span>
+										Pick the token and enter the{" "}
+										<span className="text-text-primary">beneficiary</span>,{" "}
+										<span className="text-text-primary">amount</span>, and lock duration.
+									</span>
+								</li>
+								<li className="flex gap-3">
+									<span
+										className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-[rgba(129,140,248,0.3)] font-mono text-[10px]"
+										style={{ color: "var(--color-indigo)" }}
+									>
+										2
+									</span>
+									<span>
+										Optionally add a <span className="text-text-primary">cliff</span> for linear
+										vesting, or leave off for all-or-nothing unlock.
+									</span>
+								</li>
+								<li className="flex gap-3">
+									<span
+										className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-[rgba(129,140,248,0.3)] font-mono text-[10px]"
+										style={{ color: "var(--color-indigo)" }}
+									>
+										3
+									</span>
+									<span>
+										Approve USDC + token, then sign. Beneficiary claims over time from the contract
+										— you can revoke if you enabled it.
+									</span>
+								</li>
+							</ol>
+						</div>
+					</aside>
 				</div>
 			</main>
 

@@ -58,61 +58,65 @@ export function SwapHistory({ scope = "user", limit = 10, refreshKey = 0 }: Swap
 	if (scope === "user" && !address) return null;
 
 	return (
-		<div className="overflow-hidden rounded-2xl border border-border-hair bg-bg-elevated">
-			<div className="flex items-center justify-between border-b border-border-hair px-4 py-3">
-				<div className="font-display text-[15px] tracking-[-0.01em] text-text-primary">
-					{scope === "user" ? "Your recent swaps" : "Recent swaps"}
+		<div className="overflow-hidden rounded-3xl border border-border-subtle bg-bg-elevated p-5 shadow-[0_20px_60px_rgba(0,0,0,0.3)] sm:p-6">
+			<div className="mb-4 flex items-center justify-between">
+				<div className="font-mono text-[10px] text-text-tertiary uppercase tracking-[0.14em]">
+					{scope === "user" ? "Your recent swaps" : "Global recent swaps"}
 				</div>
 				<button
 					type="button"
 					onClick={() => refetch(true)}
 					disabled={isLoading || isRefreshing}
-					className="text-text-tertiary transition-colors hover:text-gold disabled:opacity-40"
-					title="Refresh"
+					aria-label="Refresh swaps"
+					className="inline-flex size-7 items-center justify-center rounded-lg text-text-tertiary transition-colors hover:bg-bg-field hover:text-gold disabled:opacity-40"
 				>
 					<RefreshCwIcon className={cn("size-3.5", isRefreshing && "animate-spin")} />
 				</button>
 			</div>
-			<div className="px-4 py-2">
-				{isLoading && <p className="py-4 text-center text-xs text-text-tertiary">Loading…</p>}
-				{!isLoading && swaps.length === 0 && (
-					<p className="py-4 text-center text-xs text-text-tertiary">No swaps yet.</p>
-				)}
-				{!isLoading && swaps.length > 0 && (
-					<ul className="divide-y divide-border-hair">
-						{swaps.map((s) => {
-							const usd = estimateSwapUsdValue(s);
-							return (
-								<li
-									key={`${s.txHash}-${s.logIndex}`}
-									className="flex items-center justify-between py-2.5 text-xs"
+			{isLoading && (
+				<p className="py-6 text-center font-mono text-[11px] text-text-tertiary uppercase tracking-[0.12em]">
+					Loading…
+				</p>
+			)}
+			{!isLoading && swaps.length === 0 && (
+				<p className="py-6 text-center font-mono text-[11px] text-text-tertiary uppercase tracking-[0.12em]">
+					No swaps yet
+				</p>
+			)}
+			{!isLoading && swaps.length > 0 && (
+				<ul className="-mx-2 divide-y divide-border-hair">
+					{swaps.map((s) => {
+						const usd = estimateSwapUsdValue(s);
+						return (
+							<li
+								key={`${s.txHash}-${s.logIndex}`}
+								className="flex items-center justify-between rounded-xl px-2 py-2.5 text-[12px] transition-colors hover:bg-bg-field/60"
+							>
+								<div className="min-w-0">
+									<p className="truncate font-mono text-text-primary">
+										{formatUnits(BigInt(s.amountIn), TIP20_DECIMALS)} {TRUNCATE(s.tokenIn)}{" "}
+										<span className="text-text-tertiary">→</span>{" "}
+										{formatUnits(BigInt(s.amountOut), TIP20_DECIMALS)} {TRUNCATE(s.tokenOut)}
+									</p>
+									<p className="mt-0.5 font-mono text-[10.5px] text-text-tertiary">
+										{new Date(s.createdAt).toLocaleString()}
+										{usd !== null && <span className="ml-2 text-gold/80">≈ {formatUsd(usd)}</span>}
+									</p>
+								</div>
+								<a
+									href={`${explorer}/tx/${s.txHash}`}
+									target="_blank"
+									rel="noopener noreferrer"
+									aria-label="View on explorer"
+									className="ml-3 inline-flex size-7 shrink-0 items-center justify-center rounded-lg text-text-tertiary transition-colors hover:bg-bg-field hover:text-gold"
 								>
-									<div className="min-w-0">
-										<p className="truncate font-mono text-text-primary">
-											{formatUnits(BigInt(s.amountIn), TIP20_DECIMALS)} {TRUNCATE(s.tokenIn)} →{" "}
-											{formatUnits(BigInt(s.amountOut), TIP20_DECIMALS)} {TRUNCATE(s.tokenOut)}
-										</p>
-										<p className="font-mono text-text-tertiary">
-											{new Date(s.createdAt).toLocaleString()}
-											{usd !== null && (
-												<span className="ml-2 text-text-secondary">≈ {formatUsd(usd)}</span>
-											)}
-										</p>
-									</div>
-									<a
-										href={`${explorer}/tx/${s.txHash}`}
-										target="_blank"
-										rel="noopener noreferrer"
-										className="ml-3 shrink-0 text-text-tertiary hover:text-gold"
-									>
-										<ExternalLinkIcon className="size-3.5" />
-									</a>
-								</li>
-							);
-						})}
-					</ul>
-				)}
-			</div>
+									<ExternalLinkIcon className="size-3.5" />
+								</a>
+							</li>
+						);
+					})}
+				</ul>
+			)}
 		</div>
 	);
 }

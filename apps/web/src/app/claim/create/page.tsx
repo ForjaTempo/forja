@@ -58,19 +58,77 @@ export default function CreateClaimCampaignPage() {
 					className="mb-12"
 				/>
 
-				<div className="reveal mx-auto max-w-3xl">
-					{hasClaimer ? (
-						<ClaimCampaignForm initialToken={initialToken} />
-					) : (
-						<div className="space-y-2 rounded-2xl border border-border-hair bg-bg-elevated p-12 text-center">
-							<p className="font-display text-[28px] tracking-[-0.01em] text-text-primary">
-								Coming soon
-							</p>
-							<p className="text-[13.5px] text-text-secondary">
-								Merkle claim campaigns are not yet available on this network.
-							</p>
+				<div className="grid gap-10 lg:grid-cols-[1.1fr_1fr] lg:items-start">
+					<div className="reveal">
+						{hasClaimer ? (
+							<ClaimCampaignForm initialToken={initialToken} />
+						) : (
+							<div className="space-y-2 rounded-2xl border border-border-hair bg-bg-elevated p-12 text-center">
+								<p className="font-display text-[28px] tracking-[-0.01em] text-text-primary">
+									Coming soon
+								</p>
+								<p className="text-[13.5px] text-text-secondary">
+									Merkle claim campaigns are not yet available on this network.
+								</p>
+							</div>
+						)}
+					</div>
+
+					<aside
+						className="reveal flex flex-col gap-6 lg:sticky lg:top-24"
+						style={{ transitionDelay: "0.15s" }}
+					>
+						<div
+							className="relative overflow-hidden rounded-2xl border border-border-hair p-6"
+							style={{
+								background:
+									"radial-gradient(circle at 50% 0%, rgba(255,107,61,0.1), transparent 60%), var(--color-bg-elevated)",
+							}}
+						>
+							<div className="mb-4 font-mono text-[10px] text-text-tertiary uppercase tracking-[0.14em]">
+								How it works
+							</div>
+							<ol className="space-y-4 text-sm text-text-secondary">
+								<li className="flex gap-3">
+									<span
+										className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-[rgba(255,107,61,0.3)] font-mono text-[10px]"
+										style={{ color: "var(--color-ember)" }}
+									>
+										1
+									</span>
+									<span>
+										Paste or upload your recipient list —{" "}
+										<span className="text-text-primary">address,amount</span> pairs. Up to 5,000
+										wallets per campaign.
+									</span>
+								</li>
+								<li className="flex gap-3">
+									<span
+										className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-[rgba(255,107,61,0.3)] font-mono text-[10px]"
+										style={{ color: "var(--color-ember)" }}
+									>
+										2
+									</span>
+									<span>
+										Name the campaign, pick a <span className="text-text-primary">slug</span>, and
+										optionally set start/end dates and a sweep-on-expiry policy.
+									</span>
+								</li>
+								<li className="flex gap-3">
+									<span
+										className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-[rgba(255,107,61,0.3)] font-mono text-[10px]"
+										style={{ color: "var(--color-ember)" }}
+									>
+										3
+									</span>
+									<span>
+										Deposit tokens once + pay the flat fee. Recipients claim their share
+										permissionlessly — gas-free for you.
+									</span>
+								</li>
+							</ol>
 						</div>
-					)}
+					</aside>
 				</div>
 			</main>
 		</div>
