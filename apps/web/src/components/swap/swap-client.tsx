@@ -90,7 +90,7 @@ export function SwapClient() {
 					</div>
 				)}
 
-				<div className="reveal grid gap-8 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start">
+				<div className="reveal mx-auto grid w-full max-w-[920px] gap-4 lg:grid-cols-[minmax(0,440px)_minmax(0,1fr)] lg:items-start lg:gap-5">
 					<div className="mx-auto w-full max-w-md lg:mx-0">
 						<SwapPanel
 							initialTokenIn={initialIn}
@@ -99,8 +99,8 @@ export function SwapClient() {
 						/>
 					</div>
 					<aside className="space-y-4">
-						<SwapHistory scope="user" limit={5} refreshKey={historyKey} />
-						<SwapHistory scope="global" limit={5} refreshKey={historyKey} />
+						<SwapHistory scope="user" limit={6} refreshKey={historyKey} />
+						<SwapHistory scope="global" limit={4} refreshKey={historyKey} />
 					</aside>
 				</div>
 			</div>
