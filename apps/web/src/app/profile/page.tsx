@@ -57,9 +57,10 @@ export default function ProfilePage() {
 					</div>
 					<h1
 						className="m-0 font-display font-normal leading-[0.95] tracking-[-0.03em]"
-						style={{ fontSize: "clamp(32px, 5vw, 52px)" }}
+						style={{ fontSize: "clamp(40px, 6.5vw, 76px)" }}
 					>
-						Sign your work. <span className="gold-text italic">Shape your page.</span>
+						<span className="block">Sign your work.</span>
+						<span className="gold-text block italic">Shape your page.</span>
 					</h1>
 					<p className="max-w-xl text-[14.5px] text-text-secondary">
 						Claim your handle, banner, and links. Everything you edit here is what visitors see on

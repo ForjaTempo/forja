@@ -143,7 +143,13 @@ export function Hero({ tokensCount, launchesCount, creatorsCount }: HeroProps = 
 
 			<div className="relative z-[3] mx-auto max-w-[1400px] px-6 pt-16 pb-12 text-center lg:px-10">
 				<div className="reveal mb-8">
-					<span className="inline-flex items-center gap-2.5 rounded-full border border-border-gold bg-[rgba(240,211,138,0.06)] py-1.5 pr-3.5 pl-2 text-[12.5px] text-text-secondary">
+					<span
+						className="inline-flex items-center gap-2.5 rounded-full border border-border-gold bg-[rgba(240,211,138,0.06)] py-1.5 pr-3.5 pl-2 text-[12.5px] text-text-secondary"
+						style={{
+							boxShadow: "0 0 24px -8px rgba(240,211,138,0.35)",
+							animation: "pulse-glow 3.5s ease-in-out infinite",
+						}}
+					>
 						<span className="rounded-sm bg-gold px-1.5 py-0.5 font-mono font-semibold text-[#1a1307] text-[10px] tracking-[0.1em]">
 							NEW
 						</span>
@@ -152,7 +158,7 @@ export function Hero({ tokensCount, launchesCount, creatorsCount }: HeroProps = 
 				</div>
 
 				<h1
-					className="reveal mx-auto mb-7 font-display font-normal text-[clamp(60px,11vw,180px)] leading-[0.92] tracking-[-0.045em]"
+					className="reveal mx-auto mb-7 font-display font-normal text-[clamp(44px,7.5vw,108px)] leading-[0.98] tracking-[-0.04em]"
 					style={{ transitionDelay: "0.05s" }}
 				>
 					<span className="block">Forge tokens at</span>
