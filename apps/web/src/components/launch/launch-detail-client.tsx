@@ -6,7 +6,6 @@ import {
 	ExternalLinkIcon,
 	GlobeIcon,
 	MessageCircleIcon,
-	RocketIcon,
 	SendIcon,
 	XIcon as TwitterIcon,
 } from "lucide-react";
@@ -26,11 +25,8 @@ import { GraduationProgress } from "@/components/launch/graduation-progress";
 import { LiveTradeFeed } from "@/components/launch/live-trade-feed";
 import { TerminatedBanner } from "@/components/launch/terminated-banner";
 import { TradePanel } from "@/components/launch/trade-panel";
-import { PageContainer } from "@/components/layout/page-container";
 import { ExternalLinkGuard } from "@/components/shared/external-link-guard";
 import { SwapCta } from "@/components/swap/swap-cta";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getExplorerUrl, TEMPO_CHAIN_ID, TIP20_DECIMALS } from "@/lib/constants";
 import { erc20Abi } from "@/lib/contracts";
 import { formatDate } from "@/lib/format";
@@ -100,59 +96,92 @@ export function LaunchDetailClient({ initialLaunch, initialTrades }: Props) {
 	if (!launch) return null;
 
 	return (
-		<PageContainer className="py-8 sm:py-12">
-			<div className="space-y-6">
+		<main className="relative z-[5] mx-auto max-w-[1400px] px-6 pt-10 pb-20 sm:px-10 sm:pt-14 sm:pb-24">
+			<div className="space-y-8">
 				{/* Back link */}
 				<Link
 					href="/launch"
-					className="inline-flex items-center gap-1 text-sm text-smoke-dark hover:text-smoke"
+					className="inline-flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-[0.12em] text-text-tertiary transition-colors hover:text-text-primary"
 				>
-					<ArrowLeftIcon className="size-4" />
-					All Launches
+					<ArrowLeftIcon className="size-3.5" />
+					All launches
 				</Link>
 
-				{/* Header */}
-				<div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-					<div className="flex items-center gap-4">
+				{/* Hero row */}
+				<div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+					<div className="flex items-start gap-5">
 						{launch.imageUri ? (
 							// biome-ignore lint/performance/noImgElement: user-provided external URL, no remote pattern config
 							<img
 								src={launch.imageUri}
 								alt={launch.symbol}
-								className="size-14 rounded-full object-cover"
+								className="size-16 shrink-0 rounded-2xl object-cover"
+								style={{ boxShadow: "0 4px 24px rgba(244,114,182,0.2)" }}
 							/>
 						) : (
-							<div className="flex size-14 items-center justify-center rounded-full bg-anvil-gray">
-								<RocketIcon className="size-7 text-smoke-dark" />
+							<div
+								className="flex size-16 shrink-0 items-center justify-center rounded-2xl font-display text-xl font-semibold"
+								style={{
+									background: "linear-gradient(135deg, #f472b6, #a78bfa)",
+									color: "#1a0620",
+									boxShadow: "0 4px 24px rgba(244,114,182,0.25)",
+								}}
+							>
+								{launch.symbol.slice(0, 2).toUpperCase()}
 							</div>
 						)}
-						<div>
-							<div className="flex items-center gap-2">
-								<h1 className="text-2xl font-bold text-steel-white">{launch.name}</h1>
+						<div className="min-w-0">
+							<div className="mb-3 flex flex-wrap items-center gap-2">
+								<span
+									className="inline-flex items-center gap-2 rounded-full border px-3 py-1 font-mono text-[11px] uppercase tracking-[0.12em]"
+									style={{
+										background: "rgba(244,114,182,0.08)",
+										borderColor: "rgba(244,114,182,0.2)",
+										color: "#f472b6",
+									}}
+								>
+									${launch.symbol}
+								</span>
 								<StatusBadge launch={launch} />
 							</div>
-							<p className="text-sm text-smoke-dark">
-								${launch.symbol}
-								{launch.creatorDisplayName && <span> by {launch.creatorDisplayName}</span>}
-							</p>
+							<h1
+								className="m-0 font-display font-normal leading-[0.98] tracking-[-0.035em] text-text-primary"
+								style={{ fontSize: "clamp(36px, 5vw, 56px)" }}
+							>
+								{launch.name}
+							</h1>
+							{launch.creatorDisplayName && (
+								<p className="mt-3 text-sm text-text-secondary">
+									by{" "}
+									<Link
+										href={`/creators/${launch.creatorAddress}`}
+										className="text-text-primary hover:text-indigo"
+									>
+										{launch.creatorDisplayName}
+									</Link>
+								</p>
+							)}
 							{launch.tags && launch.tags.length > 0 && (
-								<div className="mt-2 flex flex-wrap gap-1.5">
+								<div className="mt-4 flex flex-wrap gap-1.5">
 									{launch.tags.map((tag) => (
-										<Badge key={tag} variant="outline" className="text-xs">
+										<span
+											key={tag}
+											className="inline-flex items-center rounded-full bg-bg-elevated px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.12em] text-text-secondary"
+										>
 											{tag}
-										</Badge>
+										</span>
 									))}
 								</div>
 							)}
 						</div>
 					</div>
 
-					<div className="flex gap-2">
+					<div className="flex shrink-0 flex-wrap gap-2">
 						<a
 							href={`${explorerUrl}/address/${launch.tokenAddress}`}
 							target="_blank"
 							rel="noopener noreferrer"
-							className="inline-flex items-center gap-1 rounded-md border border-anvil-gray-light px-3 py-2 text-xs text-smoke hover:text-steel-white"
+							className="inline-flex items-center gap-1.5 rounded-xl border border-border-hair bg-bg-elevated px-3.5 py-2 font-mono text-[11px] uppercase tracking-[0.12em] text-text-secondary transition-colors hover:border-border-strong hover:text-text-primary"
 						>
 							Token <ExternalLinkIcon className="size-3" />
 						</a>
@@ -160,7 +189,7 @@ export function LaunchDetailClient({ initialLaunch, initialTrades }: Props) {
 							href={`${explorerUrl}/tx/${launch.txHash}`}
 							target="_blank"
 							rel="noopener noreferrer"
-							className="inline-flex items-center gap-1 rounded-md border border-anvil-gray-light px-3 py-2 text-xs text-smoke hover:text-steel-white"
+							className="inline-flex items-center gap-1.5 rounded-xl border border-border-hair bg-bg-elevated px-3.5 py-2 font-mono text-[11px] uppercase tracking-[0.12em] text-text-secondary transition-colors hover:border-border-strong hover:text-text-primary"
 						>
 							TX <ExternalLinkIcon className="size-3" />
 						</a>
@@ -189,11 +218,14 @@ export function LaunchDetailClient({ initialLaunch, initialTrades }: Props) {
 					<div className="space-y-6 lg:col-span-2">
 						{/* Description */}
 						{launch.description && (
-							<Card className="border-anvil-gray-light bg-deep-charcoal">
-								<CardContent className="p-4">
-									<p className="text-sm text-smoke">{launch.description}</p>
-								</CardContent>
-							</Card>
+							<div className="rounded-2xl border border-border-hair bg-bg-elevated p-6">
+								<div className="mb-3 font-mono text-[11px] uppercase tracking-[0.14em] text-text-tertiary">
+									About
+								</div>
+								<p className="text-[15px] leading-[1.65] text-text-secondary">
+									{launch.description}
+								</p>
+							</div>
 						)}
 
 						{/* Bonding Curve Chart */}
@@ -204,7 +236,10 @@ export function LaunchDetailClient({ initialLaunch, initialTrades }: Props) {
 						/>
 
 						{/* Stats Row */}
-						<div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+						<div
+							className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-border-hair sm:grid-cols-5"
+							style={{ background: "var(--color-border-hair)" }}
+						>
 							<MiniStat label="Raised" value={`$${formatUsdc(launch.realUsdcRaised)}`} />
 							<MiniStat label="Volume" value={`$${formatUsdc(launch.totalVolume)}`} />
 							<MiniStat label="Trades" value={launch.tradeCount.toString()} />
@@ -213,17 +248,19 @@ export function LaunchDetailClient({ initialLaunch, initialTrades }: Props) {
 						</div>
 
 						{/* Token Info */}
-						<Card className="border-anvil-gray-light bg-deep-charcoal">
-							<CardHeader className="pb-2">
-								<CardTitle className="text-sm text-steel-white">Token Info</CardTitle>
-							</CardHeader>
-							<CardContent className="space-y-2 text-xs">
-								<InfoRow label="Token Address" value={launch.tokenAddress} mono />
-								<div className="flex items-start justify-between gap-4">
-									<span className="text-smoke-dark">Creator</span>
+						<div className="rounded-2xl border border-border-hair bg-bg-elevated p-6">
+							<div className="mb-4 font-mono text-[11px] uppercase tracking-[0.14em] text-text-tertiary">
+								Token info
+							</div>
+							<div className="divide-y divide-border-hair">
+								<InfoRow label="Token address" value={launch.tokenAddress} mono />
+								<div className="flex items-start justify-between gap-4 py-2.5">
+									<span className="font-mono text-[11px] uppercase tracking-[0.12em] text-text-tertiary">
+										Creator
+									</span>
 									<Link
 										href={`/creators/${launch.creatorAddress}`}
-										className="font-mono text-right text-indigo hover:underline"
+										className="text-right font-mono text-sm text-indigo hover:underline"
 									>
 										{launch.creatorDisplayName ?? shortenAddress(launch.creatorAddress)}
 									</Link>
@@ -233,8 +270,8 @@ export function LaunchDetailClient({ initialLaunch, initialTrades }: Props) {
 									<InfoRow label="Graduated" value={formatDate(launch.graduatedAt)} />
 								)}
 								<InfoRow label="Block" value={launch.blockNumber.toString()} />
-							</CardContent>
-						</Card>
+							</div>
+						</div>
 
 						{/* Live Trade Feed */}
 						<LiveTradeFeed
@@ -270,27 +307,31 @@ export function LaunchDetailClient({ initialLaunch, initialTrades }: Props) {
 
 						{/* Post-graduation trading flows through the Uniswap v4 router. */}
 						{launch.graduated && (
-							<Card className="border-indigo/30 bg-indigo/5">
-								<CardHeader className="pb-2">
-									<CardTitle className="text-sm text-steel-white">Trade {launch.symbol}</CardTitle>
-								</CardHeader>
-								<CardContent className="space-y-3 text-xs text-smoke">
-									<p>
-										This launch graduated to Uniswap v4. Trade it through the FORJA swap router —
-										best route, transparent 0.25% fee.
-									</p>
-									<SwapCta tokenAddress={launch.tokenAddress} className="w-full justify-center" />
-								</CardContent>
-							</Card>
+							<div
+								className="rounded-2xl border p-5"
+								style={{
+									borderColor: "rgba(129,140,248,0.3)",
+									background: "rgba(129,140,248,0.05)",
+								}}
+							>
+								<div className="mb-3 font-mono text-[11px] uppercase tracking-[0.14em] text-indigo">
+									Trade {launch.symbol}
+								</div>
+								<p className="mb-4 text-xs leading-[1.6] text-text-secondary">
+									This launch graduated to Uniswap v4. Trade it through the FORJA swap router — best
+									route, transparent 0.25% fee.
+								</p>
+								<SwapCta tokenAddress={launch.tokenAddress} className="w-full justify-center" />
+							</div>
 						)}
 
 						{/* User Position */}
 						{(position || onChainBalance !== undefined) && (
-							<Card className="border-anvil-gray-light bg-deep-charcoal">
-								<CardHeader className="pb-2">
-									<CardTitle className="text-sm text-steel-white">Your Position</CardTitle>
-								</CardHeader>
-								<CardContent className="space-y-2 text-xs">
+							<div className="rounded-2xl border border-border-hair bg-bg-elevated p-5">
+								<div className="mb-4 font-mono text-[11px] uppercase tracking-[0.14em] text-text-tertiary">
+									Your position
+								</div>
+								<div className="divide-y divide-border-hair">
 									{onChainBalance !== undefined && (
 										<InfoRow
 											label="Balance"
@@ -300,48 +341,89 @@ export function LaunchDetailClient({ initialLaunch, initialTrades }: Props) {
 									{position && (
 										<>
 											<InfoRow
-												label="Total Spent"
+												label="Total spent"
 												value={`$${formatUsdc(position.totalUsdcSpent)}`}
 											/>
 											<InfoRow
-												label="Total Received"
+												label="Total received"
 												value={`$${formatUsdc(position.totalUsdcReceived)}`}
 											/>
 											<InfoRow label="Trades" value={position.tradeCount.toString()} />
 										</>
 									)}
-								</CardContent>
-							</Card>
+								</div>
+							</div>
 						)}
 					</div>
 				</div>
 			</div>
-		</PageContainer>
+		</main>
 	);
 }
 
 function StatusBadge({ launch }: { launch: LaunchDetail }) {
-	if (launch.graduated) return <Badge variant="success">Graduated</Badge>;
-	if (launch.killed || launch.failed) {
-		return <Badge variant="destructive">{launch.killed ? "Killed" : "Failed"}</Badge>;
+	let label: string;
+	let color: string;
+	let bg: string;
+	let border: string;
+
+	if (launch.graduated) {
+		label = "Graduated";
+		color = "var(--color-green)";
+		bg = "rgba(74,222,128,0.1)";
+		border = "rgba(74,222,128,0.25)";
+	} else if (launch.killed) {
+		label = "Killed";
+		color = "var(--color-red)";
+		bg = "rgba(248,113,113,0.1)";
+		border = "rgba(248,113,113,0.25)";
+	} else if (launch.failed) {
+		label = "Failed";
+		color = "var(--color-red)";
+		bg = "rgba(248,113,113,0.1)";
+		border = "rgba(248,113,113,0.25)";
+	} else {
+		label = "Active";
+		color = "#f472b6";
+		bg = "rgba(244,114,182,0.1)";
+		border = "rgba(244,114,182,0.25)";
 	}
-	return <Badge variant="warning">Live</Badge>;
+
+	return (
+		<span
+			className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.12em]"
+			style={{ background: bg, borderColor: border, color }}
+		>
+			<span
+				aria-hidden
+				className="size-1.5 rounded-full"
+				style={{ background: color, boxShadow: `0 0 8px ${color}` }}
+			/>
+			{label}
+		</span>
+	);
 }
 
 function MiniStat({ label, value }: { label: string; value: string }) {
 	return (
-		<div className="rounded-lg border border-anvil-gray-light bg-obsidian-black/50 p-3">
-			<p className="text-xs text-smoke-dark">{label}</p>
-			<p className="mt-1 text-sm font-semibold text-steel-white">{value}</p>
+		<div className="bg-bg-elevated px-4 py-4">
+			<div className="mb-1.5 font-mono text-[10px] uppercase tracking-[0.14em] text-text-tertiary">
+				{label}
+			</div>
+			<div className="font-display text-[22px] leading-none tracking-[-0.02em] text-text-primary">
+				{value}
+			</div>
 		</div>
 	);
 }
 
 function InfoRow({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
 	return (
-		<div className="flex items-start justify-between gap-4">
-			<span className="text-smoke-dark">{label}</span>
-			<span className={`text-right text-smoke ${mono ? "font-mono" : ""}`}>
+		<div className="flex items-start justify-between gap-4 py-2.5">
+			<span className="font-mono text-[11px] uppercase tracking-[0.12em] text-text-tertiary">
+				{label}
+			</span>
+			<span className={`text-right text-sm text-text-secondary ${mono ? "font-mono" : ""}`}>
 				{mono && value.startsWith("0x") ? shortenAddress(value) : value}
 			</span>
 		</div>
@@ -370,7 +452,7 @@ function SocialLinksRow({ launch }: { launch: LaunchDetail }) {
 			{website && (
 				<ExternalLinkGuard
 					href={website}
-					className="inline-flex items-center gap-1.5 rounded-md border border-anvil-gray-light bg-anvil-gray/30 px-2.5 py-1 text-xs text-smoke transition-colors hover:border-indigo/60 hover:text-indigo"
+					className="inline-flex items-center gap-1.5 rounded-xl border border-border-hair bg-bg-elevated px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.1em] text-text-secondary transition-colors hover:border-border-strong hover:text-indigo"
 				>
 					<GlobeIcon className="size-3.5" />
 					Website
@@ -403,7 +485,7 @@ function SocialLink({ href, label, icon }: { href: string; label: string; icon: 
 			href={href}
 			target="_blank"
 			rel="noopener noreferrer"
-			className="inline-flex items-center gap-1.5 rounded-md border border-anvil-gray-light bg-anvil-gray/30 px-2.5 py-1 text-xs text-smoke transition-colors hover:border-indigo/60 hover:text-indigo"
+			className="inline-flex items-center gap-1.5 rounded-xl border border-border-hair bg-bg-elevated px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.1em] text-text-secondary transition-colors hover:border-border-strong hover:text-indigo"
 		>
 			{icon}
 			{label}

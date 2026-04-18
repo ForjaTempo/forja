@@ -33,13 +33,13 @@ export function LaunchSearch({ value, onChange }: LaunchSearchProps) {
 
 	return (
 		<div className="relative">
-			<SearchIcon className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-smoke-dark" />
+			<SearchIcon className="-translate-y-1/2 absolute top-1/2 left-3.5 size-4 text-text-tertiary" />
 			<Input
 				type="text"
-				placeholder="Search by name, symbol, or token address..."
+				placeholder="Search tokens, creators, addresses…"
 				value={local}
 				onChange={handleChange}
-				className="h-10 border-anvil-gray-light bg-obsidian-black/50 pl-10 text-smoke placeholder:text-smoke-dark"
+				className="h-10 rounded-[10px] border-border-hair bg-bg-elevated pl-10 text-[13px] text-text-primary placeholder:text-text-tertiary focus:border-[rgba(244,114,182,0.4)]"
 			/>
 		</div>
 	);
