@@ -6,6 +6,9 @@ import { Header } from "@/components/layout/header";
 import { Providers } from "@/components/providers";
 import { APP_DESCRIPTION, APP_NAME, APP_URL } from "@/lib/constants";
 import { getNonce } from "@/lib/nonce";
+// CSS import order matters in Next 16 prod with cssChunking:"strict" — vendor
+// CSS first so Tailwind utilities in globals.css cascade on top consistently.
+import "@rainbow-me/rainbowkit/styles.css";
 import "./globals.css";
 
 // Display — editorial serif used for headings, hero text, italic accent words

@@ -1,6 +1,6 @@
 "use client";
 
-import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { ConnectCta } from "@/components/shared/connect-cta";
 import { useQuery } from "@tanstack/react-query";
 import {
 	ArrowLeftIcon,
@@ -150,7 +150,7 @@ export function LaunchCreateForm() {
 				<WalletIcon className="size-12 text-text-tertiary" />
 				<h2 className="font-display text-2xl font-normal text-text-primary">Connect your wallet</h2>
 				<p className="text-sm text-text-secondary">Connect your wallet to create a launch.</p>
-				<ConnectButton />
+				<ConnectCta fullWidth={false} />
 			</div>
 		);
 	}

@@ -1,6 +1,6 @@
 "use client";
 
-import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { ConnectCta } from "@/components/shared/connect-cta";
 import { ChevronDownIcon, ChevronUpIcon, WalletIcon } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { formatUnits, parseUnits } from "viem";
@@ -313,13 +313,11 @@ export function TradePanel({
 
 	if (!isConnected) {
 		return (
-			<Card className="border-border-hair bg-bg-elevated">
-				<CardContent className="flex flex-col items-center gap-4 p-6">
-					<WalletIcon className="size-8 text-text-tertiary" />
-					<p className="text-sm text-text-tertiary">Connect wallet to trade</p>
-					<ConnectButton />
-				</CardContent>
-			</Card>
+			<div className="flex flex-col items-center gap-4 rounded-2xl border border-border-hair bg-bg-elevated p-6">
+				<WalletIcon className="size-8 text-text-tertiary" />
+				<p className="text-[13px] text-text-tertiary">Connect wallet to trade</p>
+				<ConnectCta fullWidth={false} />
+			</div>
 		);
 	}
 
