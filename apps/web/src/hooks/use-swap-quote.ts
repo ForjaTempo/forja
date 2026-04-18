@@ -18,6 +18,16 @@ interface UseSwapQuoteReturn {
 	error: string | null;
 }
 
+const REASON_MESSAGES: Record<string, string> = {
+	no_pool:
+		"No Uniswap v4 pool exists for this pair. This token may trade on v2/v3 or have no liquidity yet.",
+	pool_drained:
+		"Pool exists but liquidity was withdrawn. Wait for an LP to re-deposit, or pick another token.",
+	zero_estimate: "Amount too small to estimate — try a larger input.",
+	invalid_input: "Invalid token addresses or amount.",
+	rpc_error: "Network error while fetching quote. Try again in a moment.",
+};
+
 /**
  * Debounced swap quote fetcher. Re-runs whenever inputs change after
  * `debounceMs` of stillness. Returns the latest server-side estimate plus
@@ -56,8 +66,12 @@ export function useSwapQuote({
 					slippageBps,
 				});
 				if (cancelled) return;
-				setQuote(result);
-				if (!result) setError("No liquidity for this pair");
+				if ("quote" in result) {
+					setQuote(result.quote);
+				} else {
+					setQuote(null);
+					setError(REASON_MESSAGES[result.reason] ?? "Quote unavailable");
+				}
 			} catch (e) {
 				if (cancelled) return;
 				setError(e instanceof Error ? e.message : "Quote failed");

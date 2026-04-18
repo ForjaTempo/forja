@@ -37,29 +37,40 @@ export type GetQuoteParams = {
 	slippageBps: number;
 };
 
+/** Reason codes for quote failures so the UI can render a useful message. */
+export type QuoteFailureReason = "no_pool" | "pool_drained" | "zero_estimate";
+
 /**
  * Quote an exact-input swap by probing standard v4 fee tiers and picking the
- * pool that delivers the most output. Returns `null` when no liquidity exists
- * for the pair on any probed tier.
+ * pool that delivers the most output.
  *
- * The estimate is based on current-tick spot price plus single-range
- * constant-product math. For deep swaps the on-chain `minAmountOut` floor (set
- * from `slippageBps`) protects users from real-world tick crossings.
+ * Returns:
+ *   - `{ quote }` when at least one pool has in-range liquidity
+ *   - `{ reason: "pool_drained" }` if ≥1 pool is initialised but has 0
+ *     in-range liquidity (token was tradeable but LPs withdrew)
+ *   - `{ reason: "no_pool" }` if no v4 pool exists at the probed tiers
+ *   - `{ reason: "zero_estimate" }` if the math short-circuits to 0
  */
-export async function getQuote(params: GetQuoteParams): Promise<SwapQuote | null> {
+export async function getQuoteDetailed(
+	params: GetQuoteParams,
+): Promise<{ quote: SwapQuote } | { reason: QuoteFailureReason }> {
 	const { client, tokenIn, tokenOut, amountIn, slippageBps } = params;
 
-	if (amountIn === 0n) return null;
-	if (tokenIn.toLowerCase() === tokenOut.toLowerCase()) return null;
+	if (amountIn === 0n) return { reason: "zero_estimate" };
+	if (tokenIn.toLowerCase() === tokenOut.toLowerCase()) return { reason: "no_pool" };
 
 	const forjaFee = (amountIn * BigInt(SWAP_FEE_BPS)) / 10_000n;
 	const amountInAfterFee = amountIn - forjaFee;
+
+	let anyPoolExists = false;
 
 	const candidates = await Promise.all(
 		STANDARD_FEE_TIERS.map(async ({ fee, tickSpacing }) => {
 			const { key, zeroForOneIfInputIsTokenA } = buildPoolKey(tokenIn, tokenOut, fee, tickSpacing);
 			const state = await readPoolState(client, key);
-			if (!state.exists || state.liquidity === 0n) return null;
+			if (!state.exists) return null;
+			anyPoolExists = true;
+			if (state.liquidity === 0n) return null;
 
 			const zeroForOne = zeroForOneIfInputIsTokenA;
 			const { amountOut, sqrtPriceX96After } = estimateAmountOut(
@@ -81,7 +92,9 @@ export async function getQuote(params: GetQuoteParams): Promise<SwapQuote | null
 	);
 
 	const valid = candidates.filter((c): c is NonNullable<typeof c> => c !== null);
-	if (valid.length === 0) return null;
+	if (valid.length === 0) {
+		return { reason: anyPoolExists ? "pool_drained" : "no_pool" };
+	}
 
 	// Pick the route with the highest amountOut.
 	const best = valid.reduce((a, b) => (b.amountOut > a.amountOut ? b : a));
@@ -99,20 +112,28 @@ export async function getQuote(params: GetQuoteParams): Promise<SwapQuote | null
 		: SQRT_PRICE_LIMIT.MAX_MINUS_ONE;
 
 	return {
-		tokenIn,
-		tokenOut,
-		amountIn,
-		forjaFee,
-		amountInAfterFee,
-		amountOut: best.amountOut,
-		minAmountOut,
-		priceImpactBps: impact,
-		poolKey: best.key,
-		zeroForOne: best.zeroForOne,
-		sqrtPriceLimitX96,
-		sqrtPriceX96Before: best.sqrtPriceX96Before,
-		sqrtPriceX96After: best.sqrtPriceX96After,
+		quote: {
+			tokenIn,
+			tokenOut,
+			amountIn,
+			forjaFee,
+			amountInAfterFee,
+			amountOut: best.amountOut,
+			minAmountOut,
+			priceImpactBps: impact,
+			poolKey: best.key,
+			zeroForOne: best.zeroForOne,
+			sqrtPriceLimitX96,
+			sqrtPriceX96Before: best.sqrtPriceX96Before,
+			sqrtPriceX96After: best.sqrtPriceX96After,
+		},
 	};
+}
+
+/** Backwards-compatible wrapper that drops the reason code. */
+export async function getQuote(params: GetQuoteParams): Promise<SwapQuote | null> {
+	const result = await getQuoteDetailed(params);
+	return "quote" in result ? result.quote : null;
 }
 
 /**
