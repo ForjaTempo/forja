@@ -267,3 +267,14 @@ body {
 	outline: 2px solid var(--color-gold);
 	outline-offset: 2px;
 }
+
+/* RainbowKit modal — defensive background fill so Tailwind v4 preflight
+   doesn't blank the modal card. Targets the outer modal container and its
+   dialog. --rk-colors-* variables come from RainbowKit's darkTheme(). */
+[data-rk] [role="dialog"],
+[data-rk] [data-testid="rk-account-modal"],
+[data-rk] [data-testid="rk-chain-modal"],
+[data-rk] [data-testid="rk-connect-modal"] {
+	background: var(--rk-colors-modalBackground, #141218) !important;
+	border: 1px solid var(--rk-colors-modalBorder, rgba(255, 255, 255, 0.08)) !important;
+}
