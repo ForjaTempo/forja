@@ -10,9 +10,7 @@ import {
 	XAxis,
 	YAxis,
 } from "recharts";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-// Contract constants (6 decimals)
 const VIRTUAL_TOKEN_RESERVE = 1_073_000_000;
 const VIRTUAL_USDC_RESERVE = 30_000;
 const CURVE_SUPPLY = 800_000_000;
@@ -54,17 +52,24 @@ interface CurveChartProps {
 export function CurveChart({ realTokensSold, realUsdcRaised, graduated }: CurveChartProps) {
 	const data = useMemo(() => generateCurveData(), []);
 
-	const currentPctSold = useMemo(() => {
-		const sold = Number(BigInt(realTokensSold)) / 1e6;
-		return Math.min(100, (sold / CURVE_SUPPLY) * 100);
+	const soldAmount = useMemo(() => {
+		try {
+			return Number(BigInt(realTokensSold)) / 1e6;
+		} catch {
+			return 0;
+		}
 	}, [realTokensSold]);
 
+	const currentPctSold = useMemo(
+		() => Math.min(100, (soldAmount / CURVE_SUPPLY) * 100),
+		[soldAmount],
+	);
+
 	const currentPrice = useMemo(() => {
-		const sold = Number(BigInt(realTokensSold)) / 1e6;
-		const virtualTokens = VIRTUAL_TOKEN_RESERVE - sold;
+		const virtualTokens = VIRTUAL_TOKEN_RESERVE - soldAmount;
 		const virtualUsdc = K / virtualTokens;
 		return virtualUsdc / virtualTokens;
-	}, [realTokensSold]);
+	}, [soldAmount]);
 
 	const graduationPctSold = useMemo(() => {
 		for (const point of data) {
@@ -76,96 +81,108 @@ export function CurveChart({ realTokensSold, realUsdcRaised, graduated }: CurveC
 	}, [data]);
 
 	const progressPct = useMemo(() => {
-		const raised = Number(BigInt(realUsdcRaised)) / 1e6;
-		return Math.min(100, (raised / GRADUATION_THRESHOLD) * 100);
+		try {
+			const raised = Number(BigInt(realUsdcRaised)) / 1e6;
+			return Math.min(100, (raised / GRADUATION_THRESHOLD) * 100);
+		} catch {
+			return 0;
+		}
 	}, [realUsdcRaised]);
 
+	const hasActivity = soldAmount > 0 || graduated;
+
 	return (
-		<Card className="border-anvil-gray-light bg-deep-charcoal">
-			<CardHeader className="pb-2">
-				<div className="flex items-center justify-between">
-					<CardTitle className="text-sm text-steel-white">Bonding Curve</CardTitle>
-					<span className="text-xs text-smoke-dark">{progressPct.toFixed(1)}% to graduation</span>
+		<div className="rounded-2xl border border-border-hair bg-bg-elevated p-5">
+			<div className="mb-4 flex items-center justify-between">
+				<div className="font-mono text-[10px] text-text-tertiary uppercase tracking-[0.14em]">
+					Bonding curve
 				</div>
-			</CardHeader>
-			<CardContent>
-				<div className="h-[200px]">
-					<ResponsiveContainer width="100%" height="100%">
-						<AreaChart data={data} margin={{ top: 5, right: 5, bottom: 5, left: 5 }}>
-							<defs>
-								<linearGradient id="curveGradient" x1="0" y1="0" x2="0" y2="1">
-									<stop offset="0%" stopColor="#5b6ada" stopOpacity={0.4} />
-									<stop offset="100%" stopColor="#5b6ada" stopOpacity={0.05} />
-								</linearGradient>
-							</defs>
-							<XAxis
-								dataKey="percentSold"
-								tick={{ fill: "#6B7280", fontSize: 10 }}
-								tickLine={false}
-								axisLine={{ stroke: "#374151" }}
-								tickFormatter={(v: number) => `${v}%`}
-								interval={19}
-							/>
-							<YAxis
-								tick={{ fill: "#6B7280", fontSize: 10 }}
-								tickLine={false}
-								axisLine={false}
-								tickFormatter={(v: number) =>
-									v >= 0.001 ? `$${v.toFixed(4)}` : `$${v.toExponential(1)}`
-								}
-								width={60}
-							/>
-							<Tooltip
-								content={({ payload }) => {
-									if (!payload?.[0]) return null;
-									const d = payload[0].payload as CurveDataPoint;
-									return (
-										<div className="rounded border border-anvil-gray-light bg-obsidian-black p-2 text-xs">
-											<p className="text-smoke-dark">{d.percentSold}% sold</p>
-											<p className="text-indigo">${d.price.toFixed(6)}</p>
-											<p className="text-smoke-dark">${d.usdcRaised.toLocaleString()} raised</p>
-										</div>
-									);
+				<span className="font-mono text-[11px] text-text-tertiary">
+					{progressPct.toFixed(1)}% to graduation
+				</span>
+			</div>
+			<div className="h-[200px]">
+				<ResponsiveContainer width="100%" height="100%">
+					<AreaChart data={data} margin={{ top: 20, right: 5, bottom: 5, left: 5 }}>
+						<defs>
+							<linearGradient id="curveGradient" x1="0" y1="0" x2="0" y2="1">
+								<stop offset="0%" stopColor="#f472b6" stopOpacity={0.4} />
+								<stop offset="100%" stopColor="#f472b6" stopOpacity={0.03} />
+							</linearGradient>
+						</defs>
+						<XAxis
+							dataKey="percentSold"
+							tick={{ fill: "#7a7e93", fontSize: 10 }}
+							tickLine={false}
+							axisLine={{ stroke: "rgba(255,255,255,0.06)" }}
+							tickFormatter={(v: number) => `${v}%`}
+							interval={19}
+						/>
+						<YAxis
+							tick={{ fill: "#7a7e93", fontSize: 10 }}
+							tickLine={false}
+							axisLine={false}
+							tickFormatter={(v: number) =>
+								v >= 0.001 ? `$${v.toFixed(4)}` : `$${v.toExponential(1)}`
+							}
+							width={60}
+						/>
+						<Tooltip
+							content={({ payload }) => {
+								if (!payload?.[0]) return null;
+								const d = payload[0].payload as CurveDataPoint;
+								return (
+									<div className="rounded-xl border border-border-subtle bg-bg-elevated px-3 py-2 font-mono text-[11px] shadow-lg">
+										<p className="text-text-tertiary">{d.percentSold}% sold</p>
+										<p className="mt-0.5" style={{ color: "#f472b6" }}>
+											${d.price.toFixed(6)}
+										</p>
+										<p className="mt-0.5 text-text-tertiary">
+											${d.usdcRaised.toLocaleString()} raised
+										</p>
+									</div>
+								);
+							}}
+						/>
+						{!graduated && (
+							<ReferenceLine
+								x={graduationPctSold}
+								stroke="#4ade80"
+								strokeDasharray="4 4"
+								strokeOpacity={0.55}
+								label={{
+									value: "Graduate",
+									position: "top",
+									fill: "#4ade80",
+									fontSize: 10,
 								}}
 							/>
-							{!graduated && (
-								<ReferenceLine
-									x={graduationPctSold}
-									stroke="#10B981"
-									strokeDasharray="4 4"
-									strokeOpacity={0.6}
-									label={{
-										value: "Grad.",
-										position: "top",
-										fill: "#10B981",
-										fontSize: 10,
-									}}
-								/>
-							)}
+						)}
+						{hasActivity && (
 							<ReferenceLine
 								x={Math.round(currentPctSold)}
-								stroke="#5b6ada"
+								stroke="#f472b6"
 								strokeWidth={2}
 								label={{
 									value: `$${currentPrice.toFixed(6)}`,
 									position: "top",
-									fill: "#5b6ada",
+									fill: "#f472b6",
 									fontSize: 10,
 								}}
 							/>
-							<Area
-								type="monotone"
-								dataKey="price"
-								stroke="#5b6ada"
-								strokeWidth={2}
-								fill="url(#curveGradient)"
-								dot={false}
-								animationDuration={500}
-							/>
-						</AreaChart>
-					</ResponsiveContainer>
-				</div>
-			</CardContent>
-		</Card>
+						)}
+						<Area
+							type="monotone"
+							dataKey="price"
+							stroke="#f472b6"
+							strokeWidth={2}
+							fill="url(#curveGradient)"
+							dot={false}
+							animationDuration={500}
+						/>
+					</AreaChart>
+				</ResponsiveContainer>
+			</div>
+		</div>
 	);
 }
