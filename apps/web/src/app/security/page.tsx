@@ -76,8 +76,8 @@ export default function SecurityPage() {
 							Non-custodial
 						</div>
 						<p className="text-[13px] text-text-secondary">
-							Your keys stay in your wallet. Forja never touches private keys or moves funds on
-							your behalf.
+							Your keys stay in your wallet. Forja never touches private keys or moves funds on your
+							behalf.
 						</p>
 					</div>
 					<div className="rounded-2xl border border-green/30 bg-green/5 p-4">
@@ -85,8 +85,8 @@ export default function SecurityPage() {
 							No seed phrase
 						</div>
 						<p className="text-[13px] text-text-secondary">
-							We never ask for your seed phrase. We sign on-chain transactions only — wallet
-							popup, you approve.
+							We never ask for your seed phrase. We sign on-chain transactions only — wallet popup,
+							you approve.
 						</p>
 					</div>
 					<div className="rounded-2xl border border-green/30 bg-green/5 p-4">
@@ -94,8 +94,8 @@ export default function SecurityPage() {
 							Verified contracts
 						</div>
 						<p className="text-[13px] text-text-secondary">
-							All 7 contracts have canonical source verified on Sourcify. Bytecode ↔ Solidity
-							match, fully inspectable.
+							All 7 contracts have canonical source verified on Sourcify. Bytecode ↔ Solidity match,
+							fully inspectable.
 						</p>
 					</div>
 					<div className="rounded-2xl border border-green/30 bg-green/5 p-4">
@@ -103,8 +103,7 @@ export default function SecurityPage() {
 							Open source
 						</div>
 						<p className="text-[13px] text-text-secondary">
-							Frontend + contracts live on GitHub. Every line reviewable, every deploy
-							reproducible.
+							Frontend + contracts live on GitHub. Every line reviewable, every deploy reproducible.
 						</p>
 					</div>
 				</div>
