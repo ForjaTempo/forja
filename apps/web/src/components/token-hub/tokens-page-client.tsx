@@ -12,12 +12,13 @@ import {
 	type TokenEnriched,
 } from "@/actions/token-hub";
 import { PageContainer } from "@/components/layout/page-container";
+import { ToolHero } from "@/components/shared/tool-hero";
+import { useReveal } from "@/components/shared/use-reveal";
 import { TokenFilters } from "@/components/token-hub/token-filters";
 import { TokenGrid } from "@/components/token-hub/token-grid";
 import { TokenSearch } from "@/components/token-hub/token-search";
 import { TrendingRow } from "@/components/token-hub/trending-row";
 import { AnimatedCounter } from "@/components/ui/animated-counter";
-import { PageHeader } from "@/components/ui/page-header";
 import { LAUNCH_TAG_SET } from "@/lib/launch-tags";
 
 const LIMIT = 20;
@@ -62,6 +63,7 @@ export function TokensPageClient({
 	initialStats,
 	initialTrending,
 }: TokensPageClientProps) {
+	useReveal();
 	const router = useRouter();
 	const searchParams = useSearchParams();
 	const [, startTransition] = useTransition();
@@ -194,64 +196,87 @@ export function TokensPageClient({
 	const tokens = data?.tokens ?? [];
 	const total = data?.total ?? 0;
 
+	const statCards: Array<{ label: string; value: number; color: string }> = stats
+		? [
+				{ label: "Total tokens", value: stats.totalTokens, color: "var(--color-gold)" },
+				{ label: "Forged on FORJA", value: stats.forjaTokens, color: "var(--color-indigo)" },
+				{ label: "Total holders", value: stats.totalHolders, color: "var(--color-green)" },
+			]
+		: [];
+
 	return (
-		<PageContainer className="py-8 sm:py-12">
-			<div className="space-y-8">
-				<PageHeader title="Token Hub" description="Discover and explore tokens on Tempo" />
+		<PageContainer className="py-16 sm:py-20 lg:py-24">
+			<div className="space-y-10">
+				<ToolHero
+					number="/07"
+					label="Tokens · Discovery"
+					accent="gold"
+					title={
+						<>
+							Every TIP-20 on Tempo.
+							<br />
+							<span className="gold-text italic">One index.</span>
+						</>
+					}
+					description="Search, filter, and explore every token on Tempo — FORJA-forged, launchpad, or external. Holder growth, trust signals, and live price at a glance."
+				/>
 
-				{initialTrending.length > 0 && <TrendingRow tokens={initialTrending} />}
-
-				{stats && (
-					<div className="grid grid-cols-3 gap-4">
-						<div className="rounded-lg border border-border-subtle bg-surface-card p-4 text-center">
-							<AnimatedCounter
-								value={stats.totalTokens}
-								className="font-mono text-2xl font-bold text-indigo"
-							/>
-							<p className="mt-1 text-xs text-smoke-dark">Total Tokens</p>
-						</div>
-						<div className="rounded-lg border border-border-subtle bg-surface-card p-4 text-center">
-							<AnimatedCounter
-								value={stats.forjaTokens}
-								className="font-mono text-2xl font-bold text-indigo"
-							/>
-							<p className="mt-1 text-xs text-smoke-dark">FORJA Created</p>
-						</div>
-						<div className="rounded-lg border border-border-subtle bg-surface-card p-4 text-center">
-							<AnimatedCounter
-								value={stats.totalHolders}
-								className="font-mono text-2xl font-bold text-indigo"
-							/>
-							<p className="mt-1 text-xs text-smoke-dark">Total Holders</p>
-						</div>
+				{initialTrending.length > 0 && (
+					<div className="reveal">
+						<TrendingRow tokens={initialTrending} />
 					</div>
 				)}
 
-				<div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+				{stats && (
+					<div
+						className="reveal grid grid-cols-1 gap-px overflow-hidden rounded-2xl border border-border-hair sm:grid-cols-3"
+						style={{ background: "var(--color-border-hair)" }}
+					>
+						{statCards.map((s) => (
+							<div key={s.label} className="bg-bg-elevated px-6 py-5 text-center sm:text-left">
+								<p className="font-mono text-[11px] uppercase tracking-[0.14em] text-text-tertiary">
+									{s.label}
+								</p>
+								<div
+									className="mt-2 font-display text-[32px] font-normal tracking-[-0.025em]"
+									style={{ color: s.color }}
+								>
+									<AnimatedCounter value={s.value} />
+								</div>
+							</div>
+						))}
+					</div>
+				)}
+
+				<div className="reveal flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 					<div className="flex-1 sm:max-w-md">
 						<TokenSearch value={search} onChange={handleSearchChange} />
 					</div>
 				</div>
 
-				<TokenFilters
-					source={source}
-					status={status}
-					tags={tags}
-					sort={sort}
-					onSourceChange={handleSourceChange}
-					onStatusChange={handleStatusChange}
-					onToggleTag={handleToggleTag}
-					onSortChange={handleSortChange}
-					onClearAll={handleClearAll}
-				/>
+				<div className="reveal">
+					<TokenFilters
+						source={source}
+						status={status}
+						tags={tags}
+						sort={sort}
+						onSourceChange={handleSourceChange}
+						onStatusChange={handleStatusChange}
+						onToggleTag={handleToggleTag}
+						onSortChange={handleSortChange}
+						onClearAll={handleClearAll}
+					/>
+				</div>
 
-				<TokenGrid
-					tokens={tokens}
-					total={total}
-					isLoading={isLoading}
-					hasMore={tokens.length < total}
-					onLoadMore={handleLoadMore}
-				/>
+				<div className="reveal">
+					<TokenGrid
+						tokens={tokens}
+						total={total}
+						isLoading={isLoading}
+						hasMore={tokens.length < total}
+						onLoadMore={handleLoadMore}
+					/>
+				</div>
 			</div>
 		</PageContainer>
 	);

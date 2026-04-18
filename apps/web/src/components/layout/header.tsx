@@ -49,21 +49,21 @@ export function Header() {
 					: "border-b border-transparent bg-transparent",
 			)}
 		>
-			<div className="mx-auto flex h-[68px] max-w-[1400px] items-center justify-between gap-6 px-6 lg:px-10">
-				<div className="flex items-center gap-3">
+			<div className="mx-auto flex h-[68px] max-w-[1400px] items-center gap-4 px-4 sm:px-6 lg:gap-6 lg:px-10">
+				<div className="flex shrink-0 items-center gap-2 md:gap-3">
 					<MobileNav />
-					<Link href="/" className="flex items-center gap-2.5">
-						<ForjaLogo size={26} />
-						<span className="font-display text-[22px] leading-none tracking-[-0.01em] text-text-primary">
+					<Link href="/" className="flex items-center gap-2">
+						<ForjaLogo size={24} />
+						<span className="font-display text-[20px] leading-none tracking-[-0.01em] text-text-primary md:text-[22px]">
 							Forja
 						</span>
-						<span className="ml-1 rounded border border-border-gold px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.12em] text-gold">
+						<span className="ml-0.5 hidden rounded border border-border-gold px-1.5 py-0.5 font-mono text-[10px] text-gold uppercase tracking-[0.12em] sm:inline-block">
 							Tempo
 						</span>
 					</Link>
 				</div>
 
-				<nav className="hidden items-center gap-1 md:flex">
+				<nav className="hidden min-w-0 flex-1 justify-center gap-0.5 md:flex">
 					{baseNavLinks.map((link) => {
 						const active = isActive(pathname, link.href);
 						return (
@@ -71,7 +71,7 @@ export function Header() {
 								key={link.href}
 								href={link.href}
 								className={cn(
-									"relative px-3.5 py-2 text-[13.5px] font-medium transition-colors",
+									"relative whitespace-nowrap px-2.5 py-2 font-medium text-[13px] transition-colors xl:px-3 xl:text-[13.5px]",
 									active ? "text-text-primary" : "text-text-secondary hover:text-text-primary",
 								)}
 							>
@@ -87,8 +87,8 @@ export function Header() {
 					})}
 				</nav>
 
-				<div className="flex items-center gap-2">
-					<div className="hidden items-center gap-2 rounded-full border border-border-subtle bg-bg-elevated px-3 py-1.5 font-mono text-[12px] text-text-secondary lg:flex">
+				<div className="ml-auto flex shrink-0 items-center gap-2">
+					<div className="hidden items-center gap-2 rounded-full border border-border-subtle bg-bg-elevated px-3 py-1.5 font-mono text-[12px] text-text-secondary xl:flex">
 						<span
 							aria-hidden
 							className="size-1.5 animate-[ember-flicker_2s_ease-in-out_infinite] rounded-full bg-green shadow-[0_0_6px_var(--color-green)]"

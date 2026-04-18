@@ -3,7 +3,9 @@
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { isAddress } from "viem";
-import { PageHeader } from "@/components/ui/page-header";
+import { PageContainer } from "@/components/layout/page-container";
+import { ToolHero } from "@/components/shared/tool-hero";
+import { useReveal } from "@/components/shared/use-reveal";
 import { useTokenInfo } from "@/hooks/use-token-info";
 import { hasSwap, PATHUSDC_ADDRESS } from "@/lib/constants";
 import { SwapHistory } from "./swap-history";
@@ -18,6 +20,7 @@ const PATHUSDC_OPTION: TokenOption = {
 };
 
 export function SwapClient() {
+	useReveal();
 	const searchParams = useSearchParams();
 	const tokenInParam = searchParams.get("tokenIn");
 	const tokenOutParam = searchParams.get("tokenOut");
@@ -64,30 +67,43 @@ export function SwapClient() {
 	}, [tokenOutValid, outInfo.symbol, outInfo.name, outInfo.decimals]);
 
 	return (
-		<div className="mx-auto grid max-w-5xl gap-6 lg:grid-cols-[1fr_360px]">
-			<div className="space-y-6">
-				<PageHeader
-					title="Swap"
-					description="Trade any TIP-20 token on Tempo. Powered by Uniswap v4 + 0.25% protocol fee."
+		<PageContainer className="py-16 sm:py-20 lg:py-24">
+			<div className="space-y-10">
+				<ToolHero
+					number="/06"
+					label="Swap · Route via v4 + native DEX"
+					accent="gold"
+					title={
+						<>
+							Trade any token.
+							<br />
+							<span className="gold-text italic">Flat 0.25%.</span>
+						</>
+					}
+					description="Best route picked automatically between Uniswap v4 pools and Tempo's native DEX. Sign once, swap many."
 				/>
+
 				{!hasSwap && (
-					<div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-4 text-sm text-amber-300">
+					<div className="reveal rounded-2xl border border-ember/30 bg-ember/5 p-4 text-sm text-ember">
 						Swap is currently in canary preview. The router contract is being deployed; quotes work,
 						execution will activate once the address is wired into env.
 					</div>
 				)}
-				<div className="mx-auto max-w-md">
-					<SwapPanel
-						initialTokenIn={initialIn}
-						initialTokenOut={initialOut}
-						onSwapSuccess={onSwapSuccess}
-					/>
+
+				<div className="reveal grid gap-8 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start">
+					<div className="mx-auto w-full max-w-md lg:mx-0">
+						<SwapPanel
+							initialTokenIn={initialIn}
+							initialTokenOut={initialOut}
+							onSwapSuccess={onSwapSuccess}
+						/>
+					</div>
+					<aside className="space-y-4">
+						<SwapHistory scope="user" limit={5} refreshKey={historyKey} />
+						<SwapHistory scope="global" limit={5} refreshKey={historyKey} />
+					</aside>
 				</div>
 			</div>
-			<aside className="space-y-4 lg:pt-16">
-				<SwapHistory scope="user" limit={5} refreshKey={historyKey} />
-				<SwapHistory scope="global" limit={5} refreshKey={historyKey} />
-			</aside>
-		</div>
+		</PageContainer>
 	);
 }

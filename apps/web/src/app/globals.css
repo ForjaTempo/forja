@@ -114,11 +114,8 @@
 	--animate-blur-in: blur-in 0.9s var(--ease-out) both;
 }
 
-* {
-	box-sizing: border-box;
-	margin: 0;
-	padding: 0;
-}
+/* Tailwind's preflight already resets box-sizing, margins and browser defaults;
+   we only layer brand-specific baseline tweaks on top. */
 
 html,
 body {
@@ -131,28 +128,6 @@ body {
 
 body {
 	overflow-x: hidden;
-}
-
-a {
-	color: inherit;
-	text-decoration: none;
-}
-
-button {
-	font-family: inherit;
-	cursor: pointer;
-}
-
-input,
-textarea,
-select {
-	font-family: inherit;
-	outline: none;
-}
-
-::selection {
-	background: var(--color-gold);
-	color: #000;
 }
 
 .font-display {
