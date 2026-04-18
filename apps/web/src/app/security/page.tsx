@@ -151,7 +151,7 @@ export default function SecurityPage() {
 						<ul className="mt-3 list-disc space-y-1 pl-5 text-[14px] text-text-secondary">
 							<li>
 								Third-party contracts (Uniswap v4 PoolManager, Permit2, TIP-20 factory precompile,
-								enshrined DEX precompile).
+								Tempo native DEX precompile).
 							</li>
 							<li>User-deployed tokens created via the ForjaTokenFactory.</li>
 							<li>External token issuers' contracts indexed for discovery.</li>

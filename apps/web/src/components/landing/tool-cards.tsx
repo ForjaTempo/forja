@@ -1,5 +1,14 @@
 "use client";
 
+import {
+	ArrowLeftRightIcon,
+	CoinsIcon,
+	GiftIcon,
+	LockIcon,
+	type LucideIcon,
+	RocketIcon,
+	SendIcon,
+} from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { hasLaunchpad, hasSwap } from "@/lib/constants";
@@ -15,6 +24,7 @@ interface Tool {
 	stat: string;
 	color: string;
 	href: string;
+	icon: LucideIcon;
 	enabled: boolean;
 }
 
@@ -28,6 +38,7 @@ const allTools: Tool[] = [
 		stat: "Instant deploy · 2 USDC fee",
 		color: "#f0d38a",
 		href: "/create",
+		icon: CoinsIcon,
 		enabled: true,
 	},
 	{
@@ -39,6 +50,7 @@ const allTools: Tool[] = [
 		stat: "500 recipients per tx",
 		color: "#4ade80",
 		href: "/multisend",
+		icon: SendIcon,
 		enabled: true,
 	},
 	{
@@ -50,6 +62,7 @@ const allTools: Tool[] = [
 		stat: "Cliff + linear vesting",
 		color: "#818cf8",
 		href: "/lock",
+		icon: LockIcon,
 		enabled: true,
 	},
 	{
@@ -61,6 +74,7 @@ const allTools: Tool[] = [
 		stat: "Merkle tree · public proofs",
 		color: "#ff6b3d",
 		href: "/claim/create",
+		icon: GiftIcon,
 		enabled: hasClaimer,
 	},
 	{
@@ -72,6 +86,7 @@ const allTools: Tool[] = [
 		stat: "Bonding curve · auto graduation",
 		color: "#f472b6",
 		href: "/launch",
+		icon: RocketIcon,
 		enabled: hasLaunchpad,
 	},
 	{
@@ -79,10 +94,11 @@ const allTools: Tool[] = [
 		title: "Swap",
 		tagline: "Instant trade, flat fee",
 		description:
-			"Every TIP-20 tradable via Uniswap v4 routing + Tempo's native DEX. 0.25% protocol fee, transparent on-chain.",
-		stat: "v4 + enshrined DEX · 0.25% fee",
+			"Every TIP-20 tradable via Uniswap v4 routing on Tempo. 0.25% protocol fee, transparent on-chain.",
+		stat: "Uniswap v4 · 0.25% fee",
 		color: "#60a5fa",
 		href: "/swap",
+		icon: ArrowLeftRightIcon,
 		enabled: hasSwap,
 	},
 ];
@@ -110,55 +126,62 @@ export function ToolCards() {
 					className="grid overflow-hidden rounded-3xl border border-border-hair md:grid-cols-2 lg:grid-cols-3"
 					style={{ background: "var(--color-border-hair)", gap: 1 }}
 				>
-					{tools.map((tool, i) => (
-						<Link
-							key={tool.key}
-							href={tool.href}
-							onMouseEnter={() => setHovered(i)}
-							onMouseLeave={() => setHovered(null)}
-							className="group reveal relative flex min-h-[320px] flex-col justify-between overflow-hidden bg-bg-page px-8 py-10"
-							style={{ transitionDelay: `${i * 0.05}s` }}
-						>
-							<div
-								aria-hidden
-								className="-top-20 -right-20 absolute size-60 blur-3xl transition-opacity duration-500"
-								style={{
-									background: `radial-gradient(circle, ${tool.color}30, transparent 70%)`,
-									opacity: hovered === i ? 1 : 0.3,
-								}}
-							/>
-							<div className="relative z-[2]">
+					{tools.map((tool, i) => {
+						const Icon = tool.icon;
+						return (
+							<Link
+								key={tool.key}
+								href={tool.href}
+								onMouseEnter={() => setHovered(i)}
+								onMouseLeave={() => setHovered(null)}
+								className="group reveal relative flex min-h-[320px] flex-col justify-between overflow-hidden bg-bg-page px-8 py-10"
+								style={{ transitionDelay: `${i * 0.05}s` }}
+							>
 								<div
-									className="mb-7 size-14 rounded-xl border"
+									aria-hidden
+									className="-top-20 -right-20 absolute size-60 blur-3xl transition-opacity duration-500"
 									style={{
-										background: `linear-gradient(135deg, ${tool.color}25, ${tool.color}08)`,
-										borderColor: `${tool.color}30`,
+										background: `radial-gradient(circle, ${tool.color}30, transparent 70%)`,
+										opacity: hovered === i ? 1 : 0.3,
 									}}
 								/>
-								<div className="mb-1.5 font-mono text-[10px] text-text-tertiary uppercase tracking-[0.15em]">
-									/{tool.key}
+								<div className="relative z-[2]">
+									<div
+										className="mb-7 flex size-14 items-center justify-center rounded-xl border transition-transform duration-500 group-hover:-translate-y-0.5 group-hover:scale-[1.04]"
+										style={{
+											background: `linear-gradient(135deg, ${tool.color}25, ${tool.color}08)`,
+											borderColor: `${tool.color}30`,
+											color: tool.color,
+											boxShadow: `0 8px 30px -12px ${tool.color}55, inset 0 1px 0 rgba(255,255,255,0.06)`,
+										}}
+									>
+										<Icon className="size-6" strokeWidth={1.75} />
+									</div>
+									<div className="mb-1.5 font-mono text-[10px] text-text-tertiary uppercase tracking-[0.15em]">
+										/{tool.key}
+									</div>
+									<h3 className="m-0 mb-1.5 font-display font-normal text-[34px] tracking-[-0.025em]">
+										{tool.title}
+									</h3>
+									<div className="mb-3.5 font-medium text-[13.5px]" style={{ color: tool.color }}>
+										{tool.tagline}
+									</div>
+									<p className="m-0 text-[14px] text-text-secondary leading-[1.6]">
+										{tool.description}
+									</p>
 								</div>
-								<h3 className="m-0 mb-1.5 font-display font-normal text-[34px] tracking-[-0.025em]">
-									{tool.title}
-								</h3>
-								<div className="mb-3.5 font-medium text-[13.5px]" style={{ color: tool.color }}>
-									{tool.tagline}
+								<div className="relative z-[2] mt-7 flex justify-between border-border-hair border-t pt-5 font-mono text-[12px] text-text-tertiary">
+									<span>{tool.stat}</span>
+									<span
+										className="transition-colors"
+										style={{ color: hovered === i ? tool.color : "var(--color-text-tertiary)" }}
+									>
+										Open →
+									</span>
 								</div>
-								<p className="m-0 text-[14px] text-text-secondary leading-[1.6]">
-									{tool.description}
-								</p>
-							</div>
-							<div className="relative z-[2] mt-7 flex justify-between border-border-hair border-t pt-5 font-mono text-[12px] text-text-tertiary">
-								<span>{tool.stat}</span>
-								<span
-									className="transition-colors"
-									style={{ color: hovered === i ? tool.color : "var(--color-text-tertiary)" }}
-								>
-									Open →
-								</span>
-							</div>
-						</Link>
-					))}
+							</Link>
+						);
+					})}
 				</div>
 			</div>
 		</section>

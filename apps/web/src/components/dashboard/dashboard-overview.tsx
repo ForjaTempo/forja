@@ -20,8 +20,8 @@ interface DashboardOverviewProps {
 }
 
 /**
- * Portfolio hero — 1fr 2fr split with TVL display on the left and a decorative
- * sparkline + stat mini-cards on the right. Real values only, never mocked.
+ * Portfolio hero — 1fr 2fr split with TVL display on the left and real-activity
+ * bar chart on the right. All numbers are pulled from overview; no mocked data.
  */
 export function DashboardOverview({ overview }: DashboardOverviewProps) {
 	const tvlBig = BigInt(overview.totalValueLocked || "0");
@@ -44,6 +44,15 @@ export function DashboardOverview({ overview }: DashboardOverviewProps) {
 	const feesDisplay =
 		feesPaid > 0 ? `$${feesPaid.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "—";
 
+	const activity = [
+		{ key: "Tokens", value: overview.tokensCreated, color: "#f0d38a" },
+		{ key: "Sends", value: overview.multisendCount, color: "#4ade80" },
+		{ key: "Locks", value: overview.lockCount, color: "#818cf8" },
+		{ key: "Launches", value: overview.launchCount, color: "#f472b6" },
+		{ key: "Watchlist", value: overview.watchlistCount, color: "#60a5fa" },
+	];
+	const hasActivity = activity.some((a) => a.value > 0);
+
 	return (
 		<div
 			className="reveal rounded-3xl border border-border-subtle p-8 sm:p-10"
@@ -52,7 +61,6 @@ export function DashboardOverview({ overview }: DashboardOverviewProps) {
 			}}
 		>
 			<div className="grid gap-10 lg:grid-cols-[1fr_2fr]">
-				{/* Left: TVL + mini stats */}
 				<div>
 					<p className="font-mono text-[11px] uppercase tracking-[0.14em] text-text-tertiary">
 						Total value locked
@@ -79,10 +87,11 @@ export function DashboardOverview({ overview }: DashboardOverviewProps) {
 					</div>
 				</div>
 
-				{/* Right: decorative sparkline + header */}
 				<div>
 					<div className="mb-3 flex items-center justify-between">
-						<div className="text-sm font-medium text-text-primary">Portfolio snapshot</div>
+						<div className="font-mono text-[10px] text-text-tertiary uppercase tracking-[0.14em]">
+							Activity mix
+						</div>
 						{overview.unreadAlerts > 0 ? (
 							<div className="inline-flex items-center gap-2 font-mono text-[11px] text-ember">
 								<span
@@ -98,7 +107,9 @@ export function DashboardOverview({ overview }: DashboardOverviewProps) {
 							</div>
 						)}
 					</div>
-					<SparklinePlaceholder />
+
+					{hasActivity ? <ActivityBars items={activity} /> : <ActivityEmpty />}
+
 					<div className="mt-3 grid grid-cols-3 gap-3 font-mono text-[11px] text-text-tertiary">
 						<SummaryCell label="Multisends" value={overview.multisendCount} />
 						<SummaryCell label="Locks" value={overview.lockCount} />
@@ -155,55 +166,50 @@ function SummaryCell({ label, value }: { label: string; value: number }) {
 	);
 }
 
-/**
- * Decorative sparkline — purely visual, not data-driven. We intentionally do
- * not display a chart of fabricated portfolio history; the gradient line hints
- * at activity without claiming a specific value.
- */
-function SparklinePlaceholder() {
-	const pts = [28, 32, 30, 38, 42, 48, 45, 52, 58, 55, 62, 68, 72, 70, 78, 84, 82, 88, 92, 96];
-	const max = Math.max(...pts);
-	const min = Math.min(...pts);
-	const coords = pts
-		.map(
-			(v, i) => `${(i / (pts.length - 1)) * 100},${100 - ((v - min) / (max - min || 1)) * 92 - 4}`,
-		)
-		.join(" ");
+function ActivityBars({ items }: { items: Array<{ key: string; value: number; color: string }> }) {
+	const max = Math.max(...items.map((i) => i.value), 1);
 	return (
-		<svg
-			viewBox="0 0 100 100"
-			preserveAspectRatio="none"
-			className="block h-[180px] w-full sm:h-[220px]"
-			aria-hidden
-		>
-			<title>Decorative portfolio sparkline</title>
-			<defs>
-				<linearGradient id="dash-spark-fill" x1="0" x2="0" y1="0" y2="1">
-					<stop offset="0" stopColor="#f0d38a" stopOpacity="0.3" />
-					<stop offset="1" stopColor="#f0d38a" stopOpacity="0" />
-				</linearGradient>
-			</defs>
-			{[20, 40, 60, 80].map((y) => (
-				<line
-					key={y}
-					x1="0"
-					x2="100"
-					y1={y}
-					y2={y}
-					stroke="rgba(255,255,255,0.04)"
-					vectorEffect="non-scaling-stroke"
-				/>
-			))}
-			<polygon points={`0,100 ${coords} 100,100`} fill="url(#dash-spark-fill)" />
-			<polyline
-				points={coords}
-				fill="none"
-				stroke="#f0d38a"
-				strokeWidth="1.8"
-				strokeLinecap="round"
-				vectorEffect="non-scaling-stroke"
-			/>
-		</svg>
+		<div className="rounded-2xl border border-border-hair bg-bg-field/40 p-5">
+			<div className="grid grid-cols-5 items-end gap-3 h-[180px] sm:h-[200px]">
+				{items.map((item) => {
+					const pct = (item.value / max) * 100;
+					return (
+						<div key={item.key} className="flex h-full flex-col justify-end">
+							<div
+								className="relative w-full rounded-t-md transition-[height] duration-700"
+								style={{
+									height: `${Math.max(pct, item.value > 0 ? 8 : 0)}%`,
+									minHeight: item.value > 0 ? "12px" : "0",
+									background: `linear-gradient(180deg, ${item.color}, ${item.color}55)`,
+									boxShadow: `0 -6px 20px -10px ${item.color}`,
+								}}
+							/>
+						</div>
+					);
+				})}
+			</div>
+			<div className="mt-3 grid grid-cols-5 gap-3 font-mono text-[10px] text-text-tertiary uppercase tracking-[0.1em]">
+				{items.map((item) => (
+					<div key={item.key} className="flex flex-col items-center gap-0.5">
+						<span style={{ color: item.color }}>{item.value}</span>
+						<span className="truncate text-[9px]">{item.key}</span>
+					</div>
+				))}
+			</div>
+		</div>
+	);
+}
+
+function ActivityEmpty() {
+	return (
+		<div className="flex h-[220px] flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-border-hair bg-bg-field/30 px-6 text-center">
+			<p className="font-display text-[18px] tracking-[-0.01em] text-text-primary">
+				Your forge is <span className="gold-text italic">cold.</span>
+			</p>
+			<p className="text-[12.5px] text-text-tertiary">
+				Create your first token, run a multisend, or lock some supply — activity shows up here.
+			</p>
+		</div>
 	);
 }
 

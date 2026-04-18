@@ -16,7 +16,6 @@ const rainbowTheme = darkTheme({
 	accentColorForeground: "#1a1307",
 	borderRadius: "large",
 	fontStack: "system",
-	overlayBlur: "small",
 });
 
 function NetworkGuard({ children }: { children: ReactNode }) {

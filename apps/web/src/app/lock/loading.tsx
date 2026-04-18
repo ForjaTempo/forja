@@ -3,23 +3,22 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function LockLoading() {
 	return (
-		<PageContainer className="py-8 sm:py-12">
-			<div className="mx-auto max-w-lg space-y-8">
-				<div className="space-y-2">
-					<Skeleton className="h-8 w-40" />
-					<Skeleton className="h-5 w-80" />
+		<PageContainer className="py-16 sm:py-20">
+			<div className="mx-auto max-w-2xl space-y-8">
+				<div className="space-y-3">
+					<Skeleton className="h-6 w-40 rounded-full" />
+					<Skeleton className="h-16 w-full rounded-xl" />
+					<Skeleton className="h-5 w-2/3 rounded" />
 				</div>
-				<div className="space-y-4">
-					<Skeleton className="h-10 w-full rounded-lg" />
-					<div className="space-y-4 rounded-xl border border-anvil-gray-light bg-anvil-gray p-6">
-						<Skeleton className="h-5 w-32" />
-						<Skeleton className="h-10 w-full" />
-						<Skeleton className="h-5 w-28" />
-						<Skeleton className="h-10 w-full" />
-						<Skeleton className="h-5 w-36" />
-						<Skeleton className="h-10 w-full" />
-						<Skeleton className="h-12 w-full rounded-lg" />
-					</div>
+				<Skeleton className="h-11 w-80 rounded-xl" />
+				<div className="space-y-5 rounded-2xl border border-border-hair bg-bg-elevated p-6 sm:p-8">
+					{Array.from({ length: 5 }).map((_, i) => (
+						<div key={`f-${i.toString()}`} className="space-y-2">
+							<Skeleton className="h-3 w-28 rounded" />
+							<Skeleton className="h-11 w-full rounded-xl" />
+						</div>
+					))}
+					<Skeleton className="h-12 w-full rounded-xl" />
 				</div>
 			</div>
 		</PageContainer>
