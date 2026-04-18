@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Separator } from "@/components/ui/separator";
-import { hasLaunchpad } from "@/lib/constants";
+import { hasLaunchpad, hasSwap } from "@/lib/constants";
 import { hasClaimer } from "@/lib/contracts";
 
 const allProductLinks = [
@@ -9,11 +9,14 @@ const allProductLinks = [
 	{ label: "Lock", href: "/lock" },
 	{ label: "Claim", href: "/claim/create" },
 	{ label: "Launchpad", href: "/launch" },
+	{ label: "Swap", href: "/swap" },
+	{ label: "Tokens", href: "/tokens" },
 ] as const;
 
 const productLinks = allProductLinks.filter((link) => {
 	if (link.href === "/claim/create" && !hasClaimer) return false;
 	if (link.href === "/launch" && !hasLaunchpad) return false;
+	if (link.href === "/swap" && !hasSwap) return false;
 	return true;
 });
 
