@@ -17,10 +17,9 @@ export const PATHUSDC_ADDRESS = "0x20C0000000000000000000000000000000000000" as 
 export const TIP20_FACTORY_ADDRESS = "0x20Fc000000000000000000000000000000000000" as const;
 
 /**
- * Tempo stablecoins. Stablecoin↔stablecoin swaps on Tempo route through
- * the native precompile DEX at `0xdec0…`, not Uniswap v4 pools. Our router
- * is v4-only today; stablecoin routing via the precompile is a planned
- * follow-up so these swaps can happen inside FORJA (no external redirect).
+ * Tempo stablecoins. Stablecoin↔stablecoin swaps on Tempo settle via the
+ * native DEX precompile at `0xDEc0…`; v2 of ForjaSwapRouter routes these
+ * through the precompile and skims the same 0.25% fee as the v4 path.
  *
  * Source: tokenlist.tempo.xyz/list/4217 (stablecoin group).
  */
@@ -62,8 +61,20 @@ export const hasLaunchpad =
 
 export const FORJA_SWAP_ROUTER_ADDRESS = (process.env.NEXT_PUBLIC_FORJA_SWAP_ROUTER ??
 	"0x") as `0x${string}`;
+export const FORJA_SWAP_ROUTER_MODERATO_ADDRESS = (process.env
+	.NEXT_PUBLIC_FORJA_SWAP_ROUTER_MODERATO ?? "0x") as `0x${string}`;
 export const hasSwap =
 	FORJA_SWAP_ROUTER_ADDRESS !== "0x" && process.env.NEXT_PUBLIC_SWAP_ENABLED === "true";
+
+/**
+ * Per-chain router address. v2 is deployed on both Tempo mainnet and Moderato
+ * testnet; returns `0x` for any unsupported chain so the UI can disable swaps.
+ */
+export function getSwapRouterAddress(chainId: number): `0x${string}` {
+	if (chainId === TEMPO_CHAIN_ID) return FORJA_SWAP_ROUTER_ADDRESS;
+	if (chainId === TEMPO_MODERATO_CHAIN_ID) return FORJA_SWAP_ROUTER_MODERATO_ADDRESS;
+	return "0x";
+}
 
 // Tempo Uniswap v4 + Permit2 (used by ForjaSwapRouter and the off-chain quoter)
 export const POOL_MANAGER_ADDRESS = "0x33620f62c5b9b2086dd6b62f4a297a9f30347029" as const;

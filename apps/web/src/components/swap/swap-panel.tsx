@@ -1,9 +1,9 @@
 "use client";
 
-import { ArrowDownIcon, ArrowRightIcon, SettingsIcon } from "lucide-react";
+import { AlertTriangleIcon, ArrowDownIcon, ArrowRightIcon, SettingsIcon } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { formatUnits, type Hex, parseUnits } from "viem";
-import { useAccount } from "wagmi";
+import { useAccount, useChainId, useSwitchChain } from "wagmi";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -14,7 +14,13 @@ import { useSwapQuote } from "@/hooks/use-swap-quote";
 import { useTokenBalance } from "@/hooks/use-token-balance";
 import { useTokenInfo } from "@/hooks/use-token-info";
 import { useTransactionToast } from "@/hooks/use-transaction-toast";
-import { hasSwap } from "@/lib/constants";
+import {
+	getSwapRouterAddress,
+	hasSwap,
+	SUPPORTED_CHAIN_IDS,
+	TEMPO_CHAIN_ID,
+	TEMPO_MODERATO_CHAIN_ID,
+} from "@/lib/constants";
 import { formatErrorMessage } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { type TokenOption, TokenPicker } from "./token-picker";
@@ -35,7 +41,14 @@ interface SwapPanelProps {
 
 export function SwapPanel({ initialTokenIn, initialTokenOut }: SwapPanelProps) {
 	const { isConnected } = useAccount();
+	const chainId = useChainId();
+	const { switchChain } = useSwitchChain();
 	const { txConfirmed } = useTransactionToast();
+
+	const isSupportedChain = SUPPORTED_CHAIN_IDS.has(chainId);
+	const isTestnet = chainId === TEMPO_MODERATO_CHAIN_ID;
+	const routerAddress = getSwapRouterAddress(chainId);
+	const routerDeployed = routerAddress !== "0x" && routerAddress.length === 42;
 
 	const [tokenIn, setTokenIn] = useState<TokenOption | undefined>(initialTokenIn);
 	const [tokenOut, setTokenOut] = useState<TokenOption | undefined>(initialTokenOut);
@@ -94,6 +107,8 @@ export function SwapPanel({ initialTokenIn, initialTokenOut }: SwapPanelProps) {
 	const swapDisabled =
 		!isConnected ||
 		!hasSwap ||
+		!isSupportedChain ||
+		!routerDeployed ||
 		!tokenIn ||
 		!tokenOut ||
 		parsedAmountIn === 0n ||
@@ -139,6 +154,38 @@ export function SwapPanel({ initialTokenIn, initialTokenOut }: SwapPanelProps) {
 	return (
 		<Card className="border-border-subtle bg-surface-card">
 			<CardContent className="space-y-4 p-5">
+				{/* Chain guard */}
+				{isConnected && !isSupportedChain && (
+					<div className="flex items-start gap-2 rounded-lg border border-red-500/40 bg-red-500/5 p-3 text-xs text-red-300">
+						<AlertTriangleIcon className="size-4 shrink-0" />
+						<div className="flex-1">
+							<p className="font-medium">Wrong network</p>
+							<p className="mt-0.5 text-red-300/80">
+								FORJA Swap only works on Tempo. Your wallet is on another chain.
+							</p>
+							<button
+								type="button"
+								onClick={() => switchChain({ chainId: TEMPO_CHAIN_ID })}
+								className="mt-1 text-red-200 underline underline-offset-2 hover:text-white"
+							>
+								Switch to Tempo mainnet
+							</button>
+						</div>
+					</div>
+				)}
+				{isConnected && isTestnet && (
+					<div className="flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 text-xs text-amber-300">
+						<AlertTriangleIcon className="size-4 shrink-0" />
+						<div>
+							<p className="font-medium">Testnet (Moderato)</p>
+							<p className="mt-0.5 text-amber-300/80">
+								Swaps execute on-chain but aren't indexed into history — only mainnet activity
+								appears in your dashboard.
+							</p>
+						</div>
+					</div>
+				)}
+
 				{/* Header */}
 				<div className="flex items-center justify-between">
 					<h2 className="text-base font-semibold text-steel-white">Swap</h2>

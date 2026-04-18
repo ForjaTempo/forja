@@ -1,10 +1,10 @@
 "use client";
 
-import { CheckIcon, PlusIcon, SearchIcon } from "lucide-react";
+import { CheckIcon, PlusIcon, SearchIcon, ZapIcon } from "lucide-react";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { isAddress } from "viem";
-import { getOnchainTokenMetadata } from "@/actions/swaps";
+import { getOnchainTokenMetadata, getSwappableTokens } from "@/actions/swaps";
 import { getTokenList } from "@/actions/token-hub";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ImageFallback } from "@/components/ui/image-fallback";
@@ -48,6 +48,26 @@ export function TokenPicker({
 	const [isLoading, setIsLoading] = useState(false);
 	const [importCandidate, setImportCandidate] = useState<TokenOption | null>(null);
 	const [importStatus, setImportStatus] = useState<"idle" | "loading" | "error">("idle");
+	const [swappable, setSwappable] = useState<Set<string>>(new Set());
+
+	// Load swappable-token list once per mount. Used to badge tokens that
+	// already have a discovered v4 pool so users don't pick a dead-end token.
+	useEffect(() => {
+		if (!open) return;
+		let cancelled = false;
+		(async () => {
+			const list = await getSwappableTokens();
+			if (!cancelled) setSwappable(new Set(list.map((a) => a.toLowerCase())));
+		})();
+		return () => {
+			cancelled = true;
+		};
+	}, [open]);
+
+	const isSwappable = useMemo(
+		() => (addr: string) => swappable.has(addr.toLowerCase()),
+		[swappable],
+	);
 
 	useEffect(() => {
 		if (!open) return;
@@ -224,6 +244,15 @@ export function TokenPicker({
 								<div className="min-w-0 flex-1">
 									<div className="flex items-center gap-2">
 										<span className="font-medium text-steel-white">{token.symbol}</span>
+										{isSwappable(token.address) && (
+											<span
+												title="Has a Uniswap v4 pool"
+												className="inline-flex items-center gap-0.5 rounded bg-indigo/15 px-1 py-px text-[10px] font-medium text-indigo"
+											>
+												<ZapIcon className="size-3" />
+												Pool
+											</span>
+										)}
 										{isSelected && <CheckIcon className="size-4 text-indigo" />}
 									</div>
 									<p className="truncate text-xs text-smoke-dark">{token.name}</p>

@@ -248,6 +248,30 @@ export async function getSwapQuote(params: {
 }
 
 /**
+ * Returns lowercased addresses of all tokens that have a discovered v4 pool
+ * (as either currency0 or currency1). Used by the Token Picker to badge
+ * pool-backed tokens without a per-token chain probe.
+ */
+export async function getSwappableTokens(): Promise<string[]> {
+	try {
+		const db = getDb();
+		const rows = await db.execute<{ address: string }>(
+			sql`
+				SELECT DISTINCT addr AS address FROM (
+					SELECT ${schema.v4Pools.currency0} AS addr FROM ${schema.v4Pools}
+					UNION ALL
+					SELECT ${schema.v4Pools.currency1} AS addr FROM ${schema.v4Pools}
+				) t
+			`,
+		);
+		return rows.map((r) => r.address);
+	} catch (err) {
+		console.error("[swaps] getSwappableTokens failed:", err);
+		return [];
+	}
+}
+
+/**
  * Fetch ERC-20 metadata (name, symbol, decimals) directly from chain. Used by
  * the Token Picker's "import by address" path for tokens that aren't in
  * token_hub_cache (e.g. non-TIP-20 ERC-20s that nonetheless have Uniswap v4

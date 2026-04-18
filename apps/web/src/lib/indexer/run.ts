@@ -11,6 +11,7 @@ import { indexSwapEvents } from "./index-swaps";
 import { indexTip20Events } from "./index-tip20";
 import { indexTokenEvents } from "./index-tokens";
 import { indexTransferEvents } from "./index-transfers";
+import { indexV4PoolEvents } from "./index-v4-pools";
 
 const DEFAULT_CHUNK_SIZE = 50_000n;
 const TRANSFER_CHUNK_SIZE = 10_000n;
@@ -41,6 +42,7 @@ const contracts: ContractIndexer[] = [
 	{ name: "claimer", index: indexClaimEvents },
 	{ name: "launchpad", index: indexLaunchEvents },
 	{ name: "swap-router", index: indexSwapEvents },
+	{ name: "v4-pools", index: indexV4PoolEvents },
 	{ name: "tip20-factory", index: indexTip20Events },
 	{ name: "transfers", chunkSize: TRANSFER_CHUNK_SIZE, index: indexTransferEvents },
 ];

@@ -8,6 +8,7 @@ import { getSwapHistory, type SwapRow } from "@/actions/swaps";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useExplorerUrl } from "@/hooks/use-explorer-url";
 import { TIP20_DECIMALS } from "@/lib/constants";
+import { estimateSwapUsdValue, formatUsd } from "@/lib/swap/usd-value";
 
 const TRUNCATE = (addr: string) => `${addr.slice(0, 6)}…${addr.slice(-4)}`;
 
@@ -57,28 +58,34 @@ export function SwapHistory({ scope = "user", limit = 10 }: SwapHistoryProps) {
 				)}
 				{!isLoading && swaps.length > 0 && (
 					<ul className="divide-y divide-border-subtle">
-						{swaps.map((s) => (
-							<li
-								key={`${s.txHash}-${s.logIndex}`}
-								className="flex items-center justify-between py-2 text-xs"
-							>
-								<div className="min-w-0">
-									<p className="truncate text-steel-white">
-										{formatUnits(BigInt(s.amountIn), TIP20_DECIMALS)} {TRUNCATE(s.tokenIn)} →{" "}
-										{formatUnits(BigInt(s.amountOut), TIP20_DECIMALS)} {TRUNCATE(s.tokenOut)}
-									</p>
-									<p className="text-smoke-dark">{new Date(s.createdAt).toLocaleString()}</p>
-								</div>
-								<a
-									href={`${explorer}/tx/${s.txHash}`}
-									target="_blank"
-									rel="noopener noreferrer"
-									className="ml-3 shrink-0 text-smoke-dark hover:text-indigo"
+						{swaps.map((s) => {
+							const usd = estimateSwapUsdValue(s);
+							return (
+								<li
+									key={`${s.txHash}-${s.logIndex}`}
+									className="flex items-center justify-between py-2 text-xs"
 								>
-									<ExternalLinkIcon className="size-3.5" />
-								</a>
-							</li>
-						))}
+									<div className="min-w-0">
+										<p className="truncate text-steel-white">
+											{formatUnits(BigInt(s.amountIn), TIP20_DECIMALS)} {TRUNCATE(s.tokenIn)} →{" "}
+											{formatUnits(BigInt(s.amountOut), TIP20_DECIMALS)} {TRUNCATE(s.tokenOut)}
+										</p>
+										<p className="text-smoke-dark">
+											{new Date(s.createdAt).toLocaleString()}
+											{usd !== null && <span className="ml-2 text-smoke">≈ {formatUsd(usd)}</span>}
+										</p>
+									</div>
+									<a
+										href={`${explorer}/tx/${s.txHash}`}
+										target="_blank"
+										rel="noopener noreferrer"
+										className="ml-3 shrink-0 text-smoke-dark hover:text-indigo"
+									>
+										<ExternalLinkIcon className="size-3.5" />
+									</a>
+								</li>
+							);
+						})}
 					</ul>
 				)}
 			</CardContent>
