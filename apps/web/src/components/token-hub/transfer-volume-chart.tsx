@@ -4,7 +4,6 @@ import { useQuery } from "@tanstack/react-query";
 import dynamic from "next/dynamic";
 import { useMemo } from "react";
 import { getTokenDailyStats } from "@/actions/token-hub";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const Area = dynamic(() => import("recharts").then((m) => m.Area), { ssr: false });
@@ -44,70 +43,68 @@ export function TransferVolumeChart({ tokenAddress, days = 30 }: TransferVolumeC
 	const hasEnoughData = chartData.length >= 2;
 
 	return (
-		<Card className="border-anvil-gray-light bg-deep-charcoal">
-			<CardHeader className="pb-2">
-				<CardTitle className="text-sm text-steel-white">Transfer Activity ({days}d)</CardTitle>
-			</CardHeader>
-			<CardContent>
-				{isLoading ? (
-					<Skeleton className="h-[200px] rounded" />
-				) : !hasEnoughData ? (
-					<div className="flex h-[200px] items-center justify-center">
-						<p className="text-center text-sm text-smoke-dark">
-							Not enough transfer data yet. Chart will populate as the token gets more activity.
-						</p>
-					</div>
-				) : (
-					<div className="h-[200px]">
-						<ResponsiveContainer width="100%" height="100%">
-							<AreaChart data={chartData} margin={{ top: 5, right: 5, bottom: 5, left: 5 }}>
-								<defs>
-									<linearGradient id="volumeGradient" x1="0" y1="0" x2="0" y2="1">
-										<stop offset="0%" stopColor="#5b6ada" stopOpacity={0.4} />
-										<stop offset="100%" stopColor="#5b6ada" stopOpacity={0.05} />
-									</linearGradient>
-								</defs>
-								<XAxis
-									dataKey="date"
-									tick={{ fill: "#6B7280", fontSize: 10 }}
-									tickLine={false}
-									axisLine={{ stroke: "#374151" }}
-									interval="preserveStartEnd"
-									minTickGap={30}
-								/>
-								<YAxis
-									tick={{ fill: "#6B7280", fontSize: 10 }}
-									tickLine={false}
-									axisLine={false}
-									width={40}
-									allowDecimals={false}
-								/>
-								<Tooltip
-									content={({ payload, label }) => {
-										if (!payload?.[0]) return null;
-										const value = payload[0].value as number;
-										return (
-											<div className="rounded border border-anvil-gray-light bg-obsidian-black p-2 text-xs">
-												<p className="text-smoke-dark">{label}</p>
-												<p className="text-indigo">{value} transfers</p>
-											</div>
-										);
-									}}
-								/>
-								<Area
-									type="monotone"
-									dataKey="transfers"
-									stroke="#5b6ada"
-									strokeWidth={2}
-									fill="url(#volumeGradient)"
-									dot={false}
-									animationDuration={500}
-								/>
-							</AreaChart>
-						</ResponsiveContainer>
-					</div>
-				)}
-			</CardContent>
-		</Card>
+		<div className="rounded-2xl border border-border-hair bg-bg-elevated p-5">
+			<div className="mb-4 font-mono text-[10px] text-text-tertiary uppercase tracking-[0.14em]">
+				Transfer activity · {days}d
+			</div>
+			{isLoading ? (
+				<Skeleton className="h-[200px] rounded-xl" />
+			) : !hasEnoughData ? (
+				<div className="flex h-[200px] items-center justify-center">
+					<p className="max-w-sm text-center text-[13px] text-text-tertiary">
+						Not enough transfer data yet. Chart fills in as the token accrues activity.
+					</p>
+				</div>
+			) : (
+				<div className="h-[200px]">
+					<ResponsiveContainer width="100%" height="100%">
+						<AreaChart data={chartData} margin={{ top: 5, right: 5, bottom: 5, left: 5 }}>
+							<defs>
+								<linearGradient id="volumeGradient" x1="0" y1="0" x2="0" y2="1">
+									<stop offset="0%" stopColor="#818cf8" stopOpacity={0.4} />
+									<stop offset="100%" stopColor="#818cf8" stopOpacity={0.05} />
+								</linearGradient>
+							</defs>
+							<XAxis
+								dataKey="date"
+								tick={{ fill: "#7a7e93", fontSize: 10 }}
+								tickLine={false}
+								axisLine={{ stroke: "rgba(255,255,255,0.06)" }}
+								interval="preserveStartEnd"
+								minTickGap={30}
+							/>
+							<YAxis
+								tick={{ fill: "#7a7e93", fontSize: 10 }}
+								tickLine={false}
+								axisLine={false}
+								width={40}
+								allowDecimals={false}
+							/>
+							<Tooltip
+								content={({ payload, label }) => {
+									if (!payload?.[0]) return null;
+									const value = payload[0].value as number;
+									return (
+										<div className="rounded-xl border border-border-subtle bg-bg-elevated px-3 py-2 font-mono text-[11px] shadow-lg">
+											<p className="text-text-tertiary">{label}</p>
+											<p className="mt-0.5 text-indigo">{value} transfers</p>
+										</div>
+									);
+								}}
+							/>
+							<Area
+								type="monotone"
+								dataKey="transfers"
+								stroke="#818cf8"
+								strokeWidth={2}
+								fill="url(#volumeGradient)"
+								dot={false}
+								animationDuration={500}
+							/>
+						</AreaChart>
+					</ResponsiveContainer>
+				</div>
+			)}
+		</div>
 	);
 }

@@ -24,7 +24,7 @@ const SORT_OPTIONS: { value: SortOption; label: string }[] = [
 	{ value: "trending", label: "Trending" },
 	{ value: "newest", label: "Newest" },
 	{ value: "holders", label: "Holders" },
-	{ value: "transfers", label: "Most Active" },
+	{ value: "transfers", label: "Most active" },
 	{ value: "oldest", label: "Oldest" },
 ];
 
@@ -101,7 +101,7 @@ export function TokenFilters({
 					<button
 						type="button"
 						onClick={onClearAll}
-						className="inline-flex items-center gap-1 rounded-full border border-anvil-gray-light px-2.5 py-1 text-xs text-smoke-dark hover:border-red-500/40 hover:text-red-400"
+						className="inline-flex items-center gap-1 rounded-full border border-border-hair bg-bg-field px-2.5 py-1 font-medium text-[11px] text-text-tertiary transition-colors hover:border-red/40 hover:text-red"
 					>
 						<XIcon className="size-3" />
 						Clear all
@@ -115,7 +115,7 @@ export function TokenFilters({
 function FilterRow({ label, children }: { label: string; children: React.ReactNode }) {
 	return (
 		<div className="flex flex-wrap items-center gap-2">
-			<span className="w-14 shrink-0 text-xs font-medium uppercase tracking-wider text-smoke-dark">
+			<span className="w-16 shrink-0 font-mono text-[10px] text-text-tertiary uppercase tracking-[0.14em]">
 				{label}
 			</span>
 			{children}

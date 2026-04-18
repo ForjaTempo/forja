@@ -1,7 +1,6 @@
 "use client";
 
 import type { TokenEnriched } from "@/actions/token-hub";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TokenCard } from "./token-card";
 
@@ -18,7 +17,7 @@ export function TokenGrid({ tokens, total, isLoading, hasMore, onLoadMore }: Tok
 		return (
 			<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
 				{Array.from({ length: 6 }).map((_, i) => (
-					<Skeleton key={`skel-${i.toString()}`} className="h-44 rounded-lg" />
+					<Skeleton key={`skel-${i.toString()}`} className="h-44 rounded-2xl" />
 				))}
 			</div>
 		);
@@ -26,8 +25,8 @@ export function TokenGrid({ tokens, total, isLoading, hasMore, onLoadMore }: Tok
 
 	if (tokens.length === 0) {
 		return (
-			<div className="py-16 text-center">
-				<p className="text-sm text-smoke-dark">No tokens found</p>
+			<div className="rounded-2xl border border-border-hair bg-bg-elevated py-16 text-center">
+				<p className="text-[13px] text-text-tertiary">No tokens found.</p>
 			</div>
 		);
 	}
@@ -41,14 +40,16 @@ export function TokenGrid({ tokens, total, isLoading, hasMore, onLoadMore }: Tok
 			</div>
 			{hasMore && (
 				<div className="flex justify-center">
-					<Button
-						variant="outline"
+					<button
+						type="button"
 						onClick={onLoadMore}
 						disabled={isLoading}
-						className="border-anvil-gray-light text-smoke"
+						className="inline-flex items-center gap-2 rounded-xl border border-border-hair bg-bg-elevated px-5 py-2.5 font-medium text-[13px] text-text-secondary transition-colors hover:border-border-subtle hover:text-text-primary disabled:cursor-not-allowed disabled:opacity-60"
 					>
-						{isLoading ? "Loading..." : `Load More (${tokens.length} of ${total})`}
-					</Button>
+						{isLoading
+							? "Loading…"
+							: `Load more · ${tokens.length.toLocaleString()} of ${total.toLocaleString()}`}
+					</button>
 				</div>
 			)}
 		</div>

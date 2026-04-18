@@ -59,7 +59,6 @@ export function WatchlistButton({ tokenAddress, className }: WatchlistButtonProp
 
 		let watched = isWatched;
 
-		// If not authed, request auth and refetch watched state before deciding
 		if (!isAuthed) {
 			const ok = await requestAuth();
 			if (!ok) return;
@@ -80,8 +79,8 @@ export function WatchlistButton({ tokenAddress, className }: WatchlistButtonProp
 			onClick={handleClick}
 			disabled={mutation.isPending}
 			className={cn(
-				"rounded-md p-1 transition-colors",
-				isWatched ? "text-indigo hover:text-indigo/70" : "text-smoke-dark hover:text-indigo",
+				"inline-flex size-8 items-center justify-center rounded-lg border border-border-hair bg-bg-field transition-colors hover:border-border-subtle",
+				isWatched ? "text-gold" : "text-text-tertiary hover:text-gold",
 				className,
 			)}
 			title={isWatched ? "Remove from watchlist" : "Add to watchlist"}

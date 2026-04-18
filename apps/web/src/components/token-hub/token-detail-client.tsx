@@ -85,42 +85,45 @@ export function TokenDetailClient({
 	return (
 		<PageContainer className="py-8 sm:py-12">
 			<div className="space-y-8">
-				{/* Breadcrumb */}
-				<nav className="flex items-center gap-1.5 text-xs text-smoke-dark">
-					<Link href="/" className="hover:text-smoke">
+				<nav className="flex items-center gap-1.5 font-mono text-[11px] text-text-tertiary uppercase tracking-[0.1em]">
+					<Link href="/" className="transition-colors hover:text-text-secondary">
 						Home
 					</Link>
 					<ChevronRightIcon className="size-3" />
-					<Link href="/tokens" className="hover:text-smoke">
+					<Link href="/tokens" className="transition-colors hover:text-text-secondary">
 						Tokens
 					</Link>
 					<ChevronRightIcon className="size-3" />
-					<span className="font-medium text-steel-white">{token.symbol}</span>
+					<span className="text-gold">{token.symbol}</span>
 				</nav>
 
-				<div className="flex items-start justify-between gap-4">
+				<div className="flex flex-col items-stretch justify-between gap-4 md:flex-row md:items-start">
 					<div className="flex-1">
 						<TokenOverview token={token} trustSignals={trustSignals} />
 					</div>
-					<div className="mt-1 flex items-center gap-2">
+					<div className="flex items-center gap-2 md:mt-1">
 						<SwapCta tokenAddress={token.address} />
 						<WatchlistButton tokenAddress={token.address} />
 					</div>
 				</div>
 
-				{/* State signals */}
 				<ConcentrationWarning topHolderPct={token.topHolderPct} />
 				{token.isLaunchpadToken && <LaunchpadLink tokenAddress={token.address} />}
 
-				{/* Transfer activity chart */}
 				<TransferVolumeChart tokenAddress={token.address} />
 
 				<Tabs defaultValue="holders">
-					<TabsList className="border-b border-anvil-gray-light bg-transparent">
-						<TabsTrigger value="holders" className="text-smoke data-[state=active]:text-indigo">
+					<TabsList className="border-border-hair border-b bg-transparent">
+						<TabsTrigger
+							value="holders"
+							className="text-text-secondary data-[state=active]:text-gold"
+						>
 							Holders
 						</TabsTrigger>
-						<TabsTrigger value="activity" className="text-smoke data-[state=active]:text-indigo">
+						<TabsTrigger
+							value="activity"
+							className="text-text-secondary data-[state=active]:text-gold"
+						>
 							Activity
 						</TabsTrigger>
 					</TabsList>
@@ -140,9 +143,10 @@ export function TokenDetailClient({
 					</TabsContent>
 				</Tabs>
 
-				{/* Share */}
 				<div className="space-y-2">
-					<h3 className="text-sm font-medium text-smoke">Share</h3>
+					<h3 className="font-mono text-[10px] text-text-tertiary uppercase tracking-[0.14em]">
+						Share
+					</h3>
 					<ShareButtons
 						url={`${APP_URL}/tokens/${token.address}`}
 						title={`${token.name} ($${token.symbol}) on Tempo`}
@@ -150,7 +154,6 @@ export function TokenDetailClient({
 					/>
 				</div>
 
-				{/* Liquidity guidance */}
 				{token.isForjaCreated && <LiquidityGuidance />}
 			</div>
 		</PageContainer>
