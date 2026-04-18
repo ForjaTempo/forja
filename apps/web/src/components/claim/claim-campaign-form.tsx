@@ -7,10 +7,6 @@ import { type Address, formatUnits, type Hex, isAddress, parseUnits } from "viem
 import { useAccount } from "wagmi";
 import { checkCampaignQuota, storeCampaign } from "@/actions/claims";
 import { SlugInput } from "@/components/claim/slug-input";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
 import { TransactionStatus } from "@/components/ui/transaction-status";
 import { useCreateCampaign } from "@/hooks/use-create-campaign";
 import { useTokenApproval } from "@/hooks/use-token-approval";
@@ -23,10 +19,24 @@ import { claimerConfig } from "@/lib/contracts";
 import { detectDelimiter, stripBom } from "@/lib/csv-utils";
 import { deriveTxState, formatErrorMessage } from "@/lib/format";
 import { buildMerkleTree, type MerkleResult, normalizeSlug } from "@/lib/merkle";
+import { cn } from "@/lib/utils";
 
 const MAX_RECIPIENTS = 5000;
 const ADDRESS_RE = /^0x[0-9a-fA-F]{40}$/;
 const VALID_AMOUNT = /^\d+(\.\d{1,18})?$/;
+
+const labelCls = "font-mono text-[11px] uppercase tracking-[0.12em] text-text-tertiary";
+const inputCls =
+	"w-full rounded-xl border border-border-hair bg-bg-field px-4 py-3 text-[15px] text-text-primary placeholder:text-text-tertiary focus:border-gold/60 focus:outline-none transition-colors";
+
+const goldButtonStyle = {
+	background: "linear-gradient(135deg, #ffe5a8, #f0d38a 50%, #e8b860)",
+	boxShadow: "0 4px 30px rgba(240,211,138,0.3), inset 0 1px 0 rgba(255,255,255,0.5)",
+};
+const goldButtonCls =
+	"inline-flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3.5 font-semibold text-[#1a1307] text-[15px] transition-transform hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:translate-y-0";
+const neutralBtnCls =
+	"inline-flex items-center justify-center gap-2 rounded-xl border border-border-hair bg-bg-elevated px-5 py-3 font-medium text-[13px] text-text-secondary transition-colors hover:border-border-subtle hover:text-text-primary disabled:cursor-not-allowed disabled:opacity-50";
 
 type Step = 1 | 2 | 3;
 type InputMode = "paste" | "manual";
@@ -264,7 +274,6 @@ export function ClaimCampaignForm({ initialToken }: ClaimCampaignFormProps) {
 		else if (step === 3) setStep(2);
 	}, [step]);
 
-	// Build merkle tree when reaching step 3
 	useEffect(() => {
 		if (step !== 3) return;
 		if (parsed.rows.length === 0) return;
@@ -282,7 +291,6 @@ export function ClaimCampaignForm({ initialToken }: ClaimCampaignFormProps) {
 		}
 	}, [step, parsed.rows, decimals]);
 
-	// Quota check on step 3
 	useEffect(() => {
 		if (step !== 3 || !walletAddress) return;
 		(async () => {
@@ -312,7 +320,6 @@ export function ClaimCampaignForm({ initialToken }: ClaimCampaignFormProps) {
 		);
 	}, [validTokenAddress, merkleResult, startUnix, endUnix, sweepEnabled, noExpiry, createCampaign]);
 
-	// After tx success, store campaign in DB
 	useEffect(() => {
 		if (!isSuccess || !txHash || !campaignId || !merkleResult || !validTokenAddress) return;
 		if (successFired.current) return;
@@ -392,207 +399,279 @@ export function ClaimCampaignForm({ initialToken }: ClaimCampaignFormProps) {
 
 	if (!isConnected) {
 		return (
-			<Card>
-				<CardContent className="py-10 text-center text-smoke-dark">
-					Connect your wallet to create a claim campaign.
-				</CardContent>
-			</Card>
+			<div className="rounded-2xl border border-border-hair bg-bg-elevated p-10 text-center text-[13px] text-text-tertiary">
+				Connect your wallet to forge a claim campaign.
+			</div>
 		);
 	}
 
+	const steps = [
+		{ n: 1, label: "Recipients" },
+		{ n: 2, label: "Details" },
+		{ n: 3, label: "Deploy" },
+	] as const;
+
 	return (
 		<form onSubmit={handleSubmit} className="space-y-6">
-			<div className="flex items-center gap-2 text-sm">
-				<span className={step >= 1 ? "font-semibold text-foreground" : "text-smoke-dark"}>
-					1. Token & Recipients
-				</span>
-				<span className="text-smoke-dark">→</span>
-				<span className={step >= 2 ? "font-semibold text-foreground" : "text-smoke-dark"}>
-					2. Details
-				</span>
-				<span className="text-smoke-dark">→</span>
-				<span className={step >= 3 ? "font-semibold text-foreground" : "text-smoke-dark"}>
-					3. Deploy
-				</span>
+			<div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.12em]">
+				{steps.map((s, i) => {
+					const active = step >= s.n;
+					return (
+						<div key={s.n} className="flex items-center gap-2">
+							<div className="flex items-center gap-2">
+								<span
+									className={cn(
+										"flex size-5 items-center justify-center rounded-full border text-[10px]",
+										active
+											? "border-ember/40 bg-ember/10 text-ember"
+											: "border-border-hair bg-bg-field text-text-tertiary",
+									)}
+								>
+									{s.n}
+								</span>
+								<span className={active ? "text-text-primary" : "text-text-tertiary"}>
+									{s.label}
+								</span>
+							</div>
+							{i < steps.length - 1 && <span className="text-text-tertiary">→</span>}
+						</div>
+					);
+				})}
 			</div>
 
-			{step === 1 && (
-				<Card>
-					<CardContent className="space-y-4 py-6">
-						<div className="space-y-1.5">
-							<label htmlFor="token-addr" className="block text-sm font-medium">
-								Token Address
+			<div className="rounded-2xl border border-border-hair bg-bg-elevated p-6 shadow-[0_20px_60px_rgba(0,0,0,0.4)] sm:p-8">
+				{step === 1 && (
+					<div className="space-y-5">
+						<div className="space-y-2">
+							<label htmlFor="token-addr" className={labelCls}>
+								Token address
 							</label>
-							<Input
+							<input
 								id="token-addr"
 								type="text"
-								placeholder="0x..."
+								placeholder="0x…"
 								value={tokenAddress}
 								onChange={(e) => setTokenAddress(e.target.value)}
+								className={cn(inputCls, "font-mono text-[14px]")}
+								spellCheck={false}
+								autoComplete="off"
 							/>
 							{validTokenAddress && tokenSymbol && (
-								<p className="text-xs text-smoke-dark">
-									{tokenSymbol} • decimals: {decimals}
+								<p className="text-[12px] text-text-tertiary">
+									{tokenSymbol} · {decimals} decimals
 								</p>
 							)}
-							{isTokenError && <p className="text-xs text-rose-500">Could not load token info</p>}
+							{isTokenError && <p className="text-[12px] text-red">Could not load token info.</p>}
 						</div>
 
-						<div className="flex gap-2 text-sm">
-							<button
-								type="button"
-								className={inputMode === "paste" ? "font-semibold underline" : "text-smoke-dark"}
-								onClick={() => setInputMode("paste")}
+						<div className="space-y-2">
+							<span className={labelCls}>Recipients</span>
+							<div
+								className="flex gap-1 rounded-xl border border-border-hair bg-bg-field p-1"
+								role="tablist"
 							>
-								Paste / CSV
-							</button>
-							<button
-								type="button"
-								className={inputMode === "manual" ? "font-semibold underline" : "text-smoke-dark"}
-								onClick={() => setInputMode("manual")}
-							>
-								Manual
-							</button>
+								<button
+									type="button"
+									role="tab"
+									aria-selected={inputMode === "paste"}
+									className={cn(
+										"flex-1 rounded-lg px-3 py-1.5 text-[12.5px] font-medium transition-colors",
+										inputMode === "paste"
+											? "bg-bg-elevated text-text-primary"
+											: "text-text-tertiary hover:text-text-secondary",
+									)}
+									onClick={() => setInputMode("paste")}
+								>
+									Paste / CSV
+								</button>
+								<button
+									type="button"
+									role="tab"
+									aria-selected={inputMode === "manual"}
+									className={cn(
+										"flex-1 rounded-lg px-3 py-1.5 text-[12.5px] font-medium transition-colors",
+										inputMode === "manual"
+											? "bg-bg-elevated text-text-primary"
+											: "text-text-tertiary hover:text-text-secondary",
+									)}
+									onClick={() => setInputMode("manual")}
+								>
+									Manual entry
+								</button>
+							</div>
 						</div>
 
 						{inputMode === "paste" ? (
 							<textarea
-								className="h-40 w-full rounded-md border border-border bg-background p-3 text-sm font-mono"
-								placeholder="0xabc...,100&#10;0xdef...,250"
+								className="min-h-[160px] w-full rounded-xl border border-border-hair bg-bg-field px-4 py-3 font-mono text-[13px] text-text-primary placeholder:text-text-tertiary focus:border-gold/60 focus:outline-none transition-colors"
+								placeholder="0xabc…,100&#10;0xdef…,250"
 								value={pasteText}
 								onChange={(e) => setPasteText(e.target.value)}
+								spellCheck={false}
 							/>
 						) : (
 							<div className="space-y-2">
 								{manualRows.map((row, i) => (
-									<div key={row.id ?? `row-${i}`} className="flex gap-2">
-										<Input
-											placeholder="0x..."
+									<div key={row.id ?? `row-${i}`} className="flex items-center gap-2">
+										<input
+											type="text"
+											placeholder="0x…"
 											value={row.address}
 											onChange={(e) => handleRowChange(i, "address", e.target.value)}
+											className={cn(inputCls, "flex-[2] py-2.5 font-mono text-[13px]")}
+											spellCheck={false}
+											autoComplete="off"
 										/>
-										<Input
-											placeholder="amount"
+										<input
+											type="text"
+											placeholder="Amount"
 											value={row.amount}
 											onChange={(e) => handleRowChange(i, "amount", e.target.value)}
-											className="w-32"
+											className={cn(inputCls, "w-32 py-2.5 font-mono text-[13px]")}
+											inputMode="decimal"
+											autoComplete="off"
 										/>
-										<Button
+										<button
 											type="button"
-											variant="outline"
-											size="icon"
+											className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg border border-border-hair bg-bg-field text-text-tertiary transition-colors hover:border-border-subtle hover:text-red disabled:cursor-not-allowed disabled:opacity-40"
 											onClick={() => handleRemoveRow(i)}
 											disabled={manualRows.length === 1}
+											aria-label={`Remove row ${i + 1}`}
 										>
-											<TrashIcon className="size-4" />
-										</Button>
+											<TrashIcon className="size-3.5" />
+										</button>
 									</div>
 								))}
-								<Button type="button" variant="outline" size="sm" onClick={handleAddRow}>
-									<PlusIcon className="mr-1 size-4" /> Add row
-								</Button>
+								<button
+									type="button"
+									className="inline-flex items-center gap-1.5 rounded-lg border border-border-hair bg-bg-field px-3 py-2 text-[12px] font-medium text-text-secondary transition-colors hover:border-border-subtle hover:text-text-primary"
+									onClick={handleAddRow}
+								>
+									<PlusIcon className="size-3" />
+									Add row
+								</button>
 							</div>
 						)}
 
 						{parsed.errors.length > 0 && (
-							<div className="space-y-1 text-xs text-rose-500">
+							<div className="space-y-1" role="alert">
 								{parsed.errors.slice(0, 5).map((err) => (
-									<p key={err}>{err}</p>
+									<p key={err} className="text-[12px] text-red">
+										{err}
+									</p>
 								))}
-								{parsed.errors.length > 5 && <p>... and {parsed.errors.length - 5} more errors</p>}
+								{parsed.errors.length > 5 && (
+									<p className="text-[12px] text-text-tertiary">
+										… and {parsed.errors.length - 5} more errors
+									</p>
+								)}
 							</div>
 						)}
 
-						<Separator />
-						<div className="flex justify-between text-sm">
-							<span>{parsed.rows.length} recipients</span>
-							<span>
-								Total: {totalFormatted} {tokenSymbol ?? ""}
+						<div className="flex items-center justify-between border-border-hair border-t pt-4 text-[13px]">
+							<span className="text-text-tertiary">
+								{parsed.rows.length} {parsed.rows.length === 1 ? "recipient" : "recipients"}
+							</span>
+							<span className="font-mono text-text-primary">
+								Total {totalFormatted} {tokenSymbol ?? ""}
 							</span>
 						</div>
 						{insufficientToken && (
-							<p className="text-xs text-rose-500">Insufficient token balance</p>
+							<p className="text-[12px] text-red">Insufficient token balance.</p>
 						)}
 
 						<div className="flex justify-end">
-							<Button type="button" onClick={handleNext} disabled={!step1Valid}>
-								Next
-							</Button>
+							<button
+								type="button"
+								onClick={handleNext}
+								disabled={!step1Valid}
+								className={goldButtonCls}
+								style={goldButtonStyle}
+							>
+								Continue to details
+							</button>
 						</div>
-					</CardContent>
-				</Card>
-			)}
+					</div>
+				)}
 
-			{step === 2 && (
-				<Card>
-					<CardContent className="space-y-4 py-6">
-						<div className="space-y-1.5">
-							<label htmlFor="title" className="block text-sm font-medium">
+				{step === 2 && (
+					<div className="space-y-5">
+						<div className="space-y-2">
+							<label htmlFor="title" className={labelCls}>
 								Title
 							</label>
-							<Input
+							<input
 								id="title"
 								type="text"
 								maxLength={80}
-								placeholder="My Airdrop Campaign"
+								placeholder="My airdrop campaign"
 								value={title}
 								onChange={(e) => setTitle(e.target.value)}
+								className={inputCls}
+								autoComplete="off"
 							/>
 						</div>
-						<div className="space-y-1.5">
-							<label htmlFor="desc" className="block text-sm font-medium">
-								Description (optional)
+						<div className="space-y-2">
+							<label htmlFor="desc" className={labelCls}>
+								Description · optional
 							</label>
 							<textarea
 								id="desc"
-								className="h-20 w-full rounded-md border border-border bg-background p-3 text-sm"
+								className="h-24 w-full rounded-xl border border-border-hair bg-bg-field px-4 py-3 text-[14px] text-text-primary placeholder:text-text-tertiary focus:border-gold/60 focus:outline-none transition-colors"
 								maxLength={300}
 								value={description}
 								onChange={(e) => setDescription(e.target.value)}
 							/>
 						</div>
-						<div className="space-y-1.5">
-							<label htmlFor="banner" className="block text-sm font-medium">
-								Banner URL (optional, https://)
+						<div className="space-y-2">
+							<label htmlFor="banner" className={labelCls}>
+								Banner URL · optional
 							</label>
-							<Input
+							<input
 								id="banner"
 								type="url"
 								placeholder="https://example.com/banner.png"
 								value={bannerUrl}
 								onChange={(e) => setBannerUrl(e.target.value)}
+								className={cn(inputCls, "font-mono text-[13px]")}
+								autoComplete="off"
 							/>
 						</div>
 
 						<SlugInput value={slug} onChange={setSlug} onValidityChange={setSlugValid} />
 
 						<div className="grid grid-cols-2 gap-3">
-							<div className="space-y-1.5">
-								<label htmlFor="start" className="block text-sm font-medium">
-									Start (optional)
+							<div className="space-y-2">
+								<label htmlFor="start" className={labelCls}>
+									Start · optional
 								</label>
-								<Input
+								<input
 									id="start"
 									type="datetime-local"
 									value={startTimeStr}
 									onChange={(e) => setStartTimeStr(e.target.value)}
+									className={cn(inputCls, "text-[13px]")}
 								/>
 							</div>
-							<div className="space-y-1.5">
-								<label htmlFor="end" className="block text-sm font-medium">
+							<div className="space-y-2">
+								<label htmlFor="end" className={labelCls}>
 									End
 								</label>
-								<Input
+								<input
 									id="end"
 									type="datetime-local"
 									value={endTimeStr}
 									onChange={(e) => setEndTimeStr(e.target.value)}
 									disabled={noExpiry}
+									className={cn(
+										inputCls,
+										"text-[13px] disabled:cursor-not-allowed disabled:opacity-50",
+									)}
 								/>
 							</div>
 						</div>
 
-						<label className="flex items-center gap-2 text-sm">
+						<label className="flex cursor-pointer items-center gap-2 text-[13px] text-text-secondary">
 							<input
 								type="checkbox"
 								checked={noExpiry}
@@ -600,88 +679,114 @@ export function ClaimCampaignForm({ initialToken }: ClaimCampaignFormProps) {
 									setNoExpiry(e.target.checked);
 									if (e.target.checked) setSweepEnabled(false);
 								}}
+								className="size-3.5 accent-ember"
 							/>
 							No expiry
 						</label>
 
-						<label className="flex items-center gap-2 text-sm">
+						<label className="flex cursor-pointer items-center gap-2 text-[13px] text-text-secondary">
 							<input
 								type="checkbox"
 								checked={sweepEnabled}
 								onChange={(e) => setSweepEnabled(e.target.checked)}
 								disabled={noExpiry}
+								className="size-3.5 accent-ember disabled:cursor-not-allowed disabled:opacity-50"
 							/>
 							Allow sweep of unclaimed tokens after end (requires end time)
 						</label>
 
-						<div className="flex justify-between">
-							<Button type="button" variant="outline" onClick={handleBack}>
+						<div className="flex justify-between pt-2">
+							<button type="button" onClick={handleBack} className={neutralBtnCls}>
 								Back
-							</Button>
-							<Button type="button" onClick={handleNext} disabled={!step2Valid}>
-								Next
-							</Button>
+							</button>
+							<button
+								type="button"
+								onClick={handleNext}
+								disabled={!step2Valid}
+								className={goldButtonCls}
+								style={{ ...goldButtonStyle, width: "auto" }}
+							>
+								Continue to deploy
+							</button>
 						</div>
-					</CardContent>
-				</Card>
-			)}
+					</div>
+				)}
 
-			{step === 3 && (
-				<Card>
-					<CardContent className="space-y-4 py-6">
-						<h3 className="font-semibold">Review & Deploy</h3>
-						<dl className="grid grid-cols-2 gap-2 text-sm">
-							<dt className="text-smoke-dark">Token</dt>
-							<dd>{tokenSymbol ?? tokenAddress}</dd>
-							<dt className="text-smoke-dark">Recipients</dt>
-							<dd>{parsed.rows.length}</dd>
-							<dt className="text-smoke-dark">Total amount</dt>
-							<dd>
-								{totalFormatted} {tokenSymbol ?? ""}
-							</dd>
-							<dt className="text-smoke-dark">Slug</dt>
-							<dd>forja.fun/claim/{normalizeSlug(slug)}</dd>
-							<dt className="text-smoke-dark">Fee</dt>
-							<dd>~ {FEES.claimCampaign} USDC (Est.)</dd>
+				{step === 3 && (
+					<div className="space-y-5">
+						<div className="space-y-1">
+							<div className={labelCls}>Review</div>
+							<h3 className="font-display text-[22px] tracking-[-0.01em] text-text-primary">
+								Ready to light up the forge?
+							</h3>
+						</div>
+						<dl className="space-y-2.5 rounded-xl border border-border-hair bg-bg-field/60 p-4 text-[13px]">
+							<div className="flex justify-between">
+								<dt className="text-text-tertiary">Token</dt>
+								<dd className="font-mono text-text-primary">
+									{tokenSymbol ?? tokenAddress.slice(0, 10)}
+								</dd>
+							</div>
+							<div className="flex justify-between">
+								<dt className="text-text-tertiary">Recipients</dt>
+								<dd className="font-mono text-text-primary">{parsed.rows.length}</dd>
+							</div>
+							<div className="flex justify-between">
+								<dt className="text-text-tertiary">Total amount</dt>
+								<dd className="font-mono text-text-primary">
+									{totalFormatted} {tokenSymbol ?? ""}
+								</dd>
+							</div>
+							<div className="flex justify-between">
+								<dt className="text-text-tertiary">Slug</dt>
+								<dd className="font-mono text-ember">/{normalizeSlug(slug) || "my-airdrop"}</dd>
+							</div>
+							<div className="flex justify-between">
+								<dt className="text-text-tertiary">Fee</dt>
+								<dd className="font-mono text-text-primary">~{FEES.claimCampaign} USDC · Est.</dd>
+							</div>
 						</dl>
 
-						{merkleError && <p className="text-xs text-rose-500">{merkleError}</p>}
-						{quotaError && <p className="text-xs text-rose-500">{quotaError}</p>}
-						{storeError && <p className="text-xs text-rose-500">{storeError}</p>}
-						{insufficientUsdc && <p className="text-xs text-rose-500">Insufficient USDC for fee</p>}
+						{merkleError && <p className="text-[12px] text-red">{merkleError}</p>}
+						{quotaError && <p className="text-[12px] text-red">{quotaError}</p>}
+						{storeError && <p className="text-[12px] text-red">{storeError}</p>}
+						{insufficientUsdc && <p className="text-[12px] text-red">Insufficient USDC for fee.</p>}
 						{insufficientToken && (
-							<p className="text-xs text-rose-500">Insufficient token balance</p>
+							<p className="text-[12px] text-red">Insufficient token balance.</p>
 						)}
 
 						<div className="space-y-2">
 							{needsUsdcApproval && (
-								<Button
+								<button
 									type="button"
-									className="w-full"
+									className={goldButtonCls}
+									style={goldButtonStyle}
 									onClick={approveUsdc}
 									disabled={isUsdcApproving || isUsdcApprovalConfirming}
 								>
 									{isUsdcApproving || isUsdcApprovalConfirming
-										? "Approving USDC..."
-										: "1. Approve USDC fee"}
-								</Button>
+										? "Approving USDC…"
+										: "Approve USDC fee (1/3)"}
+								</button>
 							)}
 							{!needsUsdcApproval && needsTokenApproval && (
-								<Button
+								<button
 									type="button"
-									className="w-full"
+									className={goldButtonCls}
+									style={goldButtonStyle}
 									onClick={approveToken}
 									disabled={isTokenApproving || isTokenApprovalConfirming}
 								>
 									{isTokenApproving || isTokenApprovalConfirming
-										? "Approving token..."
-										: "2. Approve token deposit"}
-								</Button>
+										? "Approving token…"
+										: "Approve token deposit (2/3)"}
+								</button>
 							)}
 							{!needsUsdcApproval && !needsTokenApproval && (
-								<Button
+								<button
 									type="button"
-									className="w-full"
+									className={goldButtonCls}
+									style={goldButtonStyle}
 									onClick={handleDeploy}
 									disabled={
 										!merkleResult ||
@@ -694,22 +799,22 @@ export function ClaimCampaignForm({ initialToken }: ClaimCampaignFormProps) {
 									}
 								>
 									{isCreating || isConfirming
-										? "Creating campaign..."
+										? "Forging campaign…"
 										: isStoring
-											? "Saving..."
-											: "3. Create campaign"}
-								</Button>
+											? "Saving…"
+											: "Forge campaign (3/3)"}
+								</button>
 							)}
 						</div>
 
-						<div className="flex justify-between">
-							<Button type="button" variant="outline" onClick={handleBack}>
+						<div className="flex justify-start">
+							<button type="button" onClick={handleBack} className={neutralBtnCls}>
 								Back
-							</Button>
+							</button>
 						</div>
-					</CardContent>
-				</Card>
-			)}
+					</div>
+				)}
+			</div>
 
 			<TransactionStatus
 				open={txDialogOpen}
@@ -721,7 +826,7 @@ export function ClaimCampaignForm({ initialToken }: ClaimCampaignFormProps) {
 				}}
 				state={txState}
 				txHash={txHash}
-				title="Create claim campaign"
+				title="Forging campaign"
 				error={createError ? formatErrorMessage(createError) : (storeError ?? undefined)}
 			/>
 		</form>

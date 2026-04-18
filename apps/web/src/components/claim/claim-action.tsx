@@ -1,10 +1,9 @@
 "use client";
 
+import { ExternalLinkIcon } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { formatUnits, type Hex } from "viem";
 import type { ClaimCampaignRow, ProofForWalletResult } from "@/actions/claims";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { TransactionStatus } from "@/components/ui/transaction-status";
 import { useClaimReward } from "@/hooks/use-claim-reward";
 import { deriveTxState, formatDate, formatErrorMessage } from "@/lib/format";
@@ -79,85 +78,119 @@ export function ClaimAction({
 
 	if (proof === null) {
 		return (
-			<Card>
-				<CardContent className="py-6 text-center">
-					<p className="text-sm font-medium text-foreground">
-						You are not eligible for this airdrop.
-					</p>
-					<p className="mt-1 text-xs text-smoke-dark">
-						Only addresses on the original recipient list can claim.
-					</p>
-				</CardContent>
-			</Card>
+			<div className="rounded-2xl border border-border-hair bg-bg-elevated p-8 text-center">
+				<div className="mb-2 font-mono text-[10px] text-text-tertiary uppercase tracking-[0.14em]">
+					Not eligible
+				</div>
+				<p className="font-display text-[18px] tracking-[-0.01em] text-text-primary">
+					This wallet isn't on the recipient list.
+				</p>
+				<p className="mt-1.5 text-[12.5px] text-text-tertiary">
+					Only addresses on the original merkle root can claim.
+				</p>
+			</div>
 		);
 	}
 
 	if (proof.claimedAt) {
 		return (
-			<Card>
-				<CardContent className="space-y-2 py-6 text-center">
-					<p className="text-sm font-semibold text-emerald-500">
-						Already claimed: {amountFormatted} {sym}
-					</p>
-					<p className="text-xs text-smoke-dark">on {formatDate(proof.claimedAt)}</p>
-					{proof.claimedTxHash && (
-						<a
-							href={`${explorerUrl}/tx/${proof.claimedTxHash}`}
-							target="_blank"
-							rel="noopener noreferrer"
-							className="text-xs text-indigo underline"
-						>
-							View transaction
-						</a>
-					)}
-				</CardContent>
-			</Card>
+			<div className="rounded-2xl border border-green/30 bg-green/5 p-8 text-center">
+				<div className="mb-2 inline-flex items-center gap-2 font-mono text-[11px] text-green uppercase tracking-[0.2em]">
+					<span
+						aria-hidden
+						className="size-1.5 rounded-full bg-green shadow-[0_0_8px_var(--color-green)]"
+					/>
+					Claimed
+				</div>
+				<p className="font-display text-[22px] tracking-[-0.01em] text-text-primary">
+					{amountFormatted} {sym}
+				</p>
+				<p className="mt-1 font-mono text-[12px] text-text-tertiary">
+					{formatDate(proof.claimedAt)}
+				</p>
+				{proof.claimedTxHash && (
+					<a
+						href={`${explorerUrl}/tx/${proof.claimedTxHash}`}
+						target="_blank"
+						rel="noopener noreferrer"
+						className="mt-3 inline-flex items-center gap-1 font-mono text-[12px] text-text-secondary transition-colors hover:text-gold"
+					>
+						View transaction
+						<ExternalLinkIcon className="size-3" />
+					</a>
+				)}
+			</div>
 		);
 	}
 
 	if (phase === "pending") {
 		return (
-			<Card>
-				<CardContent className="space-y-2 py-6 text-center">
-					<p className="text-sm font-medium text-foreground">
-						You are eligible for {amountFormatted} {sym}
-					</p>
-					<p className="text-xs text-smoke-dark">Claim opens in {formatCountdown(startSec, now)}</p>
-				</CardContent>
-			</Card>
+			<div className="rounded-2xl border border-border-hair bg-bg-elevated p-8 text-center">
+				<div className="mb-2 font-mono text-[10px] text-text-tertiary uppercase tracking-[0.14em]">
+					Eligible
+				</div>
+				<p className="font-display text-[22px] tracking-[-0.01em]">
+					<span className="text-text-primary">{amountFormatted} </span>
+					<span className="gold-text italic">{sym}</span>
+				</p>
+				<p className="mt-2 font-mono text-[12px] text-text-tertiary">
+					Claim opens in {formatCountdown(startSec, now)}
+				</p>
+			</div>
 		);
 	}
 
 	if (phase === "ended") {
 		return (
-			<Card>
-				<CardContent className="py-6 text-center">
-					<p className="text-sm font-medium text-foreground">The claim period has ended.</p>
-					{campaign.endTime && (
-						<p className="mt-1 text-xs text-smoke-dark">Ended on {formatDate(campaign.endTime)}</p>
-					)}
-				</CardContent>
-			</Card>
+			<div className="rounded-2xl border border-border-hair bg-bg-elevated p-8 text-center">
+				<div className="mb-2 font-mono text-[10px] text-text-tertiary uppercase tracking-[0.14em]">
+					Closed
+				</div>
+				<p className="font-display text-[18px] tracking-[-0.01em] text-text-primary">
+					The claim period has ended.
+				</p>
+				{campaign.endTime && (
+					<p className="mt-1.5 text-[12.5px] text-text-tertiary">
+						Ended on {formatDate(campaign.endTime)}
+					</p>
+				)}
+			</div>
 		);
 	}
 
+	const claiming = isClaiming || isConfirming;
 	return (
 		<>
-			<Card>
-				<CardContent className="space-y-3 py-6">
-					<p className="text-center text-sm font-medium text-foreground">
-						You are eligible for {amountFormatted} {sym}
+			<div className="space-y-4 rounded-2xl border border-ember/30 bg-ember/5 p-6">
+				<div className="text-center">
+					<div className="mb-2 inline-flex items-center gap-2 font-mono text-[11px] text-ember uppercase tracking-[0.2em]">
+						<span
+							aria-hidden
+							className="size-1.5 animate-[ember-flicker_2s_ease-in-out_infinite] rounded-full bg-ember shadow-[0_0_8px_var(--color-ember)]"
+						/>
+						Eligible
+					</div>
+					<p className="font-display text-[28px] leading-[1.1] tracking-[-0.02em]">
+						<span className="text-text-primary">{amountFormatted} </span>
+						<span className="gold-text italic">{sym}</span>
 					</p>
-					<Button
-						type="button"
-						className="w-full"
-						onClick={handleClaim}
-						disabled={isClaiming || isConfirming}
-					>
-						{isClaiming || isConfirming ? "Claiming..." : `Claim ${amountFormatted} ${sym}`}
-					</Button>
-				</CardContent>
-			</Card>
+					<p className="mt-1 font-mono text-[11px] text-text-tertiary uppercase tracking-[0.12em]">
+						Waiting for you
+					</p>
+				</div>
+				<button
+					type="button"
+					onClick={handleClaim}
+					disabled={claiming}
+					className="inline-flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3.5 font-semibold text-[#1a1307] text-[15px] transition-transform hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:translate-y-0"
+					style={{
+						background: "linear-gradient(135deg, #ffe5a8, #f0d38a 50%, #e8b860)",
+						boxShadow: "0 4px 30px rgba(240,211,138,0.3), inset 0 1px 0 rgba(255,255,255,0.5)",
+					}}
+				>
+					{claiming ? "Claiming…" : `Claim ${amountFormatted} ${sym}`}
+				</button>
+			</div>
 			<TransactionStatus
 				open={txDialogOpen}
 				onOpenChange={(open) => {
@@ -166,7 +199,7 @@ export function ClaimAction({
 				}}
 				state={txState}
 				txHash={txHash}
-				title="Claim airdrop"
+				title="Claiming airdrop"
 				error={error ? formatErrorMessage(error) : undefined}
 			/>
 		</>

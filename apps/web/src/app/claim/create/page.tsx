@@ -5,7 +5,6 @@ import { ClaimCampaignForm } from "@/components/claim/claim-campaign-form";
 import { CursorGlow } from "@/components/shared/cursor-glow";
 import { ToolHero, ToolStat, ToolStatBar, ToolStatDivider } from "@/components/shared/tool-hero";
 import { useReveal } from "@/components/shared/use-reveal";
-import { Card, CardContent } from "@/components/ui/card";
 import { hasClaimer } from "@/lib/contracts";
 
 export default function CreateClaimCampaignPage() {
@@ -63,14 +62,14 @@ export default function CreateClaimCampaignPage() {
 					{hasClaimer ? (
 						<ClaimCampaignForm initialToken={initialToken} />
 					) : (
-						<Card className="border-border-hair bg-bg-card">
-							<CardContent className="space-y-2 py-12 text-center">
-								<p className="font-display text-3xl text-text-primary">Coming soon</p>
-								<p className="text-sm text-text-secondary">
-									Merkle claim campaigns are not yet available on this network.
-								</p>
-							</CardContent>
-						</Card>
+						<div className="space-y-2 rounded-2xl border border-border-hair bg-bg-elevated p-12 text-center">
+							<p className="font-display text-[28px] tracking-[-0.01em] text-text-primary">
+								Coming soon
+							</p>
+							<p className="text-[13.5px] text-text-secondary">
+								Merkle claim campaigns are not yet available on this network.
+							</p>
+						</div>
 					)}
 				</div>
 			</main>
