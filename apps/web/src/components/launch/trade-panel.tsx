@@ -1,10 +1,10 @@
 "use client";
 
-import { ConnectCta } from "@/components/shared/connect-cta";
 import { ChevronDownIcon, ChevronUpIcon, WalletIcon } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { formatUnits, parseUnits } from "viem";
 import { useAccount, useReadContract, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
+import { ConnectCta } from "@/components/shared/connect-cta";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { triggerConfetti } from "@/components/ui/confetti";

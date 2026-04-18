@@ -1,9 +1,9 @@
 "use client";
 
-import { ConnectCta } from "@/components/shared/connect-cta";
 import { LoaderIcon } from "lucide-react";
 import type { CSSProperties } from "react";
 import { useAccount } from "wagmi";
+import { ConnectCta } from "@/components/shared/connect-cta";
 import { cn } from "@/lib/utils";
 
 interface SendButtonProps {

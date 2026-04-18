@@ -1,6 +1,5 @@
 "use client";
 
-import { ConnectCta } from "@/components/shared/connect-cta";
 import { useQuery } from "@tanstack/react-query";
 import {
 	ArrowLeftIcon,
@@ -21,6 +20,7 @@ import { type ChangeEvent, useCallback, useEffect, useRef, useState } from "reac
 import { parseUnits } from "viem";
 import { useAccount } from "wagmi";
 import { getLaunchDbId, saveLaunchMetadata } from "@/actions/launches";
+import { ConnectCta } from "@/components/shared/connect-cta";
 import { triggerConfetti } from "@/components/ui/confetti";
 import { FilterChip } from "@/components/ui/filter-chip";
 import { ImageUpload } from "@/components/ui/image-upload";
