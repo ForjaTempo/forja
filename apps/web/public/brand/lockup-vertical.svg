@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 280" fill="none" role="img" aria-label="Forja">
+  <title>Forja</title>
+  <defs>
+    <linearGradient id="vmarkGold" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#ffe5a8"/>
+      <stop offset="0.5" stop-color="#f0d38a"/>
+      <stop offset="1" stop-color="#e8b860"/>
+    </linearGradient>
+    <linearGradient id="vtextGold" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#ffe5a8"/>
+      <stop offset="0.5" stop-color="#f0d38a"/>
+      <stop offset="1" stop-color="#e8b860"/>
+    </linearGradient>
+  </defs>
+  <!-- Mark (128px) centered horizontally, top block -->
+  <g transform="translate(136, 24) scale(4)">
+    <path d="M4 10 L28 10 L26 14 L22 14 L22 20 L25 23 L25 26 L7 26 L7 23 L10 20 L10 14 L6 14 Z" fill="url(#vmarkGold)"/>
+    <rect x="14" y="6" width="4" height="4" rx="0.5" fill="#ff6b3d"/>
+  </g>
+  <!-- Wordmark centered below -->
+  <text
+    x="200"
+    y="240"
+    font-family="'Instrument Serif', 'Times New Roman', serif"
+    font-size="96"
+    font-weight="400"
+    letter-spacing="-3"
+    text-anchor="middle"
+    fill="url(#vtextGold)"
+  >Forja</text>
+</svg>
