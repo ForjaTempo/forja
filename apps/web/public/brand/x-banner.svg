@@ -6,12 +6,12 @@
       <stop offset="0" stop-color="#0a0910"/>
       <stop offset="1" stop-color="#12121a"/>
     </linearGradient>
-    <radialGradient id="bnGlow1" cx="0.3" cy="0.4" r="0.45">
+    <radialGradient id="bnGlow1" cx="0.72" cy="0.35" r="0.45">
       <stop offset="0" stop-color="rgba(240,211,138,0.22)"/>
       <stop offset="1" stop-color="rgba(240,211,138,0)"/>
     </radialGradient>
-    <radialGradient id="bnGlow2" cx="0.75" cy="0.7" r="0.35">
-      <stop offset="0" stop-color="rgba(255,107,61,0.15)"/>
+    <radialGradient id="bnGlow2" cx="0.22" cy="0.7" r="0.32">
+      <stop offset="0" stop-color="rgba(255,107,61,0.12)"/>
       <stop offset="1" stop-color="rgba(255,107,61,0)"/>
     </radialGradient>
     <linearGradient id="bnMark" x1="0" x2="1" y1="0" y2="1">
@@ -31,17 +31,27 @@
   <rect width="1500" height="500" fill="url(#bnGlow1)"/>
   <rect width="1500" height="500" fill="url(#bnGlow2)"/>
 
-  <!-- Horizontal grid lines, very subtle -->
+  <!-- Subtle horizontal gridlines -->
   <g stroke="rgba(255,255,255,0.04)" stroke-width="1">
     <line x1="0" y1="125" x2="1500" y2="125"/>
     <line x1="0" y1="250" x2="1500" y2="250"/>
     <line x1="0" y1="375" x2="1500" y2="375"/>
   </g>
 
-  <!-- Left block: mark + wordmark + tagline -->
-  <g transform="translate(90, 168)">
-    <!-- Mark 120px -->
-    <g transform="scale(3.75)">
+  <!-- Decorative ember pulse in the UPPER-LEFT (stays above the avatar circle
+       which X positions around x=110 y=400 bottom-left, ~200px diameter). -->
+  <g transform="translate(180, 120)">
+    <circle cx="40" cy="40" r="5" fill="#ff6b3d" opacity="0.85"/>
+    <circle cx="40" cy="40" r="12" fill="none" stroke="rgba(255,107,61,0.4)" stroke-width="1"/>
+    <circle cx="40" cy="40" r="24" fill="none" stroke="rgba(255,107,61,0.2)" stroke-width="1"/>
+    <circle cx="40" cy="40" r="40" fill="none" stroke="rgba(255,107,61,0.1)" stroke-width="1"/>
+  </g>
+
+  <!-- RIGHT-ALIGNED CONTENT — safe zone, clear of the profile picture overlay. -->
+
+  <!-- Mark, upper-center-right -->
+  <g transform="translate(820, 130)">
+    <g transform="scale(3.25)">
       <path d="M4 10 L28 10 L26 14 L22 14 L22 20 L25 23 L25 26 L7 26 L7 23 L10 20 L10 14 L6 14 Z" fill="url(#bnMark)"/>
       <rect x="14" y="6" width="4" height="4" rx="0.5" fill="#ff6b3d"/>
     </g>
@@ -49,24 +59,24 @@
 
   <!-- Wordmark right of mark -->
   <text
-    x="240"
-    y="278"
+    x="928"
+    y="248"
     font-family="'Instrument Serif', 'Times New Roman', serif"
-    font-size="152"
+    font-size="148"
     font-weight="400"
-    letter-spacing="-5"
+    letter-spacing="-4.5"
     fill="url(#bnText)"
   >Forja</text>
 
-  <!-- Eyebrow line above tagline -->
-  <g transform="translate(90, 335)">
+  <!-- Gold eyebrow line (right block) -->
+  <g transform="translate(820, 310)">
     <rect width="36" height="1" fill="#f0d38a" opacity="0.7"/>
   </g>
 
-  <!-- Tagline -->
+  <!-- Tagline, right block -->
   <text
-    x="90"
-    y="378"
+    x="820"
+    y="354"
     font-family="'Geist', system-ui, sans-serif"
     font-size="28"
     font-weight="500"
@@ -74,10 +84,10 @@
     fill="#ededf0"
   >Create. Send. Lock. Claim. Launch. Trade.</text>
 
-  <!-- Sub-tagline / mono eyebrow (right-bottom or below main tagline) -->
+  <!-- Mono url line -->
   <text
-    x="90"
-    y="416"
+    x="820"
+    y="392"
     font-family="'JetBrains Mono', ui-monospace, monospace"
     font-size="16"
     font-weight="500"
@@ -85,14 +95,6 @@
     fill="#a6a6a0"
   >TOKEN TOOLKIT · TEMPO MAINNET · FORJA.FUN</text>
 
-  <!-- Decorative right-side spark -->
-  <g transform="translate(1200, 220)">
-    <circle cx="40" cy="40" r="6" fill="#ff6b3d" opacity="0.9"/>
-    <circle cx="40" cy="40" r="14" fill="none" stroke="rgba(255,107,61,0.4)" stroke-width="1"/>
-    <circle cx="40" cy="40" r="28" fill="none" stroke="rgba(255,107,61,0.2)" stroke-width="1"/>
-    <circle cx="40" cy="40" r="48" fill="none" stroke="rgba(255,107,61,0.1)" stroke-width="1"/>
-  </g>
-
-  <!-- Bottom accent line -->
+  <!-- Bottom accent gold line -->
   <rect x="0" y="498" width="1500" height="2" fill="url(#bnMark)" opacity="0.5"/>
 </svg>
