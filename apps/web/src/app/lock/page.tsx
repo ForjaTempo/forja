@@ -319,14 +319,14 @@ function HowItWorks({ tab }: { tab: TabKey }) {
 			</div>
 			<ol className="space-y-4 text-sm text-text-secondary">
 				{copy.steps.map((step, i) => (
-					<li key={step} className="flex gap-3">
+					<li key={`${tab}-step-${i.toString()}`} className="flex gap-3">
 						<span
 							className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-[rgba(129,140,248,0.3)] font-mono text-[10px]"
 							style={{ color: "var(--color-indigo)" }}
 						>
 							{i + 1}
 						</span>
-						<span dangerouslySetInnerHTML={{ __html: step }} />
+						<span>{step}</span>
 					</li>
 				))}
 			</ol>
@@ -339,17 +339,30 @@ function HowItWorks({ tab }: { tab: TabKey }) {
 	);
 }
 
+const K = (text: string) => <span className="text-text-primary">{text}</span>;
+
 const HOW_IT_WORKS: Record<
 	TabKey,
-	{ eyebrow: string; title: string; steps: string[]; footnote?: string }
+	{
+		eyebrow: string;
+		title: string;
+		steps: React.ReactNode[];
+		footnote?: string;
+	}
 > = {
 	single: {
 		eyebrow: "How single-lock works",
 		title: "Lock one recipient with full control",
 		steps: [
-			'Enter the <span class="text-text-primary">token</span>, <span class="text-text-primary">beneficiary</span>, amount, and lock duration.',
-			'Optionally add a <span class="text-text-primary">cliff</span> for linear vesting, or leave off for all-or-nothing unlock.',
-			"Approve USDC + token, then sign. Beneficiary claims over time — you can revoke if enabled.",
+			<>
+				Enter the {K("token")}, {K("beneficiary")}, amount, and lock duration.
+			</>,
+			<>
+				Optionally add a {K("cliff")} for linear vesting, or leave off for all-or-nothing unlock.
+			</>,
+			<>
+				Approve USDC + token, then sign. Beneficiary claims over time — you can revoke if enabled.
+			</>,
 		],
 		footnote: "Fee · 1 USDC per lock · Audited ForjaLocker contract",
 	},
@@ -357,9 +370,12 @@ const HOW_IT_WORKS: Record<
 		eyebrow: "How batch-lock works",
 		title: "Lock up to 50 beneficiaries in one tx",
 		steps: [
-			'Paste or upload <span class="text-text-primary">address,amount</span> rows for every beneficiary.',
-			'Set a <span class="text-text-primary">shared schedule</span> — duration, cliff, vesting — applied to every row.',
-			"One USDC fee + one token approval covers the whole batch. Gas savings stack with each recipient.",
+			<>Paste or upload {K("address,amount")} rows for every beneficiary.</>,
+			<>Set a {K("shared schedule")} — duration, cliff, vesting — applied to every row.</>,
+			<>
+				One USDC fee + one token approval covers the whole batch. Gas savings stack with each
+				recipient.
+			</>,
 		],
 		footnote: "ForjaLocker v2 · Flat fee, not per-beneficiary",
 	},
@@ -367,9 +383,14 @@ const HOW_IT_WORKS: Record<
 		eyebrow: "Locks you created",
 		title: "Track and manage active locks",
 		steps: [
-			'View every lock you forged — see <span class="text-text-primary">claimed</span> vs <span class="text-text-primary">remaining</span> in real time.',
-			"Revocable locks can be cancelled; vested portion still goes to the beneficiary, remainder returns to you.",
-			"Tap any row to open the on-chain transaction or jump to the token's detail page.",
+			<>
+				View every lock you forged — see {K("claimed")} vs {K("remaining")} in real time.
+			</>,
+			<>
+				Revocable locks can be cancelled; vested portion still goes to the beneficiary, remainder
+				returns to you.
+			</>,
+			<>Tap any row to open the on-chain transaction or jump to the token's detail page.</>,
 		],
 		footnote: "Progress is live; refresh after on-chain confirmations settle.",
 	},
@@ -377,9 +398,9 @@ const HOW_IT_WORKS: Record<
 		eyebrow: "Locks locked to you",
 		title: "Claim your vested share",
 		steps: [
-			'The claimable amount updates continuously — green status means <span class="text-text-primary">ready to withdraw</span>.',
-			"Cliff not reached? You'll see 0 claimable until the vesting starts.",
-			"One tap on Claim sends the currently-unlocked portion to your wallet.",
+			<>The claimable amount updates continuously — green status means {K("ready to withdraw")}.</>,
+			<>Cliff not reached? You'll see 0 claimable until the vesting starts.</>,
+			<>One tap on Claim sends the currently-unlocked portion to your wallet.</>,
 		],
 		footnote: "Unclaimed balance continues to vest — claim anytime.",
 	},
