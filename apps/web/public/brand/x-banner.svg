@@ -1,100 +1,213 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1500 500" fill="none" role="img" aria-label="Forja X banner">
-  <title>Forja — Token toolkit for Tempo</title>
+  <title>Forja — The token toolkit for Tempo</title>
   <defs>
-    <linearGradient id="bnBg" x1="0" x2="0" y1="0" y2="1">
+    <!-- Layered background gradients — same recipe as the hero section on forja.fun -->
+    <linearGradient id="bgBase" x1="0" x2="0" y1="0" y2="1">
       <stop offset="0" stop-color="#0a0910"/>
       <stop offset="1" stop-color="#12121a"/>
     </linearGradient>
-    <radialGradient id="bnGlow1" cx="0.72" cy="0.35" r="0.45">
-      <stop offset="0" stop-color="rgba(240,211,138,0.22)"/>
+    <radialGradient id="goldHalo" cx="0.55" cy="0.5" r="0.55">
+      <stop offset="0" stop-color="rgba(240,211,138,0.26)"/>
+      <stop offset="0.55" stop-color="rgba(255,107,61,0.08)"/>
       <stop offset="1" stop-color="rgba(240,211,138,0)"/>
     </radialGradient>
-    <radialGradient id="bnGlow2" cx="0.22" cy="0.7" r="0.32">
-      <stop offset="0" stop-color="rgba(255,107,61,0.12)"/>
+    <radialGradient id="emberHalo" cx="0.22" cy="0.62" r="0.32">
+      <stop offset="0" stop-color="rgba(255,107,61,0.24)"/>
       <stop offset="1" stop-color="rgba(255,107,61,0)"/>
     </radialGradient>
-    <linearGradient id="bnMark" x1="0" x2="1" y1="0" y2="1">
+
+    <linearGradient id="gold" x1="0" x2="1" y1="0" y2="1">
       <stop offset="0" stop-color="#ffe5a8"/>
       <stop offset="0.5" stop-color="#f0d38a"/>
       <stop offset="1" stop-color="#e8b860"/>
     </linearGradient>
-    <linearGradient id="bnText" x1="0" x2="1" y1="0" y2="1">
+    <linearGradient id="goldDeep" x1="0" x2="1" y1="0" y2="1">
       <stop offset="0" stop-color="#ffe5a8"/>
       <stop offset="0.5" stop-color="#f0d38a"/>
       <stop offset="1" stop-color="#c9a24a"/>
     </linearGradient>
+
+    <!-- Horizontal molten sweep — the same motif used on /launch page -->
+    <linearGradient id="moltenTrail" x1="0" x2="1" y1="0" y2="0">
+      <stop offset="0" stop-color="rgba(240,211,138,0)"/>
+      <stop offset="0.15" stop-color="rgba(240,211,138,0.35)"/>
+      <stop offset="0.5" stop-color="rgba(255,107,61,0.5)"/>
+      <stop offset="0.85" stop-color="rgba(240,211,138,0.35)"/>
+      <stop offset="1" stop-color="rgba(240,211,138,0)"/>
+    </linearGradient>
+
+    <!-- Mask for the grid so it fades toward edges like the landing hero -->
+    <radialGradient id="gridMask" cx="0.5" cy="0.5" r="0.65">
+      <stop offset="0" stop-color="white"/>
+      <stop offset="0.65" stop-color="white" stop-opacity="0.6"/>
+      <stop offset="1" stop-color="white" stop-opacity="0"/>
+    </radialGradient>
+    <mask id="gridFade">
+      <rect width="1500" height="500" fill="url(#gridMask)"/>
+    </mask>
   </defs>
 
-  <!-- Base -->
-  <rect width="1500" height="500" fill="url(#bnBg)"/>
-  <rect width="1500" height="500" fill="url(#bnGlow1)"/>
-  <rect width="1500" height="500" fill="url(#bnGlow2)"/>
+  <!-- Base + halos -->
+  <rect width="1500" height="500" fill="url(#bgBase)"/>
+  <rect width="1500" height="500" fill="url(#goldHalo)"/>
+  <rect width="1500" height="500" fill="url(#emberHalo)"/>
 
-  <!-- Subtle horizontal gridlines -->
-  <g stroke="rgba(255,255,255,0.04)" stroke-width="1">
-    <line x1="0" y1="125" x2="1500" y2="125"/>
-    <line x1="0" y1="250" x2="1500" y2="250"/>
-    <line x1="0" y1="375" x2="1500" y2="375"/>
-  </g>
-
-  <!-- Decorative ember pulse in the UPPER-LEFT (stays above the avatar circle
-       which X positions around x=110 y=400 bottom-left, ~200px diameter). -->
-  <g transform="translate(180, 120)">
-    <circle cx="40" cy="40" r="5" fill="#ff6b3d" opacity="0.85"/>
-    <circle cx="40" cy="40" r="12" fill="none" stroke="rgba(255,107,61,0.4)" stroke-width="1"/>
-    <circle cx="40" cy="40" r="24" fill="none" stroke="rgba(255,107,61,0.2)" stroke-width="1"/>
-    <circle cx="40" cy="40" r="40" fill="none" stroke="rgba(255,107,61,0.1)" stroke-width="1"/>
-  </g>
-
-  <!-- RIGHT-ALIGNED CONTENT — safe zone, clear of the profile picture overlay. -->
-
-  <!-- Mark, upper-center-right -->
-  <g transform="translate(820, 130)">
-    <g transform="scale(3.25)">
-      <path d="M4 10 L28 10 L26 14 L22 14 L22 20 L25 23 L25 26 L7 26 L7 23 L10 20 L10 14 L6 14 Z" fill="url(#bnMark)"/>
-      <rect x="14" y="6" width="4" height="4" rx="0.5" fill="#ff6b3d"/>
+  <!-- Grid pattern with radial mask — hero signature -->
+  <g mask="url(#gridFade)">
+    <g stroke="rgba(255,255,255,0.04)" stroke-width="1">
+      <line x1="0" y1="80" x2="1500" y2="80"/>
+      <line x1="0" y1="160" x2="1500" y2="160"/>
+      <line x1="0" y1="240" x2="1500" y2="240"/>
+      <line x1="0" y1="320" x2="1500" y2="320"/>
+      <line x1="0" y1="400" x2="1500" y2="400"/>
+      <line x1="100" y1="0" x2="100" y2="500"/>
+      <line x1="260" y1="0" x2="260" y2="500"/>
+      <line x1="420" y1="0" x2="420" y2="500"/>
+      <line x1="580" y1="0" x2="580" y2="500"/>
+      <line x1="740" y1="0" x2="740" y2="500"/>
+      <line x1="900" y1="0" x2="900" y2="500"/>
+      <line x1="1060" y1="0" x2="1060" y2="500"/>
+      <line x1="1220" y1="0" x2="1220" y2="500"/>
+      <line x1="1380" y1="0" x2="1380" y2="500"/>
     </g>
   </g>
 
-  <!-- Wordmark right of mark -->
-  <text
-    x="928"
-    y="248"
-    font-family="'Instrument Serif', 'Times New Roman', serif"
-    font-size="148"
-    font-weight="400"
-    letter-spacing="-4.5"
-    fill="url(#bnText)"
-  >Forja</text>
+  <!-- Molten trail sweeping across mid-banner -->
+  <rect x="0" y="250" width="1500" height="2" fill="url(#moltenTrail)"/>
+  <rect x="0" y="246" width="1500" height="10" fill="url(#moltenTrail)" opacity="0.3" filter="blur(8)"/>
 
-  <!-- Gold eyebrow line (right block) -->
-  <g transform="translate(820, 310)">
-    <rect width="36" height="1" fill="#f0d38a" opacity="0.7"/>
+  <!-- ================================================================
+       LEFT SIDE — sparks + large decorative mark, clear of avatar
+       X avatar lands roughly x=110, y=400, 200px circle. Stay above
+       y=300 on the left half.
+  ================================================================ -->
+
+  <!-- Scattered gold sparks (like SparkField particles on landing) -->
+  <g fill="#f0d38a">
+    <circle cx="140" cy="90" r="1.8" opacity="0.9"/>
+    <circle cx="220" cy="50" r="1.2" opacity="0.6"/>
+    <circle cx="340" cy="110" r="1.6" opacity="0.75"/>
+    <circle cx="410" cy="60" r="1" opacity="0.5"/>
+    <circle cx="500" cy="130" r="2" opacity="0.85"/>
+    <circle cx="580" cy="80" r="1.4" opacity="0.7"/>
+    <circle cx="180" cy="170" r="1.1" opacity="0.55"/>
+    <circle cx="280" cy="200" r="1.6" opacity="0.75"/>
+    <circle cx="380" cy="180" r="1" opacity="0.5"/>
+    <circle cx="480" cy="210" r="1.3" opacity="0.65"/>
+    <circle cx="560" cy="170" r="1.7" opacity="0.8"/>
+    <circle cx="660" cy="230" r="1.2" opacity="0.6"/>
+  </g>
+  <!-- A few ember sparks for warmth -->
+  <g fill="#ff6b3d">
+    <circle cx="240" cy="130" r="1.5" opacity="0.8"/>
+    <circle cx="450" cy="90" r="1.3" opacity="0.7"/>
+    <circle cx="600" cy="190" r="1.6" opacity="0.75"/>
   </g>
 
-  <!-- Tagline, right block -->
+  <!-- Large decorative mark — forge anchor on the left -->
+  <g transform="translate(90, 90) scale(4)">
+    <path d="M4 10 L28 10 L26 14 L22 14 L22 20 L25 23 L25 26 L7 26 L7 23 L10 20 L10 14 L6 14 Z" fill="url(#gold)"/>
+    <rect x="14" y="6" width="4" height="4" rx="0.5" fill="#ff6b3d"/>
+  </g>
+
+  <!-- Ember pulse rings beside the mark — breathing forge -->
+  <g transform="translate(280, 170)">
+    <circle cx="0" cy="0" r="4" fill="#ff6b3d" opacity="0.85"/>
+    <circle cx="0" cy="0" r="10" fill="none" stroke="rgba(255,107,61,0.4)" stroke-width="1"/>
+    <circle cx="0" cy="0" r="20" fill="none" stroke="rgba(255,107,61,0.22)" stroke-width="1"/>
+    <circle cx="0" cy="0" r="34" fill="none" stroke="rgba(255,107,61,0.12)" stroke-width="1"/>
+  </g>
+
+  <!-- Mono tag bottom-left (above where avatar sits) -->
+  <g transform="translate(90, 320)">
+    <rect width="32" height="1" fill="#f0d38a" opacity="0.7"/>
+    <text
+      x="44"
+      y="6"
+      font-family="'JetBrains Mono', ui-monospace, monospace"
+      font-size="14"
+      font-weight="500"
+      letter-spacing="3"
+      fill="#a6a6a0"
+    >FORGE · EDITORIAL · 2026</text>
+  </g>
+
+  <!-- ================================================================
+       RIGHT SIDE — editorial headline, forge voice
+  ================================================================ -->
+
+  <!-- Gold eyebrow badge — mirrors the "/06" style chips on the site -->
+  <g transform="translate(720, 90)">
+    <rect width="140" height="28" rx="14" fill="rgba(240,211,138,0.08)" stroke="rgba(240,211,138,0.28)"/>
+    <text
+      x="70"
+      y="18"
+      text-anchor="middle"
+      font-family="'JetBrains Mono', ui-monospace, monospace"
+      font-size="11"
+      font-weight="600"
+      letter-spacing="2.5"
+      fill="#f0d38a"
+    >TOKEN TOOLKIT</text>
+  </g>
+
+  <!-- Big serif headline · line 1 -->
   <text
-    x="820"
-    y="354"
+    x="720"
+    y="215"
+    font-family="'Instrument Serif', 'Times New Roman', serif"
+    font-size="92"
+    font-weight="400"
+    letter-spacing="-3"
+    fill="#f5f5f0"
+  >Forge tokens at</text>
+
+  <!-- Big serif headline · line 2, italic gold-gradient (signature voice) -->
+  <text
+    x="720"
+    y="300"
+    font-family="'Instrument Serif', 'Times New Roman', serif"
+    font-size="92"
+    font-style="italic"
+    font-weight="400"
+    letter-spacing="-3"
+    fill="url(#goldDeep)"
+  >the speed of payments.</text>
+
+  <!-- Tool list — the "Create · Send · Lock · Claim · Launch · Trade" eyebrow -->
+  <text
+    x="720"
+    y="360"
     font-family="'Geist', system-ui, sans-serif"
-    font-size="28"
+    font-size="22"
     font-weight="500"
-    letter-spacing="-0.3"
+    letter-spacing="-0.2"
     fill="#ededf0"
   >Create. Send. Lock. Claim. Launch. Trade.</text>
 
-  <!-- Mono url line -->
+  <!-- Bottom mono url -->
   <text
-    x="820"
-    y="392"
+    x="720"
+    y="402"
     font-family="'JetBrains Mono', ui-monospace, monospace"
-    font-size="16"
+    font-size="14"
     font-weight="500"
-    letter-spacing="3.5"
-    fill="#a6a6a0"
-  >TOKEN TOOLKIT · TEMPO MAINNET · FORJA.FUN</text>
+    letter-spacing="3"
+    fill="#7a7e93"
+  >FORJA.FUN · BUILT FOR TEMPO · NO TOKEN YET</text>
 
-  <!-- Bottom accent gold line -->
-  <rect x="0" y="498" width="1500" height="2" fill="url(#bnMark)" opacity="0.5"/>
+  <!-- Decorative flame arc · right edge -->
+  <g transform="translate(1380, 80)" opacity="0.55">
+    <path
+      d="M0 0 Q 60 40 40 100 T 50 180 Q 20 220 60 260 T 40 340"
+      fill="none"
+      stroke="url(#gold)"
+      stroke-width="1.2"
+      stroke-linecap="round"
+    />
+  </g>
+
+  <!-- Bottom gold accent line -->
+  <rect x="0" y="498" width="1500" height="2" fill="url(#gold)" opacity="0.5"/>
 </svg>
