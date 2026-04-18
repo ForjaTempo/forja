@@ -29,6 +29,7 @@ const discoverLinks: Array<{ label: string; href: string; external?: boolean }> 
 const buildLinks: Array<{ label: string; href: string; external?: boolean }> = [
 	{ label: "GitHub", href: "https://github.com/ForjaTempo/forja", external: true },
 	{ label: "Contracts", href: "/security", external: false },
+	{ label: "Brand kit", href: "/brand", external: false },
 	{ label: "security.txt", href: "/.well-known/security.txt", external: true },
 ];
 
