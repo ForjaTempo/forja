@@ -94,10 +94,7 @@ export function Header() {
 					})}
 					{isConnected && (
 						<>
-							<span
-								aria-hidden
-								className="mx-1 h-4 w-px bg-border-hair xl:mx-2"
-							/>
+							<span aria-hidden className="mx-1 h-4 w-px bg-border-hair xl:mx-2" />
 							{personalNavLinks.map((link) => {
 								const active = isActive(pathname, link.href);
 								return (
@@ -106,9 +103,7 @@ export function Header() {
 										href={link.href}
 										className={cn(
 											"relative whitespace-nowrap px-2.5 py-2 font-medium text-[13px] transition-colors xl:px-3 xl:text-[13.5px]",
-											active
-												? "text-text-primary"
-												: "text-text-secondary hover:text-text-primary",
+											active ? "text-text-primary" : "text-text-secondary hover:text-text-primary",
 										)}
 									>
 										{link.label}

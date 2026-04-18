@@ -52,11 +52,7 @@ export function MobileNav() {
 			<SheetContent side="left" className="w-72 border-border-subtle bg-bg-elevated">
 				<SheetHeader>
 					<SheetTitle asChild>
-						<Link
-							href="/"
-							onClick={() => setOpen(false)}
-							className="flex items-center gap-2"
-						>
+						<Link href="/" onClick={() => setOpen(false)} className="flex items-center gap-2">
 							<ForjaLogo size={22} />
 							<span className="font-display text-[20px] tracking-[-0.01em] text-text-primary">
 								Forja
