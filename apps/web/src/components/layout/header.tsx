@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useAccount } from "wagmi";
 import { ConnectButton } from "@/components/layout/connect-button";
 import { MobileNav } from "@/components/layout/mobile-nav";
 import { NotificationBell } from "@/components/layout/notification-bell";
@@ -11,7 +12,7 @@ import { hasSwap } from "@/lib/constants";
 import { hasClaimer, hasLaunchpad } from "@/lib/contracts";
 import { cn } from "@/lib/utils";
 
-const baseNavLinks = [
+const toolNavLinks = [
 	{ href: "/create", label: "Create" },
 	{ href: "/multisend", label: "Multisend" },
 	{ href: "/lock", label: "Lock" },
@@ -19,6 +20,11 @@ const baseNavLinks = [
 	...(hasLaunchpad ? [{ href: "/launch", label: "Launchpad" }] : []),
 	...(hasSwap ? [{ href: "/swap", label: "Swap" }] : []),
 	{ href: "/tokens", label: "Tokens" },
+];
+
+const personalNavLinks = [
+	{ href: "/dashboard", label: "Dashboard" },
+	{ href: "/profile", label: "Profile" },
 ];
 
 function isActive(pathname: string, href: string): boolean {
@@ -31,6 +37,7 @@ function isActive(pathname: string, href: string): boolean {
 
 export function Header() {
 	const pathname = usePathname();
+	const { isConnected } = useAccount();
 	const [scrolled, setScrolled] = useState(false);
 
 	useEffect(() => {
@@ -63,8 +70,8 @@ export function Header() {
 					</Link>
 				</div>
 
-				<nav className="hidden min-w-0 flex-1 justify-center gap-0.5 md:flex">
-					{baseNavLinks.map((link) => {
+				<nav className="hidden min-w-0 flex-1 items-center justify-center gap-0.5 md:flex">
+					{toolNavLinks.map((link) => {
 						const active = isActive(pathname, link.href);
 						return (
 							<Link
@@ -85,6 +92,37 @@ export function Header() {
 							</Link>
 						);
 					})}
+					{isConnected && (
+						<>
+							<span
+								aria-hidden
+								className="mx-1 h-4 w-px bg-border-hair xl:mx-2"
+							/>
+							{personalNavLinks.map((link) => {
+								const active = isActive(pathname, link.href);
+								return (
+									<Link
+										key={link.href}
+										href={link.href}
+										className={cn(
+											"relative whitespace-nowrap px-2.5 py-2 font-medium text-[13px] transition-colors xl:px-3 xl:text-[13.5px]",
+											active
+												? "text-text-primary"
+												: "text-text-secondary hover:text-text-primary",
+										)}
+									>
+										{link.label}
+										{active && (
+											<span
+												aria-hidden
+												className="-translate-x-1/2 absolute bottom-0 left-1/2 h-1 w-1 rounded-full bg-gold shadow-[0_0_8px_var(--color-gold-glow)]"
+											/>
+										)}
+									</Link>
+								);
+							})}
+						</>
+					)}
 				</nav>
 
 				<div className="ml-auto flex shrink-0 items-center gap-2">
