@@ -6,9 +6,7 @@ import { useDeferredValue, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { upsertCreatorProfile } from "@/actions/profile";
 import { ProfilePreview } from "@/components/profile/profile-preview";
-import { Button } from "@/components/ui/button";
 import { ImageUpload } from "@/components/ui/image-upload";
-import { Input } from "@/components/ui/input";
 import { useWalletAuth } from "@/hooks/use-wallet-auth";
 import { cn } from "@/lib/utils";
 
@@ -19,6 +17,17 @@ const MAX_HANDLE = 64;
 const MAX_URL = 200;
 
 const HANDLE_RE = /^[\w.-]+$/;
+
+const labelCls = "font-mono text-[11px] uppercase tracking-[0.12em] text-text-tertiary";
+const inputCls =
+	"w-full rounded-xl border border-border-hair bg-bg-field px-4 py-3 text-[14px] text-text-primary placeholder:text-text-tertiary focus:border-gold/60 focus:outline-none transition-colors";
+
+const goldButtonStyle = {
+	background: "linear-gradient(135deg, #ffe5a8, #f0d38a 50%, #e8b860)",
+	boxShadow: "0 4px 30px rgba(240,211,138,0.3), inset 0 1px 0 rgba(255,255,255,0.5)",
+};
+const goldButtonCls =
+	"inline-flex items-center gap-2 rounded-xl px-6 py-3.5 font-semibold text-[#1a1307] text-[15px] transition-transform hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:translate-y-0";
 
 interface ProfileFormProps {
 	address: string;
@@ -100,10 +109,6 @@ export function ProfileForm({ address, existing }: ProfileFormProps) {
 	);
 	const hasErrors = Object.keys(errors).length > 0;
 
-	// Defer the preview render so keystroke latency stays snappy while the preview
-	// catches up when the main thread is idle. Avatar + banner URLs come from
-	// ImageUpload which only flips on successful upload (not per-keystroke) — no
-	// need to defer those.
 	const deferredName = useDeferredValue(displayName);
 	const deferredBio = useDeferredValue(bio);
 	const deferredWebsite = useDeferredValue(website);
@@ -138,10 +143,12 @@ export function ProfileForm({ address, existing }: ProfileFormProps) {
 
 	return (
 		<div className="grid gap-6 lg:grid-cols-5 lg:gap-8">
-			<form onSubmit={handleSubmit} className="space-y-6 lg:col-span-3">
-				{/* Banner Upload */}
+			<form
+				onSubmit={handleSubmit}
+				className="space-y-6 rounded-2xl border border-border-hair bg-bg-elevated p-6 shadow-[0_20px_60px_rgba(0,0,0,0.4)] sm:p-8 lg:col-span-3"
+			>
 				<div className="space-y-2">
-					<span className="text-sm font-medium text-smoke">Banner</span>
+					<span className={labelCls}>Banner</span>
 					<ImageUpload
 						type="banner"
 						value={bannerUrl || undefined}
@@ -151,9 +158,8 @@ export function ProfileForm({ address, existing }: ProfileFormProps) {
 				</div>
 
 				<div className="grid gap-6 sm:grid-cols-2">
-					{/* Avatar Upload */}
 					<div className="space-y-2">
-						<span className="text-sm font-medium text-smoke">Avatar</span>
+						<span className={labelCls}>Avatar</span>
 						<ImageUpload
 							type="avatar"
 							value={avatarUrl || undefined}
@@ -162,31 +168,31 @@ export function ProfileForm({ address, existing }: ProfileFormProps) {
 						/>
 					</div>
 
-					{/* Display Name */}
 					<div className="space-y-2">
-						<label htmlFor="displayName" className="text-sm font-medium text-smoke">
-							Display Name
+						<label htmlFor="displayName" className={labelCls}>
+							Display name
 						</label>
-						<Input
+						<input
 							id="displayName"
+							type="text"
 							value={displayName}
 							onChange={(e) => setDisplayName(e.target.value)}
 							maxLength={MAX_DISPLAY_NAME + 5}
 							placeholder="Your name or alias"
 							aria-invalid={!!errors.displayName}
-							className="border-anvil-gray-light bg-obsidian-black/50 text-steel-white placeholder:text-smoke-dark"
+							className={inputCls}
+							autoComplete="off"
 						/>
-						<div className="flex items-center justify-between">
-							<p className={cn("text-xs", errors.displayName ? "text-red-400" : "text-smoke-dark")}>
-								{errors.displayName ?? `${displayName.length}/${MAX_DISPLAY_NAME}`}
-							</p>
-						</div>
+						<p
+							className={cn("text-[11px]", errors.displayName ? "text-red" : "text-text-tertiary")}
+						>
+							{errors.displayName ?? `${displayName.length} / ${MAX_DISPLAY_NAME}`}
+						</p>
 					</div>
 				</div>
 
-				{/* Bio */}
 				<div className="space-y-2">
-					<label htmlFor="bio" className="text-sm font-medium text-smoke">
+					<label htmlFor="bio" className={labelCls}>
 						Bio
 					</label>
 					<textarea
@@ -195,85 +201,86 @@ export function ProfileForm({ address, existing }: ProfileFormProps) {
 						onChange={(e) => setBio(e.target.value)}
 						maxLength={MAX_BIO + 20}
 						rows={3}
-						placeholder="Tell the community about yourself..."
+						placeholder="Tell the community about yourself…"
 						aria-invalid={!!errors.bio}
-						className={cn(
-							"w-full rounded-md border border-anvil-gray-light bg-obsidian-black/50 px-3 py-2 text-sm text-steel-white placeholder:text-smoke-dark",
-							"focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50",
-						)}
+						className="w-full rounded-xl border border-border-hair bg-bg-field px-4 py-3 text-[14px] text-text-primary placeholder:text-text-tertiary focus:border-gold/60 focus:outline-none transition-colors"
 					/>
-					<p className={cn("text-xs", errors.bio ? "text-red-400" : "text-smoke-dark")}>
-						{errors.bio ?? `${bio.length}/${MAX_BIO}`}
+					<p className={cn("text-[11px]", errors.bio ? "text-red" : "text-text-tertiary")}>
+						{errors.bio ?? `${bio.length} / ${MAX_BIO}`}
 					</p>
 				</div>
 
-				{/* Social Links */}
 				<div className="grid gap-6 sm:grid-cols-3">
 					<div className="space-y-2">
-						<label htmlFor="website" className="text-sm font-medium text-smoke">
-							<GlobeIcon className="mr-1 inline size-3.5" />
+						<label htmlFor="website" className={cn(labelCls, "flex items-center gap-1")}>
+							<GlobeIcon className="size-3" />
 							Website
 						</label>
-						<Input
+						<input
 							id="website"
+							type="text"
 							value={website}
 							onChange={(e) => setWebsite(e.target.value)}
 							placeholder="https://yoursite.com"
 							aria-invalid={!!errors.website}
-							className="border-anvil-gray-light bg-obsidian-black/50 text-steel-white placeholder:text-smoke-dark"
+							className={cn(inputCls, "font-mono text-[13px]")}
+							autoComplete="off"
 						/>
-						{errors.website && <p className="text-xs text-red-400">{errors.website}</p>}
+						{errors.website && <p className="text-[11px] text-red">{errors.website}</p>}
 					</div>
 
 					<div className="space-y-2">
-						<label htmlFor="twitter" className="text-sm font-medium text-smoke">
-							<XIcon className="mr-1 inline size-3.5" />
-							Twitter / X
+						<label htmlFor="twitter" className={cn(labelCls, "flex items-center gap-1")}>
+							<XIcon className="size-3" />X · Twitter
 						</label>
-						<Input
+						<input
 							id="twitter"
+							type="text"
 							value={twitterHandle}
 							onChange={(e) => setTwitterHandle(e.target.value)}
 							placeholder="username (no @)"
 							aria-invalid={!!errors.twitter}
-							className="border-anvil-gray-light bg-obsidian-black/50 text-steel-white placeholder:text-smoke-dark"
+							className={cn(inputCls, "font-mono text-[13px]")}
+							autoComplete="off"
 						/>
-						{errors.twitter && <p className="text-xs text-red-400">{errors.twitter}</p>}
+						{errors.twitter && <p className="text-[11px] text-red">{errors.twitter}</p>}
 					</div>
 
 					<div className="space-y-2">
-						<label htmlFor="telegram" className="text-sm font-medium text-smoke">
+						<label htmlFor="telegram" className={labelCls}>
 							Telegram
 						</label>
-						<Input
+						<input
 							id="telegram"
+							type="text"
 							value={telegramHandle}
 							onChange={(e) => setTelegramHandle(e.target.value)}
 							placeholder="username (no @)"
 							aria-invalid={!!errors.telegram}
-							className="border-anvil-gray-light bg-obsidian-black/50 text-steel-white placeholder:text-smoke-dark"
+							className={cn(inputCls, "font-mono text-[13px]")}
+							autoComplete="off"
 						/>
-						{errors.telegram && <p className="text-xs text-red-400">{errors.telegram}</p>}
+						{errors.telegram && <p className="text-[11px] text-red">{errors.telegram}</p>}
 					</div>
 				</div>
 
-				<Button
+				<button
 					type="submit"
 					disabled={saving || hasErrors}
-					className="bg-primary text-primary-foreground hover:bg-primary/90"
+					className={goldButtonCls}
+					style={goldButtonStyle}
 				>
 					{saving ? (
-						<Loader2Icon className="mr-2 size-4 animate-spin" />
+						<Loader2Icon className="size-4 animate-spin" />
 					) : (
-						<SaveIcon className="mr-2 size-4" />
+						<SaveIcon className="size-4" />
 					)}
-					{existing ? "Update Profile" : "Claim Profile"}
-				</Button>
+					{existing ? "Update profile" : "Claim profile"}
+				</button>
 			</form>
 
-			{/* Live Preview — sticky on desktop, deferred re-renders for snappy input */}
 			<aside className="lg:col-span-2">
-				<div className="lg:sticky lg:top-20">
+				<div className="lg:sticky lg:top-24">
 					<ProfilePreview
 						address={address}
 						displayName={deferredName}
