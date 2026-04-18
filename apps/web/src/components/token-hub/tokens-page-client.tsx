@@ -12,6 +12,7 @@ import {
 	type TokenEnriched,
 } from "@/actions/token-hub";
 import { PageContainer } from "@/components/layout/page-container";
+import { CursorGlow } from "@/components/shared/cursor-glow";
 import { ToolHero } from "@/components/shared/tool-hero";
 import { useReveal } from "@/components/shared/use-reveal";
 import { TokenFilters } from "@/components/token-hub/token-filters";
@@ -205,79 +206,82 @@ export function TokensPageClient({
 		: [];
 
 	return (
-		<PageContainer className="py-16 sm:py-20 lg:py-24">
-			<div className="space-y-10">
-				<ToolHero
-					number="/07"
-					label="Tokens · Discovery"
-					accent="gold"
-					title={
-						<>
-							Every TIP-20 on Tempo.
-							<br />
-							<span className="gold-text italic">One index.</span>
-						</>
-					}
-					description="Search, filter, and explore every token on Tempo — FORJA-forged, launchpad, or external. Holder growth, trust signals, and live price at a glance."
-				/>
+		<>
+			<CursorGlow color="rgba(240,211,138,0.06)" size={520} />
+			<PageContainer className="py-16 sm:py-20 lg:py-24">
+				<div className="space-y-10">
+					<ToolHero
+						number="/07"
+						label="Tokens · Discovery"
+						accent="gold"
+						title={
+							<>
+								Every TIP-20 on Tempo.
+								<br />
+								<span className="gold-text italic">One index.</span>
+							</>
+						}
+						description="Search, filter, and explore every token on Tempo — FORJA-forged, launchpad, or external. Holder growth, trust signals, and live price at a glance."
+					/>
 
-				{initialTrending.length > 0 && (
-					<div className="reveal">
-						<TrendingRow tokens={initialTrending} />
-					</div>
-				)}
+					{initialTrending.length > 0 && (
+						<div className="reveal">
+							<TrendingRow tokens={initialTrending} />
+						</div>
+					)}
 
-				{stats && (
-					<div
-						className="reveal grid grid-cols-1 gap-px overflow-hidden rounded-2xl border border-border-hair sm:grid-cols-3"
-						style={{ background: "var(--color-border-hair)" }}
-					>
-						{statCards.map((s) => (
-							<div key={s.label} className="bg-bg-elevated px-6 py-5 text-center sm:text-left">
-								<p className="font-mono text-[11px] uppercase tracking-[0.14em] text-text-tertiary">
-									{s.label}
-								</p>
-								<div
-									className="mt-2 font-display text-[32px] font-normal tracking-[-0.025em]"
-									style={{ color: s.color }}
-								>
-									<AnimatedCounter value={s.value} />
+					{stats && (
+						<div
+							className="reveal grid grid-cols-1 gap-px overflow-hidden rounded-2xl border border-border-hair sm:grid-cols-3"
+							style={{ background: "var(--color-border-hair)" }}
+						>
+							{statCards.map((s) => (
+								<div key={s.label} className="bg-bg-elevated px-6 py-5 text-center sm:text-left">
+									<p className="font-mono text-[11px] uppercase tracking-[0.14em] text-text-tertiary">
+										{s.label}
+									</p>
+									<div
+										className="mt-2 font-display text-[32px] font-normal tracking-[-0.025em]"
+										style={{ color: s.color }}
+									>
+										<AnimatedCounter value={s.value} />
+									</div>
 								</div>
-							</div>
-						))}
+							))}
+						</div>
+					)}
+
+					<div className="reveal flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+						<div className="flex-1 sm:max-w-md">
+							<TokenSearch value={search} onChange={handleSearchChange} />
+						</div>
 					</div>
-				)}
 
-				<div className="reveal flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-					<div className="flex-1 sm:max-w-md">
-						<TokenSearch value={search} onChange={handleSearchChange} />
+					<div className="reveal">
+						<TokenFilters
+							source={source}
+							status={status}
+							tags={tags}
+							sort={sort}
+							onSourceChange={handleSourceChange}
+							onStatusChange={handleStatusChange}
+							onToggleTag={handleToggleTag}
+							onSortChange={handleSortChange}
+							onClearAll={handleClearAll}
+						/>
+					</div>
+
+					<div className="reveal">
+						<TokenGrid
+							tokens={tokens}
+							total={total}
+							isLoading={isLoading}
+							hasMore={tokens.length < total}
+							onLoadMore={handleLoadMore}
+						/>
 					</div>
 				</div>
-
-				<div className="reveal">
-					<TokenFilters
-						source={source}
-						status={status}
-						tags={tags}
-						sort={sort}
-						onSourceChange={handleSourceChange}
-						onStatusChange={handleStatusChange}
-						onToggleTag={handleToggleTag}
-						onSortChange={handleSortChange}
-						onClearAll={handleClearAll}
-					/>
-				</div>
-
-				<div className="reveal">
-					<TokenGrid
-						tokens={tokens}
-						total={total}
-						isLoading={isLoading}
-						hasMore={tokens.length < total}
-						onLoadMore={handleLoadMore}
-					/>
-				</div>
-			</div>
-		</PageContainer>
+			</PageContainer>
+		</>
 	);
 }
