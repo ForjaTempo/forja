@@ -5,6 +5,7 @@ import { Footer } from "@/components/layout/footer";
 import { Header } from "@/components/layout/header";
 import { Providers } from "@/components/providers";
 import { APP_DESCRIPTION, APP_NAME, APP_URL } from "@/lib/constants";
+import { getNonce } from "@/lib/nonce";
 import "./globals.css";
 
 const inter = Inter({
@@ -66,7 +67,8 @@ const jsonLd = {
 	},
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+	const nonce = await getNonce();
 	return (
 		<html lang="en" className={`${inter.variable} ${jetbrainsMono.variable}`}>
 			<body className="flex min-h-screen flex-col bg-forge-black font-sans text-steel-white antialiased">
@@ -81,6 +83,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 				)}
 				<script
 					type="application/ld+json"
+					nonce={nonce}
 					// biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD structured data
 					dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
 				/>

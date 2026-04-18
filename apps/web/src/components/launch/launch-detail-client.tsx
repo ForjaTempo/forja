@@ -27,6 +27,7 @@ import { LiveTradeFeed } from "@/components/launch/live-trade-feed";
 import { TerminatedBanner } from "@/components/launch/terminated-banner";
 import { TradePanel } from "@/components/launch/trade-panel";
 import { PageContainer } from "@/components/layout/page-container";
+import { ExternalLinkGuard } from "@/components/shared/external-link-guard";
 import { SwapCta } from "@/components/swap/swap-cta";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -367,7 +368,13 @@ function SocialLinksRow({ launch }: { launch: LaunchDetail }) {
 	return (
 		<div className="flex flex-wrap items-center gap-2">
 			{website && (
-				<SocialLink href={website} label="Website" icon={<GlobeIcon className="size-3.5" />} />
+				<ExternalLinkGuard
+					href={website}
+					className="inline-flex items-center gap-1.5 rounded-md border border-anvil-gray-light bg-anvil-gray/30 px-2.5 py-1 text-xs text-smoke transition-colors hover:border-indigo/60 hover:text-indigo"
+				>
+					<GlobeIcon className="size-3.5" />
+					Website
+				</ExternalLinkGuard>
 			)}
 			{twitterUrl && (
 				<SocialLink
