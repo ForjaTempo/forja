@@ -16,8 +16,11 @@ interface ProfilePreviewProps {
 }
 
 function shortAddress(addr: string): string {
-	return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
+	return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
 }
+
+const chipCls =
+	"inline-flex items-center gap-1.5 rounded-lg border border-border-hair bg-bg-field px-2.5 py-1 font-medium text-[11px] text-text-secondary transition-colors hover:border-border-subtle hover:text-gold";
 
 export function ProfilePreview(props: ProfilePreviewProps) {
 	const {
@@ -35,23 +38,29 @@ export function ProfilePreview(props: ProfilePreviewProps) {
 
 	return (
 		<div className="space-y-3">
-			<p className="text-xs font-medium uppercase tracking-wider text-smoke-dark">Live Preview</p>
+			<p className="font-mono text-[10px] text-text-tertiary uppercase tracking-[0.14em]">
+				Live preview
+			</p>
 
-			<div className="overflow-hidden rounded-xl border border-anvil-gray-light bg-deep-charcoal">
-				{/* Banner */}
+			<div className="overflow-hidden rounded-2xl border border-border-hair bg-bg-elevated">
 				<div className="relative h-28 w-full">
 					{bannerUrl ? (
 						// biome-ignore lint/performance/noImgElement: local preview of uploaded image
 						<img src={bannerUrl} alt="Banner preview" className="h-full w-full object-cover" />
 					) : (
-						<div className="h-full w-full bg-gradient-to-br from-indigo/30 via-anvil-gray to-obsidian-black" />
+						<div
+							className="h-full w-full"
+							style={{
+								background:
+									"linear-gradient(135deg, rgba(129,140,248,0.25), rgba(240,211,138,0.12), rgba(255,107,61,0.08))",
+							}}
+						/>
 					)}
 				</div>
 
-				{/* Avatar overlap */}
-				<div className="-mt-8 px-4 pb-4">
+				<div className="-mt-8 px-4 pb-5">
 					<div className="flex items-end gap-3">
-						<div className="shrink-0 rounded-full border-4 border-deep-charcoal bg-deep-charcoal">
+						<div className="shrink-0 rounded-full border-4 border-bg-elevated bg-bg-elevated">
 							{avatarUrl ? (
 								// biome-ignore lint/performance/noImgElement: local preview
 								<img
@@ -66,18 +75,26 @@ export function ProfilePreview(props: ProfilePreviewProps) {
 					</div>
 
 					<div className="mt-3">
-						<h3 className="text-base font-semibold text-steel-white">{displayLabel}</h3>
-						<p className="font-mono text-xs text-smoke-dark">{shortAddress(address)}</p>
+						<h3 className="font-display text-[20px] tracking-[-0.01em] text-text-primary">
+							{displayLabel}
+						</h3>
+						<p className="mt-0.5 font-mono text-[11px] text-text-tertiary">
+							{shortAddress(address)}
+						</p>
 					</div>
 
-					{bio && <p className="mt-3 text-sm leading-relaxed text-smoke line-clamp-4">{bio}</p>}
+					{bio && (
+						<p className="mt-3 line-clamp-4 text-[13px] leading-relaxed text-text-secondary">
+							{bio}
+						</p>
+					)}
 
 					{(website || twitterHandle || telegramHandle) && (
-						<div className="mt-3 flex flex-wrap gap-2">
+						<div className="mt-3 flex flex-wrap gap-1.5">
 							{website && (
 								<ExternalLinkGuard
 									href={website.startsWith("http") ? website : `https://${website}`}
-									className="inline-flex items-center gap-1.5 rounded-md border border-anvil-gray-light bg-anvil-gray/40 px-2.5 py-1 text-xs text-smoke hover:border-indigo/50 hover:text-indigo"
+									className={chipCls}
 								>
 									<GlobeIcon className="size-3" />
 									Website
@@ -106,8 +123,8 @@ export function ProfilePreview(props: ProfilePreviewProps) {
 				</div>
 			</div>
 
-			<p className="text-[11px] leading-relaxed text-smoke-dark/80">
-				This is how your profile appears to others on FORJA. Click Save to publish.
+			<p className="text-[11px] leading-relaxed text-text-tertiary">
+				This is how your profile appears to others on FORJA. Click save to publish.
 			</p>
 		</div>
 	);
@@ -115,12 +132,7 @@ export function ProfilePreview(props: ProfilePreviewProps) {
 
 function SocialChip({ href, icon, label }: { href: string; icon: React.ReactNode; label: string }) {
 	return (
-		<a
-			href={href}
-			target="_blank"
-			rel="noopener noreferrer"
-			className="inline-flex items-center gap-1.5 rounded-md border border-anvil-gray-light bg-anvil-gray/40 px-2.5 py-1 text-xs text-smoke hover:border-indigo/50 hover:text-indigo"
-		>
+		<a href={href} target="_blank" rel="noopener noreferrer" className={chipCls}>
 			{icon}
 			{label}
 		</a>
