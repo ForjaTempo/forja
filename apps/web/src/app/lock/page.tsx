@@ -254,56 +254,7 @@ export default function LockPage() {
 						className="reveal flex flex-col gap-6 lg:sticky lg:top-24"
 						style={{ transitionDelay: "0.15s" }}
 					>
-						<div
-							className="relative overflow-hidden rounded-2xl border border-border-hair p-6"
-							style={{
-								background:
-									"radial-gradient(circle at 50% 0%, rgba(129,140,248,0.1), transparent 60%), var(--color-bg-elevated)",
-							}}
-						>
-							<div className="mb-4 font-mono text-[10px] text-text-tertiary uppercase tracking-[0.14em]">
-								How it works
-							</div>
-							<ol className="space-y-4 text-sm text-text-secondary">
-								<li className="flex gap-3">
-									<span
-										className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-[rgba(129,140,248,0.3)] font-mono text-[10px]"
-										style={{ color: "var(--color-indigo)" }}
-									>
-										1
-									</span>
-									<span>
-										Pick the token and enter the{" "}
-										<span className="text-text-primary">beneficiary</span>,{" "}
-										<span className="text-text-primary">amount</span>, and lock duration.
-									</span>
-								</li>
-								<li className="flex gap-3">
-									<span
-										className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-[rgba(129,140,248,0.3)] font-mono text-[10px]"
-										style={{ color: "var(--color-indigo)" }}
-									>
-										2
-									</span>
-									<span>
-										Optionally add a <span className="text-text-primary">cliff</span> for linear
-										vesting, or leave off for all-or-nothing unlock.
-									</span>
-								</li>
-								<li className="flex gap-3">
-									<span
-										className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-[rgba(129,140,248,0.3)] font-mono text-[10px]"
-										style={{ color: "var(--color-indigo)" }}
-									>
-										3
-									</span>
-									<span>
-										Approve USDC + token, then sign. Beneficiary claims over time from the contract
-										— you can revoke if you enabled it.
-									</span>
-								</li>
-							</ol>
-						</div>
+						<HowItWorks tab={activeTab} />
 					</aside>
 				</div>
 			</main>
@@ -344,3 +295,92 @@ export default function LockPage() {
 		</div>
 	);
 }
+
+/**
+ * Context-aware How-it-works rail — content follows the active tab so the
+ * right column is always relevant to what the user is doing on the left.
+ * Indigo accent matches the Lock tool color across the forge.
+ */
+function HowItWorks({ tab }: { tab: TabKey }) {
+	const copy = HOW_IT_WORKS[tab];
+	return (
+		<div
+			className="relative overflow-hidden rounded-2xl border border-border-hair p-6"
+			style={{
+				background:
+					"radial-gradient(circle at 50% 0%, rgba(129,140,248,0.1), transparent 60%), var(--color-bg-elevated)",
+			}}
+		>
+			<div className="mb-2 font-mono text-[10px] text-text-tertiary uppercase tracking-[0.14em]">
+				{copy.eyebrow}
+			</div>
+			<div className="mb-5 font-display text-[18px] leading-[1.2] tracking-[-0.01em] text-text-primary">
+				{copy.title}
+			</div>
+			<ol className="space-y-4 text-sm text-text-secondary">
+				{copy.steps.map((step, i) => (
+					<li key={step} className="flex gap-3">
+						<span
+							className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-[rgba(129,140,248,0.3)] font-mono text-[10px]"
+							style={{ color: "var(--color-indigo)" }}
+						>
+							{i + 1}
+						</span>
+						<span dangerouslySetInnerHTML={{ __html: step }} />
+					</li>
+				))}
+			</ol>
+			{copy.footnote && (
+				<p className="mt-5 border-border-hair/60 border-t pt-4 font-mono text-[11px] text-text-tertiary">
+					{copy.footnote}
+				</p>
+			)}
+		</div>
+	);
+}
+
+const HOW_IT_WORKS: Record<
+	TabKey,
+	{ eyebrow: string; title: string; steps: string[]; footnote?: string }
+> = {
+	single: {
+		eyebrow: "How single-lock works",
+		title: "Lock one recipient with full control",
+		steps: [
+			'Enter the <span class="text-text-primary">token</span>, <span class="text-text-primary">beneficiary</span>, amount, and lock duration.',
+			'Optionally add a <span class="text-text-primary">cliff</span> for linear vesting, or leave off for all-or-nothing unlock.',
+			"Approve USDC + token, then sign. Beneficiary claims over time — you can revoke if enabled.",
+		],
+		footnote: "Fee · 1 USDC per lock · Audited ForjaLocker contract",
+	},
+	batch: {
+		eyebrow: "How batch-lock works",
+		title: "Lock up to 50 beneficiaries in one tx",
+		steps: [
+			'Paste or upload <span class="text-text-primary">address,amount</span> rows for every beneficiary.',
+			'Set a <span class="text-text-primary">shared schedule</span> — duration, cliff, vesting — applied to every row.',
+			"One USDC fee + one token approval covers the whole batch. Gas savings stack with each recipient.",
+		],
+		footnote: "ForjaLocker v2 · Flat fee, not per-beneficiary",
+	},
+	"my-locks": {
+		eyebrow: "Locks you created",
+		title: "Track and manage active locks",
+		steps: [
+			'View every lock you forged — see <span class="text-text-primary">claimed</span> vs <span class="text-text-primary">remaining</span> in real time.',
+			"Revocable locks can be cancelled; vested portion still goes to the beneficiary, remainder returns to you.",
+			"Tap any row to open the on-chain transaction or jump to the token's detail page.",
+		],
+		footnote: "Progress is live; refresh after on-chain confirmations settle.",
+	},
+	claim: {
+		eyebrow: "Locks locked to you",
+		title: "Claim your vested share",
+		steps: [
+			'The claimable amount updates continuously — green status means <span class="text-text-primary">ready to withdraw</span>.',
+			"Cliff not reached? You'll see 0 claimable until the vesting starts.",
+			"One tap on Claim sends the currently-unlocked portion to your wallet.",
+		],
+		footnote: "Unclaimed balance continues to vest — claim anytime.",
+	},
+};
