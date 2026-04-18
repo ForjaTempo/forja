@@ -14,7 +14,19 @@ import {
 import { isValidSlug, normalizeSlug } from "@/lib/merkle";
 import { requireAuth } from "@/lib/session";
 
-const BANNER_URL_RE = /^https:\/\/[^\s]+$/i;
+/**
+ * Campaign banner URLs must resolve to our own MinIO-backed /api/images/ path
+ * OR to forja.fun itself (creator chose an uploaded banner). Allowing any
+ * `https://` URL let a creator embed a third-party tracking pixel on the claim
+ * page — IPs of every visitor would leak to that domain. Matching profile
+ * banner behaviour (actions/profile.ts:91).
+ */
+const BANNER_PATH_RE = /^\/api\/images\/[a-z0-9/_.-]+$/i;
+const BANNER_URL_RE = /^https:\/\/(?:forja\.fun|www\.forja\.fun)\/api\/images\/[a-z0-9/_.-]+$/i;
+
+function isValidBannerUrl(value: string): boolean {
+	return BANNER_PATH_RE.test(value) || BANNER_URL_RE.test(value);
+}
 const TX_HASH_RE = /^0x[a-fA-F0-9]{64}$/;
 const ADDRESS_LIKE_RE = /^0x[a-fA-F0-9]{40}$/;
 
@@ -148,8 +160,11 @@ export async function storeCampaign(input: StoreCampaignInput): Promise<StoreCam
 	if (input.description && input.description.length > 300) {
 		return { ok: false, error: "Description too long (max 300)" };
 	}
-	if (input.bannerUrl && !BANNER_URL_RE.test(input.bannerUrl)) {
-		return { ok: false, error: "Banner URL must be https://" };
+	if (input.bannerUrl && !isValidBannerUrl(input.bannerUrl)) {
+		return {
+			ok: false,
+			error: "Banner must be an uploaded image (/api/images/...)",
+		};
 	}
 
 	const slug = normalizeSlug(input.slug);

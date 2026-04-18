@@ -30,15 +30,19 @@ function getSecret(): Uint8Array {
 		throw new Error("SESSION_SECRET env var is required in production");
 	}
 
-	// Dev/test/build-time fallback — derive from DATABASE_URL but warn once.
+	// Dev/test/build-time fallback — derive from a dev-only constant (not
+	// DATABASE_URL, which leaks via logs/screenshots and gives an attacker who
+	// learns it the ability to forge session tokens). A fresh per-process
+	// random byte-string would break hot reload continuity, so we use a
+	// stable dev salt that's NEVER valid in production (fail-fast above).
 	if (!warnedDevFallback) {
 		warnedDevFallback = true;
 		console.warn(
 			"[session] SESSION_SECRET missing — using dev fallback. Set SESSION_SECRET in production.",
 		);
 	}
-	cachedSecret = createHmac("sha256", "forja-session-salt")
-		.update(process.env.DATABASE_URL || "dev-fallback")
+	cachedSecret = createHmac("sha256", "forja-dev-session-salt-do-not-use-in-prod")
+		.update("forja-dev-fallback-v1")
 		.digest("hex");
 	return Buffer.from(cachedSecret);
 }
