@@ -16,6 +16,7 @@ import { getCreatorLocks, getCreatorMultisends } from "@/actions/token-hub";
 import { getWatchlist } from "@/actions/watchlist";
 import { LaunchCard } from "@/components/launch/launch-card";
 import { PageContainer } from "@/components/layout/page-container";
+import { CursorGlow } from "@/components/shared/cursor-glow";
 import { useReveal } from "@/components/shared/use-reveal";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -156,6 +157,7 @@ export function DashboardClient() {
 
 	return (
 		<PageContainer className="py-16 sm:py-20 lg:py-24">
+			<CursorGlow color="rgba(129,140,248,0.06)" size={520} />
 			<div className="space-y-10">
 				{/* Hero: eyebrow + serif headline + wallet chip */}
 				<div className="reveal flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
