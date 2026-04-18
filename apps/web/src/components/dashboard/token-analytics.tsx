@@ -86,25 +86,30 @@ export function TokenAnalytics({
 
 	return (
 		<div className="space-y-6">
-			<div className="flex items-center justify-between">
+			<div className="flex items-center justify-between gap-3">
 				<div className="flex items-center gap-3">
 					<button
 						type="button"
 						onClick={onBack}
-						className="rounded-md p-1.5 text-smoke transition-colors hover:bg-anvil-gray-light hover:text-steel-white"
+						aria-label="Back to dashboard"
+						className="inline-flex size-9 items-center justify-center rounded-lg border border-border-hair bg-bg-field text-text-secondary transition-colors hover:border-border-subtle hover:text-text-primary"
 					>
 						<ArrowLeftIcon className="size-4" />
 					</button>
 					<div>
-						<h2 className="text-lg font-semibold text-steel-white">{tokenName}</h2>
-						<p className="text-xs text-smoke-dark">{tokenSymbol}</p>
+						<h2 className="font-display text-[22px] tracking-[-0.01em] text-text-primary">
+							{tokenName}
+						</h2>
+						<p className="font-mono text-[11px] text-gold uppercase tracking-[0.12em]">
+							{tokenSymbol}
+						</p>
 					</div>
 				</div>
 				<Select value={range} onValueChange={(v) => setRange(v as TimeRange)}>
-					<SelectTrigger className="w-24 border-anvil-gray-light bg-anvil-gray text-smoke">
+					<SelectTrigger className="w-28 border-border-hair bg-bg-field text-text-secondary">
 						<SelectValue />
 					</SelectTrigger>
-					<SelectContent className="border-anvil-gray-light bg-anvil-gray">
+					<SelectContent className="border-border-subtle bg-bg-elevated">
 						<SelectItem value="7d">7 days</SelectItem>
 						<SelectItem value="30d">30 days</SelectItem>
 						<SelectItem value="90d">90 days</SelectItem>
@@ -114,33 +119,33 @@ export function TokenAnalytics({
 			</div>
 
 			<div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-				<StatCard label="Current Holders" value={numFormatter.format(currentHolders)} />
+				<StatCard label="Current holders" value={numFormatter.format(currentHolders)} />
 				<StatCard
-					label={`${range === "all" ? "Total" : range} Change`}
+					label={`${range === "all" ? "Total" : range} change`}
 					value={`${Number(holderChange) >= 0 ? "+" : ""}${holderChange}%`}
 				/>
-				<StatCard label="Total Transfers" value={numFormatter.format(totalTransfers)} />
-				<StatCard label="Total Volume" value={numFormatter.format(Number(totalVolume) / divisor)} />
+				<StatCard label="Total transfers" value={numFormatter.format(totalTransfers)} />
+				<StatCard label="Total volume" value={numFormatter.format(Number(totalVolume) / divisor)} />
 			</div>
 
 			<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-				<ChartWrapper title="Holder Growth" loading={isLoading}>
+				<ChartWrapper title="Holder growth" loading={isLoading}>
 					<ResponsiveContainer width="100%" height={256}>
 						<AreaChart data={chartData}>
 							<defs>
 								<linearGradient id="holderGradient" x1="0" y1="0" x2="0" y2="1">
-									<stop offset="5%" stopColor="#5b6ada" stopOpacity={0.3} />
-									<stop offset="95%" stopColor="#5b6ada" stopOpacity={0} />
+									<stop offset="5%" stopColor="#818cf8" stopOpacity={0.35} />
+									<stop offset="95%" stopColor="#818cf8" stopOpacity={0} />
 								</linearGradient>
 							</defs>
-							<CartesianGrid strokeDasharray="3 3" stroke="#333" />
-							<XAxis dataKey="date" tick={{ fill: "#6B7280", fontSize: 11 }} />
-							<YAxis tick={{ fill: "#6B7280", fontSize: 11 }} />
+							<CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+							<XAxis dataKey="date" tick={{ fill: "#7a7e93", fontSize: 11 }} />
+							<YAxis tick={{ fill: "#7a7e93", fontSize: 11 }} />
 							<Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
 							<Area
 								type="monotone"
 								dataKey="holders"
-								stroke="#5b6ada"
+								stroke="#818cf8"
 								fill="url(#holderGradient)"
 								animationDuration={1200}
 								animationEasing="ease-out"
@@ -149,16 +154,16 @@ export function TokenAnalytics({
 					</ResponsiveContainer>
 				</ChartWrapper>
 
-				<ChartWrapper title="Transfer Volume" loading={isLoading}>
+				<ChartWrapper title="Transfer volume" loading={isLoading}>
 					<ResponsiveContainer width="100%" height={256}>
 						<BarChart data={chartData}>
-							<CartesianGrid strokeDasharray="3 3" stroke="#333" />
-							<XAxis dataKey="date" tick={{ fill: "#6B7280", fontSize: 11 }} />
-							<YAxis tick={{ fill: "#6B7280", fontSize: 11 }} />
+							<CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+							<XAxis dataKey="date" tick={{ fill: "#7a7e93", fontSize: 11 }} />
+							<YAxis tick={{ fill: "#7a7e93", fontSize: 11 }} />
 							<Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
 							<Bar
 								dataKey="volume"
-								fill="#5b6ada"
+								fill="#818cf8"
 								radius={[4, 4, 0, 0]}
 								animationDuration={1000}
 								animationBegin={50}
@@ -167,17 +172,17 @@ export function TokenAnalytics({
 					</ResponsiveContainer>
 				</ChartWrapper>
 
-				<ChartWrapper title="Daily Transfers" loading={isLoading}>
+				<ChartWrapper title="Daily transfers" loading={isLoading}>
 					<ResponsiveContainer width="100%" height={256}>
 						<LineChart data={chartData}>
-							<CartesianGrid strokeDasharray="3 3" stroke="#333" />
-							<XAxis dataKey="date" tick={{ fill: "#6B7280", fontSize: 11 }} />
-							<YAxis tick={{ fill: "#6B7280", fontSize: 11 }} />
+							<CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+							<XAxis dataKey="date" tick={{ fill: "#7a7e93", fontSize: 11 }} />
+							<YAxis tick={{ fill: "#7a7e93", fontSize: 11 }} />
 							<Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
 							<Line
 								type="monotone"
 								dataKey="transfers"
-								stroke="#5b6ada"
+								stroke="#818cf8"
 								name="Transfers"
 								dot={false}
 								animationDuration={800}
@@ -188,29 +193,33 @@ export function TokenAnalytics({
 			</div>
 
 			{holders.length > 0 && (
-				<div className="rounded-lg border border-anvil-gray-light bg-obsidian-black/50 p-4">
-					<h3 className="mb-4 text-sm font-medium text-smoke-dark">Top Holders</h3>
-					<div className="overflow-x-auto">
-						<table className="w-full text-sm">
+				<div className="rounded-2xl border border-border-hair bg-bg-elevated">
+					<div className="px-5 py-4 font-mono text-[10px] text-text-tertiary uppercase tracking-[0.14em]">
+						Top holders
+					</div>
+					<div className="overflow-x-auto border-border-hair border-t">
+						<table className="w-full text-[13px]">
 							<thead>
-								<tr className="border-b border-anvil-gray-light text-left text-xs text-smoke-dark">
-									<th className="pb-2 pr-4 font-medium">#</th>
-									<th className="pb-2 pr-4 font-medium">Address</th>
-									<th className="pb-2 pr-4 font-medium text-right">Balance</th>
-									<th className="pb-2 font-medium text-right">Share</th>
+								<tr className="font-mono text-[10px] text-text-tertiary uppercase tracking-[0.12em]">
+									<th className="py-2.5 pr-4 pl-5 text-left font-medium">#</th>
+									<th className="py-2.5 pr-4 text-left font-medium">Address</th>
+									<th className="py-2.5 pr-4 text-right font-medium">Balance</th>
+									<th className="py-2.5 pr-5 text-right font-medium">Share</th>
 								</tr>
 							</thead>
-							<tbody className="divide-y divide-anvil-gray-light/50">
+							<tbody>
 								{holders.map((h, i) => (
-									<tr key={h.holderAddress} className="text-smoke">
-										<td className="py-2 pr-4 text-xs text-smoke-dark">{i + 1}</td>
+									<tr key={h.holderAddress} className="border-border-hair border-t">
+										<td className="py-2 pr-4 pl-5 font-mono text-[11px] text-text-tertiary">
+											{i + 1}
+										</td>
 										<td className="py-2 pr-4">
 											<AddressDisplay address={h.holderAddress} />
 										</td>
-										<td className="py-2 pr-4 text-right font-mono text-xs">
+										<td className="py-2 pr-4 text-right font-mono text-[12px] text-text-primary">
 											{formatSupply(BigInt(h.balance))}
 										</td>
-										<td className="py-2 text-right font-mono text-xs">
+										<td className="py-2 pr-5 text-right font-mono text-[12px] text-text-secondary">
 											{h.percentage.toFixed(2)}%
 										</td>
 									</tr>

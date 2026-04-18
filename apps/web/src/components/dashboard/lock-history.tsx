@@ -4,9 +4,7 @@ import type { Lock } from "@forja/db";
 import { DownloadIcon, ExternalLinkIcon, LockIcon } from "lucide-react";
 import Link from "next/link";
 import { AddressDisplay } from "@/components/ui/address-display";
-import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Progress } from "@/components/ui/progress";
 import { useExplorerUrl } from "@/hooks/use-explorer-url";
 import { exportToCsv } from "@/lib/csv-export";
 import { formatDate, formatSupply } from "@/lib/format";
@@ -26,10 +24,11 @@ export function LockHistory({ locks }: LockHistoryProps) {
 				title="No locks created"
 				description="Lock tokens with vesting schedules to build trust with your community."
 				action={
-					<Link href="/lock">
-						<Button variant="outline" className="border-anvil-gray-light">
-							Create a Lock
-						</Button>
+					<Link
+						href="/lock"
+						className="inline-flex items-center gap-2 rounded-xl border border-border-hair bg-bg-elevated px-5 py-3 font-medium text-[13px] text-text-secondary transition-colors hover:border-border-subtle hover:text-text-primary"
+					>
+						Create a lock
 					</Link>
 				}
 			/>
@@ -64,46 +63,48 @@ export function LockHistory({ locks }: LockHistoryProps) {
 	}
 
 	return (
-		<div>
-			<div className="mb-4 flex justify-end">
+		<div className="rounded-2xl border border-border-hair bg-bg-elevated">
+			<div className="flex items-center justify-between px-5 py-4">
+				<div className="font-mono text-[10px] text-text-tertiary uppercase tracking-[0.14em]">
+					{locks.length} {locks.length === 1 ? "lock" : "locks"}
+				</div>
 				<button
 					type="button"
 					onClick={handleExport}
-					className="inline-flex items-center gap-1.5 rounded-md border border-anvil-gray-light px-3 py-1.5 text-xs text-smoke transition-colors hover:border-indigo hover:text-indigo"
+					className="inline-flex items-center gap-1.5 rounded-lg border border-border-hair bg-bg-field px-2.5 py-1 text-[11px] font-medium text-text-secondary transition-colors hover:border-border-subtle hover:text-gold"
 				>
 					<DownloadIcon className="size-3" />
 					Export CSV
 				</button>
 			</div>
-			<div className="overflow-x-auto">
-				<table className="w-full text-sm">
+			<div className="overflow-x-auto border-border-hair border-t">
+				<table className="w-full text-[13px]">
 					<thead>
-						<tr className="border-b border-anvil-gray-light text-left text-xs text-smoke-dark">
-							<th className="pb-2 pr-4 font-medium">Token</th>
-							<th className="pb-2 pr-4 font-medium">Beneficiary</th>
-							<th className="pb-2 pr-4 font-medium">Amount</th>
-							<th className="pb-2 pr-4 font-medium">Cliff</th>
-							<th className="pb-2 pr-4 font-medium">Duration</th>
-							<th className="pb-2 pr-4 font-medium">Progress</th>
-							<th className="pb-2 pr-4 font-medium">Status</th>
-							<th className="pb-2 pr-4 font-medium">End Date</th>
-							<th className="pb-2 font-medium">Tx</th>
+						<tr className="font-mono text-[10px] text-text-tertiary uppercase tracking-[0.12em]">
+							<th className="py-2.5 pr-4 pl-5 text-left font-medium">Token</th>
+							<th className="py-2.5 pr-4 text-left font-medium">Beneficiary</th>
+							<th className="py-2.5 pr-4 text-left font-medium">Amount</th>
+							<th className="py-2.5 pr-4 text-left font-medium">Cliff</th>
+							<th className="py-2.5 pr-4 text-left font-medium">Duration</th>
+							<th className="py-2.5 pr-4 text-left font-medium">Progress</th>
+							<th className="py-2.5 pr-4 text-left font-medium">Status</th>
+							<th className="py-2.5 pr-4 text-left font-medium">End</th>
+							<th className="py-2.5 pr-5 text-left font-medium">Tx</th>
 						</tr>
 					</thead>
-					<tbody className="divide-y divide-anvil-gray-light/50">
+					<tbody>
 						{locks.map((lock) => {
 							const isRevoked = lock.revoked;
 							const isExpired = new Date(lock.endTime) < new Date();
 							const status = isRevoked ? "Revoked" : isExpired ? "Ended" : "Active";
 							const statusColor = isRevoked
-								? "text-red-400"
+								? "text-red"
 								: isExpired
-									? "text-smoke-dark"
-									: "text-emerald-400";
+									? "text-text-tertiary"
+									: "text-green";
 
 							const total = BigInt(lock.totalAmount);
 
-							// Vesting progress: mirrors contract _getVestedAmount logic exactly
 							const now = Date.now();
 							const start = new Date(lock.startTime).getTime();
 							const end = new Date(lock.endTime).getTime();
@@ -114,58 +115,68 @@ export function LockHistory({ locks }: LockHistoryProps) {
 							} else if (now < cliffEnd) {
 								progressPct = 0;
 							} else if (!lock.vestingEnabled) {
-								// All-or-nothing: 0% until endTime, then 100%
 								progressPct = now >= end ? 100 : 0;
 							} else if (now >= end) {
 								progressPct = 100;
 							} else {
-								// Linear vesting from startTime to endTime
 								progressPct = Math.min(100, Math.floor(((now - start) / (end - start)) * 100));
 							}
 
 							const durationSec = Math.floor((end - start) / 1000);
 
 							return (
-								<tr key={lock.txHash} className="text-smoke">
-									<td className="py-2.5 pr-4">
+								<tr key={lock.txHash} className="border-border-hair border-t">
+									<td className="py-2.5 pr-4 pl-5">
 										<AddressDisplay address={lock.tokenAddress} />
 									</td>
 									<td className="py-2.5 pr-4">
 										<AddressDisplay address={lock.beneficiaryAddress} />
 									</td>
-									<td className="py-2.5 pr-4 font-mono text-xs">{formatSupply(total)}</td>
-									<td className="py-2.5 pr-4 text-xs text-smoke-dark">
+									<td className="py-2.5 pr-4 font-mono text-[12px] text-text-primary">
+										{formatSupply(total)}
+									</td>
+									<td className="py-2.5 pr-4 font-mono text-[12px] text-text-tertiary">
 										{lock.cliffDuration > 0 ? formatDuration(BigInt(lock.cliffDuration)) : "None"}
 									</td>
-									<td className="py-2.5 pr-4 text-xs text-smoke-dark">
+									<td className="py-2.5 pr-4 font-mono text-[12px] text-text-tertiary">
 										{formatDuration(BigInt(durationSec))}
 									</td>
 									<td className="py-2.5 pr-4">
 										<div className="flex items-center gap-2">
-											<Progress
-												value={progressPct}
-												className="h-1.5 w-16 bg-anvil-gray-light [&>div]:bg-emerald-400"
-											/>
-											<span className="font-mono text-xs text-smoke-dark">{progressPct}%</span>
+											<div className="h-1.5 w-20 overflow-hidden rounded-full bg-bg-field">
+												<div
+													className="h-full rounded-full transition-all duration-500"
+													style={{
+														width: `${progressPct}%`,
+														background:
+															"linear-gradient(90deg, rgba(129,140,248,0.9), rgba(129,140,248,0.5))",
+													}}
+												/>
+											</div>
+											<span className="font-mono text-[11px] text-text-tertiary">
+												{progressPct}%
+											</span>
 										</div>
 									</td>
 									<td className="py-2.5 pr-4">
-										<span className={`inline-flex items-center gap-1 text-xs ${statusColor}`}>
+										<span
+											className={`inline-flex items-center gap-1 font-mono text-[11px] uppercase tracking-[0.1em] ${statusColor}`}
+										>
 											<LockIcon className="size-3" />
 											{status}
 										</span>
 									</td>
-									<td className="py-2.5 pr-4 text-xs text-smoke-dark">
+									<td className="py-2.5 pr-4 font-mono text-[12px] text-text-tertiary">
 										{formatDate(lock.endTime)}
 									</td>
-									<td className="py-2.5">
+									<td className="py-2.5 pr-5">
 										<a
 											href={`${explorerUrl}/tx/${lock.txHash}`}
 											target="_blank"
 											rel="noopener noreferrer"
-											className="inline-flex items-center gap-1 font-mono text-xs text-smoke transition-colors hover:text-indigo"
+											className="inline-flex items-center gap-1 font-mono text-[12px] text-text-secondary transition-colors hover:text-gold"
 										>
-											{`${lock.txHash.slice(0, 6)}...${lock.txHash.slice(-4)}`}
+											{`${lock.txHash.slice(0, 6)}…${lock.txHash.slice(-4)}`}
 											<ExternalLinkIcon className="size-3" />
 										</a>
 									</td>
