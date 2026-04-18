@@ -3,7 +3,12 @@ import { getDb, schema } from "@forja/db";
 import { and, count, desc, eq, gte, or, sql } from "drizzle-orm";
 import { type Address, isAddress } from "viem";
 import { indexerClient } from "@/lib/indexer/client";
-import { getQuote, hasLiquidity, type SwapQuote } from "@/lib/swap/quoter";
+import {
+	getQuoteDetailed,
+	hasLiquidity,
+	type QuoteFailureReason,
+	type SwapQuote,
+} from "@/lib/swap/quoter";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -179,9 +184,14 @@ function serializeQuote(q: SwapQuote): SerializedSwapQuote {
 	};
 }
 
+export type SwapQuoteResult =
+	| { quote: SerializedSwapQuote }
+	| { reason: QuoteFailureReason | "invalid_input" | "rpc_error" };
+
 /**
  * Off-chain swap quote. Probes standard v4 fee tiers and picks the pool with
- * the most output. Returns `null` when no liquidity exists for the pair.
+ * the most output. Returns a reason code on failure so the UI can distinguish
+ * "pool never existed" from "pool was drained" from "bad input".
  *
  * The estimate uses single-range constant-product math; the on-chain
  * `minAmountOut` floor (from `slippageBps`) protects users from real-world
@@ -192,32 +202,33 @@ export async function getSwapQuote(params: {
 	tokenOut: string;
 	amountIn: string;
 	slippageBps: number;
-}): Promise<SerializedSwapQuote | null> {
-	if (!isAddress(params.tokenIn) || !isAddress(params.tokenOut)) return null;
-	if (params.tokenIn.toLowerCase() === params.tokenOut.toLowerCase()) return null;
+}): Promise<SwapQuoteResult> {
+	if (!isAddress(params.tokenIn) || !isAddress(params.tokenOut)) return { reason: "invalid_input" };
+	if (params.tokenIn.toLowerCase() === params.tokenOut.toLowerCase())
+		return { reason: "invalid_input" };
 
 	let amountIn: bigint;
 	try {
 		amountIn = BigInt(params.amountIn);
 	} catch {
-		return null;
+		return { reason: "invalid_input" };
 	}
-	if (amountIn <= 0n) return null;
-	if (params.slippageBps < 0 || params.slippageBps > 5_000) return null;
+	if (amountIn <= 0n) return { reason: "invalid_input" };
+	if (params.slippageBps < 0 || params.slippageBps > 5_000) return { reason: "invalid_input" };
 
 	try {
-		const quote = await getQuote({
+		const result = await getQuoteDetailed({
 			client: indexerClient,
 			tokenIn: params.tokenIn as Address,
 			tokenOut: params.tokenOut as Address,
 			amountIn,
 			slippageBps: params.slippageBps,
 		});
-		if (!quote) return null;
-		return serializeQuote(quote);
+		if ("quote" in result) return { quote: serializeQuote(result.quote) };
+		return { reason: result.reason };
 	} catch (err) {
 		console.error("[swaps] getSwapQuote failed:", err);
-		return null;
+		return { reason: "rpc_error" };
 	}
 }
 
