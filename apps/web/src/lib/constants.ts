@@ -16,6 +16,35 @@ export function getExplorerUrl(chainId: number): string {
 export const PATHUSDC_ADDRESS = "0x20C0000000000000000000000000000000000000" as const;
 export const TIP20_FACTORY_ADDRESS = "0x20Fc000000000000000000000000000000000000" as const;
 
+/**
+ * Tempo stablecoins. Stablecoin↔stablecoin swaps on Tempo route through
+ * the native precompile DEX at `0xdec0…`, not Uniswap v4 pools. Our router
+ * is v4-only today; stablecoin routing via the precompile is a planned
+ * follow-up so these swaps can happen inside FORJA (no external redirect).
+ *
+ * Source: tokenlist.tempo.xyz/list/4217 (stablecoin group).
+ */
+export const TEMPO_STABLECOINS = new Set<string>([
+	"0x20c0000000000000000000000000000000000000", // PathUSD (USDC)
+	"0x20c000000000000000000000b9537d11c60e8b50", // USDC.e (Bridged USDC)
+	"0x20c00000000000000000000014f22ca97301eb73", // USDT0
+	"0x20c0000000000000000000003554d28269e0f3c2", // frxUSD
+	"0x20c0000000000000000000000520792dcccccccc", // cUSD (Cap USD)
+	"0x20c0000000000000000000008ee4fcff88888888", // stcUSD
+	"0x20c0000000000000000000005c0bac7cef389a11", // GUSD
+	"0x20c0000000000000000000007f7ba549dd0251b9", // rUSD
+	"0x20c000000000000000000000aeed2ec36a54d0e5", // wsrUSD
+	"0x20c000000000000000000000383a23bacb546ab9", // reUSD
+	"0x20c000000000000000000000ab02d39df30bd17e", // iUSD
+	"0x20c000000000000000000000048c8f36df1c9a4a", // siUSD
+	"0x20c0000000000000000000002f52d5cc21a3207b", // USDe
+	"0x20c000000000000000000000bd95bfb69fbe6ce3", // sUSDe
+]);
+
+export function isStablecoinPair(tokenA: string, tokenB: string): boolean {
+	return TEMPO_STABLECOINS.has(tokenA.toLowerCase()) && TEMPO_STABLECOINS.has(tokenB.toLowerCase());
+}
+
 // FORJA contract addresses (set after deployment via env vars)
 export const FORJA_TOKEN_FACTORY_ADDRESS = (process.env.NEXT_PUBLIC_FORJA_TOKEN_FACTORY ??
 	"0x") as `0x${string}`;

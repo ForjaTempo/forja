@@ -14,7 +14,7 @@ import { useSwapQuote } from "@/hooks/use-swap-quote";
 import { useTokenBalance } from "@/hooks/use-token-balance";
 import { useTokenInfo } from "@/hooks/use-token-info";
 import { useTransactionToast } from "@/hooks/use-transaction-toast";
-import { hasSwap } from "@/lib/constants";
+import { hasSwap, isStablecoinPair } from "@/lib/constants";
 import { formatErrorMessage } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { type TokenOption, TokenPicker } from "./token-picker";
@@ -271,7 +271,17 @@ export function SwapPanel({ initialTokenIn, initialTokenOut }: SwapPanelProps) {
 					</div>
 				)}
 
-				{quoteError && <p className="text-center text-xs text-red-400">{quoteError}</p>}
+				{quoteError && (
+					<div className="space-y-2">
+						<p className="text-center text-xs text-red-400">{quoteError}</p>
+						{tokenIn && tokenOut && isStablecoinPair(tokenIn.address, tokenOut.address) && (
+							<div className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-center text-xs text-amber-300">
+								Stablecoin pairs route through Tempo's native DEX precompile. FORJA Swap integration
+								coming soon.
+							</div>
+						)}
+					</div>
+				)}
 
 				{/* Action buttons */}
 				{!hasSwap && (

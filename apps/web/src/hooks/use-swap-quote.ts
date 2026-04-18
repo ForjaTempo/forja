@@ -19,10 +19,8 @@ interface UseSwapQuoteReturn {
 }
 
 const REASON_MESSAGES: Record<string, string> = {
-	no_pool:
-		"No Uniswap v4 pool exists for this pair. This token may trade on v2/v3 or have no liquidity yet.",
-	pool_drained:
-		"Pool exists but liquidity was withdrawn. Wait for an LP to re-deposit, or pick another token.",
+	no_pool: "No Uniswap v4 pool for this pair yet.",
+	pool_drained: "Pool exists but in-range liquidity is zero — try again after LPs re-deposit.",
 	zero_estimate: "Amount too small to estimate — try a larger input.",
 	invalid_input: "Invalid token addresses or amount.",
 	rpc_error: "Network error while fetching quote. Try again in a moment.",
