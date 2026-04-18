@@ -8,13 +8,16 @@ import {IPermit2} from "../src/interfaces/IPermit2.sol";
 import {MockERC20} from "./mocks/MockERC20.sol";
 import {MockSwapPoolManager} from "./mocks/MockSwapPoolManager.sol";
 import {MockPermit2} from "./mocks/MockPermit2.sol";
+import {MockStablecoinDEX} from "./mocks/MockStablecoinDEX.sol";
 
 contract ForjaSwapRouterTest is Test {
     ForjaSwapRouter public router;
     MockSwapPoolManager public poolManager;
     MockPermit2 public permit2;
+    MockStablecoinDEX public stableDex;
     MockERC20 public usdc;
     MockERC20 public token;
+    MockERC20 public usdt;
 
     address public owner = address(this);
     address public treasury = makeAddr("treasury");
@@ -26,17 +29,30 @@ contract ForjaSwapRouterTest is Test {
     function setUp() public {
         usdc = new MockERC20("pathUSD", "USDC", 6);
         token = new MockERC20("Test Token", "TEST", 6);
+        usdt = new MockERC20("Tempo USDT", "USDT0", 6);
         poolManager = new MockSwapPoolManager();
         permit2 = new MockPermit2();
-        router = new ForjaSwapRouter(address(poolManager), address(permit2), treasury, FEE_BPS);
+        stableDex = new MockStablecoinDEX();
+        router = new ForjaSwapRouter(
+            address(poolManager),
+            address(permit2),
+            address(stableDex),
+            treasury,
+            FEE_BPS
+        );
 
-        // Seed alice with USDC, mock with TEST tokens for delivery
+        // Seed alice with USDC + USDT, mocks with output liquidity
         usdc.mint(alice, 100_000e6);
+        usdt.mint(alice, 100_000e6);
         token.mint(address(poolManager), 100_000e6);
+        usdt.mint(address(stableDex), 100_000e6);
+        usdc.mint(address(stableDex), 100_000e6);
 
-        // Alice approves Permit2 to pull her USDC (mock skips sig)
-        vm.prank(alice);
+        // Alice approves Permit2 to pull her tokens (mock skips sig)
+        vm.startPrank(alice);
         usdc.approve(address(permit2), type(uint256).max);
+        usdt.approve(address(permit2), type(uint256).max);
+        vm.stopPrank();
     }
 
     // ───── Helpers ─────────────────────────────────────────────────────────
@@ -80,22 +96,39 @@ contract ForjaSwapRouterTest is Test {
 
     function test_constructor_reverts_on_zero_pool() public {
         vm.expectRevert(ForjaSwapRouter.ZeroAddress.selector);
-        new ForjaSwapRouter(address(0), address(permit2), treasury, FEE_BPS);
+        new ForjaSwapRouter(address(0), address(permit2), address(stableDex), treasury, FEE_BPS);
     }
 
     function test_constructor_reverts_on_zero_permit2() public {
         vm.expectRevert(ForjaSwapRouter.ZeroAddress.selector);
-        new ForjaSwapRouter(address(poolManager), address(0), treasury, FEE_BPS);
+        new ForjaSwapRouter(address(poolManager), address(0), address(stableDex), treasury, FEE_BPS);
+    }
+
+    function test_constructor_reverts_on_zero_stable_dex() public {
+        vm.expectRevert(ForjaSwapRouter.ZeroAddress.selector);
+        new ForjaSwapRouter(address(poolManager), address(permit2), address(0), treasury, FEE_BPS);
     }
 
     function test_constructor_reverts_on_zero_recipient() public {
         vm.expectRevert(ForjaSwapRouter.ZeroAddress.selector);
-        new ForjaSwapRouter(address(poolManager), address(permit2), address(0), FEE_BPS);
+        new ForjaSwapRouter(
+            address(poolManager),
+            address(permit2),
+            address(stableDex),
+            address(0),
+            FEE_BPS
+        );
     }
 
     function test_constructor_reverts_on_fee_too_high() public {
         vm.expectRevert(ForjaSwapRouter.FeeTooHigh.selector);
-        new ForjaSwapRouter(address(poolManager), address(permit2), treasury, 101);
+        new ForjaSwapRouter(
+            address(poolManager),
+            address(permit2),
+            address(stableDex),
+            treasury,
+            101
+        );
     }
 
     // ───── Swap happy path ─────────────────────────────────────────────────
@@ -401,5 +434,177 @@ contract ForjaSwapRouterTest is Test {
 
         assertEq(out, expectedOut, "fuzz: output equals amountIn - fee");
         assertEq(usdc.balanceOf(treasury) - treasuryBefore, expectedFee, "fuzz: treasury delta = fee");
+    }
+
+    // ───── Stablecoin swap (enshrined DEX path) ────────────────────────────
+
+    function _stablePermit(address tokenIn, uint256 amount)
+        internal
+        view
+        returns (IPermit2.PermitTransferFrom memory)
+    {
+        return IPermit2.PermitTransferFrom({
+            permitted: IPermit2.TokenPermissions({token: tokenIn, amount: amount}),
+            nonce: 0,
+            deadline: block.timestamp + 1 hours
+        });
+    }
+
+    function _stableParams(
+        address tokenIn,
+        address tokenOut,
+        uint256 amountIn,
+        uint256 minOut
+    ) internal view returns (ForjaSwapRouter.ExactInputStable memory) {
+        return ForjaSwapRouter.ExactInputStable({
+            tokenIn: tokenIn,
+            tokenOut: tokenOut,
+            amountIn: amountIn,
+            minAmountOut: minOut,
+            deadline: block.timestamp + 1 hours
+        });
+    }
+
+    function test_stableSwap_skims_fee_and_delivers_output() public {
+        // 1:1 peg — expected out = amountIn - fee
+        uint256 expectedFee = (SWAP_AMOUNT * FEE_BPS) / 10_000;
+        uint256 expectedOut = SWAP_AMOUNT - expectedFee;
+        uint256 treasuryBefore = usdc.balanceOf(treasury);
+        uint256 aliceUsdtBefore = usdt.balanceOf(alice);
+
+        vm.prank(alice);
+        uint256 out = router.swapStablecoinExactInput(
+            _stableParams(address(usdc), address(usdt), SWAP_AMOUNT, 0),
+            _stablePermit(address(usdc), SWAP_AMOUNT),
+            ""
+        );
+
+        assertEq(out, expectedOut, "output = input - fee at 1:1 peg");
+        assertEq(usdt.balanceOf(alice) - aliceUsdtBefore, expectedOut, "alice receives tokenOut");
+        assertEq(usdc.balanceOf(treasury) - treasuryBefore, expectedFee, "treasury gets fee");
+    }
+
+    function test_stableSwap_reverts_on_deadline() public {
+        uint256 pastDeadline = block.timestamp - 1;
+        ForjaSwapRouter.ExactInputStable memory params = ForjaSwapRouter.ExactInputStable({
+            tokenIn: address(usdc),
+            tokenOut: address(usdt),
+            amountIn: SWAP_AMOUNT,
+            minAmountOut: 0,
+            deadline: pastDeadline
+        });
+        vm.prank(alice);
+        vm.expectRevert(ForjaSwapRouter.DeadlineExpired.selector);
+        router.swapStablecoinExactInput(params, _stablePermit(address(usdc), SWAP_AMOUNT), "");
+    }
+
+    function test_stableSwap_reverts_on_identical_tokens() public {
+        vm.prank(alice);
+        vm.expectRevert(ForjaSwapRouter.InvalidPool.selector);
+        router.swapStablecoinExactInput(
+            _stableParams(address(usdc), address(usdc), SWAP_AMOUNT, 0),
+            _stablePermit(address(usdc), SWAP_AMOUNT),
+            ""
+        );
+    }
+
+    function test_stableSwap_reverts_on_permit_token_mismatch() public {
+        ForjaSwapRouter.ExactInputStable memory params = _stableParams(
+            address(usdc),
+            address(usdt),
+            SWAP_AMOUNT,
+            0
+        );
+        // Permit is for USDT0 but swap input is USDC — exploit path must revert.
+        vm.prank(alice);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ForjaSwapRouter.PermitTokenMismatch.selector,
+                address(usdc),
+                address(usdt)
+            )
+        );
+        router.swapStablecoinExactInput(params, _stablePermit(address(usdt), SWAP_AMOUNT), "");
+    }
+
+    function test_stableSwap_reverts_on_permit_amount_mismatch() public {
+        ForjaSwapRouter.ExactInputStable memory params = _stableParams(
+            address(usdc),
+            address(usdt),
+            SWAP_AMOUNT,
+            0
+        );
+        vm.prank(alice);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ForjaSwapRouter.PermitAmountMismatch.selector,
+                SWAP_AMOUNT,
+                SWAP_AMOUNT + 1
+            )
+        );
+        router.swapStablecoinExactInput(params, _stablePermit(address(usdc), SWAP_AMOUNT + 1), "");
+    }
+
+    function test_stableSwap_reverts_on_slippage() public {
+        // Configure the mock to return less than the caller's minAmountOut.
+        // The precompile's own `InsufficientOutput` fires first since we pass
+        // the user's floor straight through. Either revert is acceptable
+        // slippage protection; we just assert execution didn't succeed.
+        stableDex.setOutputRatio(95, 100);
+        uint256 expectedFee = (SWAP_AMOUNT * FEE_BPS) / 10_000;
+        uint256 received = ((SWAP_AMOUNT - expectedFee) * 95) / 100;
+        uint256 demanded = received + 1;
+
+        vm.prank(alice);
+        vm.expectRevert();
+        router.swapStablecoinExactInput(
+            _stableParams(address(usdc), address(usdt), SWAP_AMOUNT, demanded),
+            _stablePermit(address(usdc), SWAP_AMOUNT),
+            ""
+        );
+    }
+
+    function test_stableSwap_reverts_when_paused() public {
+        router.pause();
+        vm.prank(alice);
+        vm.expectRevert();
+        router.swapStablecoinExactInput(
+            _stableParams(address(usdc), address(usdt), SWAP_AMOUNT, 0),
+            _stablePermit(address(usdc), SWAP_AMOUNT),
+            ""
+        );
+    }
+
+    function test_stableSwap_pair_missing_bubbles_up() public {
+        stableDex.setPairMissing(true);
+        vm.prank(alice);
+        // The DEX's error passes through since we don't catch it.
+        vm.expectRevert();
+        router.swapStablecoinExactInput(
+            _stableParams(address(usdc), address(usdt), SWAP_AMOUNT, 0),
+            _stablePermit(address(usdc), SWAP_AMOUNT),
+            ""
+        );
+    }
+
+    function test_stableSwap_emits_event() public {
+        uint256 expectedFee = (SWAP_AMOUNT * FEE_BPS) / 10_000;
+        uint256 expectedOut = SWAP_AMOUNT - expectedFee;
+
+        vm.prank(alice);
+        vm.expectEmit(true, true, true, true);
+        emit ForjaSwapRouter.SwapExecuted(
+            alice,
+            address(usdc),
+            address(usdt),
+            SWAP_AMOUNT,
+            expectedOut,
+            expectedFee
+        );
+        router.swapStablecoinExactInput(
+            _stableParams(address(usdc), address(usdt), SWAP_AMOUNT, 0),
+            _stablePermit(address(usdc), SWAP_AMOUNT),
+            ""
+        );
     }
 }

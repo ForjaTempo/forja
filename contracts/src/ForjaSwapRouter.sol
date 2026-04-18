@@ -15,6 +15,7 @@ import {
     BalanceDelta
 } from "./interfaces/IUniswapV4Swap.sol";
 import {IPermit2} from "./interfaces/IPermit2.sol";
+import {IStablecoinDEX} from "./interfaces/IStablecoinDEX.sol";
 
 /// @title ForjaSwapRouter
 /// @notice Thin router on top of Uniswap v4's PoolManager that takes a
@@ -41,6 +42,7 @@ contract ForjaSwapRouter is Ownable, Pausable, ReentrancyGuard, IUnlockCallback 
     // ─── Immutable wiring ──────────────────────────────────────────────────
     IPoolManagerSwap public immutable poolManager;
     IPermit2 public immutable permit2;
+    IStablecoinDEX public immutable stablecoinDex;
 
     // ─── Mutable owner-controlled config ───────────────────────────────────
     /// @notice Protocol fee in basis points (10000 = 100%). Default 25 = 0.25%.
@@ -103,16 +105,23 @@ contract ForjaSwapRouter is Ownable, Pausable, ReentrancyGuard, IUnlockCallback 
     constructor(
         address _poolManager,
         address _permit2,
+        address _stablecoinDex,
         address _feeRecipient,
         uint256 _feeBps
     ) Ownable(msg.sender) {
-        if (_poolManager == address(0) || _permit2 == address(0) || _feeRecipient == address(0)) {
+        if (
+            _poolManager == address(0) ||
+            _permit2 == address(0) ||
+            _stablecoinDex == address(0) ||
+            _feeRecipient == address(0)
+        ) {
             revert ZeroAddress();
         }
         if (_feeBps > MAX_FEE_BPS) revert FeeTooHigh();
 
         poolManager = IPoolManagerSwap(_poolManager);
         permit2 = IPermit2(_permit2);
+        stablecoinDex = IStablecoinDEX(_stablecoinDex);
         feeRecipient = _feeRecipient;
         feeBps = _feeBps;
     }
@@ -262,4 +271,94 @@ contract ForjaSwapRouter is Ownable, Pausable, ReentrancyGuard, IUnlockCallback 
         if (to == address(0)) revert ZeroAddress();
         IERC20(token).safeTransfer(to, amount);
     }
+
+    // ───────────────────────────────────────────────────────────────────────
+    //                    Stablecoin swap via Tempo precompile
+    // ───────────────────────────────────────────────────────────────────────
+
+    /// @notice Stablecoin↔stablecoin swap variant that routes through Tempo's
+    ///         native enshrined DEX precompile. Same fee-skim + Permit2
+    ///         integration as the v4 path, so the protocol earns the same
+    ///         0.25% regardless of the underlying venue.
+    ///
+    ///         The precompile only fills against stablecoin orderbooks; if the
+    ///         pair isn't a supported stablecoin pair the DEX itself will
+    ///         revert with `PairDoesNotExist`.
+    struct ExactInputStable {
+        address tokenIn;
+        address tokenOut;
+        uint256 amountIn;
+        uint256 minAmountOut;
+        uint256 deadline;
+    }
+
+    function swapStablecoinExactInput(
+        ExactInputStable calldata params,
+        IPermit2.PermitTransferFrom calldata permit,
+        bytes calldata signature
+    ) external nonReentrant whenNotPaused returns (uint256 amountOut) {
+        if (block.timestamp > params.deadline) revert DeadlineExpired();
+        if (params.tokenIn == params.tokenOut) revert InvalidPool();
+
+        // Bind the permit to this exact swap — same defense-in-depth as the
+        // v4 path so a signed but mistargeted permit can never be reused to
+        // drain a stuck balance of the real input token.
+        if (permit.permitted.token != params.tokenIn) {
+            revert PermitTokenMismatch(params.tokenIn, permit.permitted.token);
+        }
+        if (permit.permitted.amount != params.amountIn) {
+            revert PermitAmountMismatch(params.amountIn, permit.permitted.amount);
+        }
+
+        // 1. Pull funds from the user.
+        permit2.permitTransferFrom(
+            permit,
+            IPermit2.SignatureTransferDetails({to: address(this), requestedAmount: params.amountIn}),
+            msg.sender,
+            signature
+        );
+
+        // 2. Skim protocol fee from the input.
+        uint256 feeAmount = (params.amountIn * feeBps) / 10_000;
+        if (feeAmount > 0) {
+            IERC20(params.tokenIn).safeTransfer(feeRecipient, feeAmount);
+        }
+        uint256 amountInAfterFee = params.amountIn - feeAmount;
+
+        // 3. Approve the precompile for the exact amount; the DEX pulls via
+        //    transferFrom and pushes the output back to this contract.
+        IERC20(params.tokenIn).forceApprove(address(stablecoinDex), amountInAfterFee);
+
+        // 4. Execute through the orderbook. The precompile enforces its own
+        //    minAmountOut check but we pass ours through — cheap redundancy
+        //    against a buggy DEX update.
+        uint128 amountOut128 = stablecoinDex.swapExactAmountIn(
+            params.tokenIn,
+            params.tokenOut,
+            _toUint128(amountInAfterFee),
+            _toUint128(params.minAmountOut)
+        );
+        amountOut = uint256(amountOut128);
+        if (amountOut < params.minAmountOut) revert SlippageExceeded(amountOut, params.minAmountOut);
+
+        // 5. Forward the output to the user.
+        IERC20(params.tokenOut).safeTransfer(msg.sender, amountOut);
+
+        emit SwapExecuted(
+            msg.sender,
+            params.tokenIn,
+            params.tokenOut,
+            params.amountIn,
+            amountOut,
+            feeAmount
+        );
+    }
+
+    /// @dev Narrow a uint256 to uint128, reverting on overflow.
+    function _toUint128(uint256 value) internal pure returns (uint128) {
+        if (value > type(uint128).max) revert AmountOverflow();
+        return uint128(value);
+    }
+
+    error AmountOverflow();
 }

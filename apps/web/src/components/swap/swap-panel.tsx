@@ -14,7 +14,7 @@ import { useSwapQuote } from "@/hooks/use-swap-quote";
 import { useTokenBalance } from "@/hooks/use-token-balance";
 import { useTokenInfo } from "@/hooks/use-token-info";
 import { useTransactionToast } from "@/hooks/use-transaction-toast";
-import { hasSwap, isStablecoinPair } from "@/lib/constants";
+import { hasSwap } from "@/lib/constants";
 import { formatErrorMessage } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { type TokenOption, TokenPicker } from "./token-picker";
@@ -247,6 +247,12 @@ export function SwapPanel({ initialTokenIn, initialTokenOut }: SwapPanelProps) {
 				{quote && (
 					<div className="space-y-1.5 rounded-lg bg-surface-field/50 px-3 py-2.5 text-xs text-smoke">
 						<div className="flex justify-between">
+							<span>Route</span>
+							<span className="text-steel-white">
+								{quote.venue === "enshrined" ? "Tempo native DEX" : "Uniswap v4"}
+							</span>
+						</div>
+						<div className="flex justify-between">
 							<span>Price impact</span>
 							<span className={cn(highImpact && "text-amber-400")}>
 								{priceImpactPct.toFixed(2)}%
@@ -264,24 +270,16 @@ export function SwapPanel({ initialTokenIn, initialTokenOut }: SwapPanelProps) {
 								{formattedFee} {tokenIn?.symbol}
 							</span>
 						</div>
-						<div className="flex justify-between">
-							<span>Pool fee tier</span>
-							<span>{(quote.poolKey.fee / 10_000).toFixed(2)}%</span>
-						</div>
-					</div>
-				)}
-
-				{quoteError && (
-					<div className="space-y-2">
-						<p className="text-center text-xs text-red-400">{quoteError}</p>
-						{tokenIn && tokenOut && isStablecoinPair(tokenIn.address, tokenOut.address) && (
-							<div className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-center text-xs text-amber-300">
-								Stablecoin pairs route through Tempo's native DEX precompile. FORJA Swap integration
-								coming soon.
+						{quote.venue === "v4" && (
+							<div className="flex justify-between">
+								<span>Pool fee tier</span>
+								<span>{(quote.poolKey.fee / 10_000).toFixed(2)}%</span>
 							</div>
 						)}
 					</div>
 				)}
+
+				{quoteError && <p className="text-center text-xs text-red-400">{quoteError}</p>}
 
 				{/* Action buttons */}
 				{!hasSwap && (

@@ -1,17 +1,21 @@
 import "server-only";
 import type { Address, PublicClient } from "viem";
-import { SWAP_FEE_BPS } from "../constants";
+import { isStablecoinPair, SWAP_FEE_BPS } from "../constants";
 import { estimateAmountOut, priceImpactBps, SQRT_PRICE_LIMIT } from "./math";
 import { buildPoolKey, type PoolKey, STANDARD_FEE_TIERS } from "./pool";
 import { readPoolState } from "./pool-state";
+import { quoteStablecoinSwap } from "./stablecoin-dex";
 
-export type SwapQuote = {
+export type SwapVenue = "v4" | "enshrined";
+
+/** Shared fields across both venues. */
+type SwapQuoteBase = {
 	tokenIn: Address;
 	tokenOut: Address;
 	amountIn: bigint;
 	/** Protocol fee skimmed by ForjaSwapRouter (0.25% by default). */
 	forjaFee: bigint;
-	/** What actually goes into the pool after the fee skim. */
+	/** What actually goes into the venue after the fee skim. */
 	amountInAfterFee: bigint;
 	/** Indicative output, before slippage. Real value comes from on-chain execution. */
 	amountOut: bigint;
@@ -19,14 +23,20 @@ export type SwapQuote = {
 	minAmountOut: bigint;
 	/** Estimated price impact in basis points (100 = 1%). */
 	priceImpactBps: number;
-	/** Pool selected for the swap (best of probed fee tiers). */
-	poolKey: PoolKey;
-	/** Encoded direction passed to the router. */
-	zeroForOne: boolean;
-	sqrtPriceLimitX96: bigint;
-	sqrtPriceX96Before: bigint;
-	sqrtPriceX96After: bigint;
 };
+
+export type SwapQuote = SwapQuoteBase &
+	(
+		| {
+				venue: "v4";
+				poolKey: PoolKey;
+				zeroForOne: boolean;
+				sqrtPriceLimitX96: bigint;
+				sqrtPriceX96Before: bigint;
+				sqrtPriceX96After: bigint;
+		  }
+		| { venue: "enshrined" }
+	);
 
 export type GetQuoteParams = {
 	client: PublicClient;
@@ -61,6 +71,38 @@ export async function getQuoteDetailed(
 
 	const forjaFee = (amountIn * BigInt(SWAP_FEE_BPS)) / 10_000n;
 	const amountInAfterFee = amountIn - forjaFee;
+
+	// Stablecoin↔stablecoin pairs route through Tempo's native precompile DEX,
+	// not Uniswap v4. Try that venue first; fall through to v4 if the
+	// precompile can't fill (e.g. pair not on the enshrined DEX).
+	if (isStablecoinPair(tokenIn, tokenOut)) {
+		const stableOut = await quoteStablecoinSwap(client, tokenIn, tokenOut, amountInAfterFee);
+		if (stableOut && stableOut > 0n) {
+			const minAmountOut = (stableOut * BigInt(10_000 - slippageBps)) / 10_000n;
+			// Price impact on the enshrined DEX is already reflected in the
+			// precompile's quote; we expose a naive midpoint-delta as the
+			// displayed impact (input→output deviation from 1:1).
+			const mid =
+				amountInAfterFee > 0n
+					? Number(((amountInAfterFee - stableOut) * 10_000n) / amountInAfterFee)
+					: 0;
+			const impact = mid < 0 ? -mid : mid;
+			return {
+				quote: {
+					venue: "enshrined",
+					tokenIn,
+					tokenOut,
+					amountIn,
+					forjaFee,
+					amountInAfterFee,
+					amountOut: stableOut,
+					minAmountOut,
+					priceImpactBps: impact,
+				},
+			};
+		}
+		// If the precompile can't fill, keep going — maybe a v4 pool exists.
+	}
 
 	let anyPoolExists = false;
 
@@ -113,6 +155,7 @@ export async function getQuoteDetailed(
 
 	return {
 		quote: {
+			venue: "v4",
 			tokenIn,
 			tokenOut,
 			amountIn,
