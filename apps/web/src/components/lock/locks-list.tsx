@@ -2,12 +2,10 @@
 
 import { LoaderIcon } from "lucide-react";
 import { useCallback, useState } from "react";
-import { Button } from "@/components/ui/button";
 import {
 	Dialog,
 	DialogContent,
 	DialogDescription,
-	DialogFooter,
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
@@ -71,18 +69,18 @@ export function LocksList({ locks, viewRole, isLoading, onActionComplete }: Lock
 	if (isLoading) {
 		return (
 			<div className="space-y-4">
-				<Skeleton className="h-48 w-full" />
-				<Skeleton className="h-48 w-full" />
+				<Skeleton className="h-48 w-full rounded-2xl" />
+				<Skeleton className="h-48 w-full rounded-2xl" />
 			</div>
 		);
 	}
 
 	if (locks.length === 0) {
 		return (
-			<div className="flex flex-col items-center gap-2 py-12 text-center">
-				<p className="text-sm text-smoke-dark">
+			<div className="rounded-2xl border border-border-hair bg-bg-elevated p-10 text-center">
+				<p className="text-[13px] text-text-tertiary">
 					{viewRole === "creator"
-						? "You haven't created any locks yet."
+						? "You haven't forged any locks yet."
 						: "No tokens locked for you."}
 				</p>
 			</div>
@@ -104,32 +102,37 @@ export function LocksList({ locks, viewRole, isLoading, onActionComplete }: Lock
 				))}
 			</div>
 
-			{/* Revoke confirmation dialog */}
 			<Dialog open={revokeTarget !== null} onOpenChange={(open) => !open && setRevokeTarget(null)}>
-				<DialogContent className="sm:max-w-sm">
+				<DialogContent className="border-border-subtle bg-bg-elevated sm:max-w-sm">
 					<DialogHeader>
-						<DialogTitle>Revoke Lock</DialogTitle>
-						<DialogDescription>
-							Are you sure? Unclaimed vested tokens will be sent to the beneficiary, and unvested
-							tokens will be returned to you.
+						<DialogTitle className="font-display text-[22px] tracking-[-0.01em]">
+							Revoke lock?
+						</DialogTitle>
+						<DialogDescription className="text-[13px] text-text-secondary">
+							Unclaimed vested tokens go to the beneficiary, unvested tokens return to you. This
+							cannot be undone.
 						</DialogDescription>
 					</DialogHeader>
-					<DialogFooter className="flex-col gap-2 sm:flex-col">
-						<Button
-							variant="destructive"
-							className="w-full"
+					<div className="mt-4 flex gap-3">
+						<button
+							type="button"
+							onClick={() => setRevokeTarget(null)}
+							className="flex-1 rounded-xl border border-border-hair bg-bg-elevated px-4 py-3 font-medium text-[13px] text-text-secondary transition-colors hover:border-border-subtle hover:text-text-primary"
+						>
+							Cancel
+						</button>
+						<button
+							type="button"
 							onClick={handleRevokeConfirm}
 							disabled={revoke.isPending || revoke.isConfirming}
+							className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-red/40 bg-red/10 px-4 py-3 font-semibold text-[13px] text-red transition-colors hover:bg-red/20 disabled:cursor-not-allowed disabled:opacity-50"
 						>
 							{(revoke.isPending || revoke.isConfirming) && (
 								<LoaderIcon className="size-4 animate-spin" />
 							)}
-							Revoke Lock
-						</Button>
-						<Button variant="secondary" className="w-full" onClick={() => setRevokeTarget(null)}>
-							Cancel
-						</Button>
-					</DialogFooter>
+							Revoke
+						</button>
+					</div>
 				</DialogContent>
 			</Dialog>
 		</>
