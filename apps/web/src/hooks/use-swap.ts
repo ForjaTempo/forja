@@ -10,7 +10,7 @@ import {
 	useWriteContract,
 } from "wagmi";
 import type { SerializedSwapQuote } from "@/actions/swaps";
-import { PERMIT2_ADDRESS } from "@/lib/constants";
+import { getSwapRouterAddress, PERMIT2_ADDRESS } from "@/lib/constants";
 import { swapRouterConfig } from "@/lib/contracts";
 
 const PERMIT2_DOMAIN_NAME = "Permit2";
@@ -72,8 +72,9 @@ export function useSwap(): UseSwapReturn {
 	const swap = useCallback(
 		async (quote: SerializedSwapQuote, deadlineSec: number) => {
 			if (!address) throw new Error("Wallet not connected");
-			if (!isAddress(swapRouterConfig.address)) {
-				throw new Error("Swap router not configured");
+			const routerAddress = getSwapRouterAddress(chainId);
+			if (routerAddress === "0x" || !isAddress(routerAddress)) {
+				throw new Error("Swap router not deployed on this chain. Switch to Tempo mainnet.");
 			}
 
 			setSignError(null);
@@ -103,7 +104,7 @@ export function useSwap(): UseSwapReturn {
 							token: quote.tokenIn as `0x${string}`,
 							amount: BigInt(quote.amountIn),
 						},
-						spender: swapRouterConfig.address,
+						spender: routerAddress,
 						nonce,
 						deadline,
 					},
@@ -128,7 +129,7 @@ export function useSwap(): UseSwapReturn {
 
 			if (quote.venue === "enshrined") {
 				await writeContractAsync({
-					address: swapRouterConfig.address,
+					address: routerAddress,
 					abi: swapRouterConfig.abi,
 					functionName: "swapStablecoinExactInput",
 					args: [
@@ -145,7 +146,7 @@ export function useSwap(): UseSwapReturn {
 				});
 			} else {
 				await writeContractAsync({
-					address: swapRouterConfig.address,
+					address: routerAddress,
 					abi: swapRouterConfig.abi,
 					functionName: "swapExactInputSingle",
 					args: [

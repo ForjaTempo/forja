@@ -382,3 +382,30 @@ export const swaps = pgTable(
 		index("swaps_block_number_idx").on(table.blockNumber),
 	],
 );
+
+/**
+ * Uniswap v4 pools discovered from PoolManager.Initialize events. Lets the
+ * Token Picker flag tokens that already have a swappable pool without doing
+ * per-token extsload probes on every open.
+ */
+export const v4Pools = pgTable(
+	"v4_pools",
+	{
+		id: serial("id").primaryKey(),
+		poolId: text("pool_id").notNull(),
+		currency0: text("currency0").notNull(),
+		currency1: text("currency1").notNull(),
+		fee: integer("fee").notNull(),
+		tickSpacing: integer("tick_spacing").notNull(),
+		hooks: text("hooks").notNull(),
+		blockNumber: integer("block_number").notNull(),
+		txHash: text("tx_hash").notNull(),
+		createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+	},
+	(table) => [
+		unique("v4_pools_pool_id_idx").on(table.poolId),
+		index("v4_pools_currency0_idx").on(table.currency0),
+		index("v4_pools_currency1_idx").on(table.currency1),
+		index("v4_pools_block_number_idx").on(table.blockNumber),
+	],
+);
