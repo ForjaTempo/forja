@@ -1,6 +1,6 @@
 import { OpenPanelComponent } from "@openpanel/nextjs";
 import type { Metadata } from "next";
-import { Inter, JetBrains_Mono } from "next/font/google";
+import { Geist, Instrument_Serif, JetBrains_Mono } from "next/font/google";
 import { Footer } from "@/components/layout/footer";
 import { Header } from "@/components/layout/header";
 import { Providers } from "@/components/providers";
@@ -8,15 +8,27 @@ import { APP_DESCRIPTION, APP_NAME, APP_URL } from "@/lib/constants";
 import { getNonce } from "@/lib/nonce";
 import "./globals.css";
 
-const inter = Inter({
+// Display — editorial serif used for headings, hero text, italic accent words
+const instrumentSerif = Instrument_Serif({
 	subsets: ["latin"],
-	variable: "--font-inter",
+	weight: "400",
+	style: ["normal", "italic"],
+	variable: "--font-display",
 	display: "swap",
 });
 
+// Sans — modern neutral workhorse for body + UI
+const geist = Geist({
+	subsets: ["latin"],
+	weight: ["300", "400", "500", "600", "700"],
+	variable: "--font-sans",
+	display: "swap",
+});
+
+// Mono — addresses, numbers, eyebrow labels
 const jetbrainsMono = JetBrains_Mono({
 	subsets: ["latin"],
-	variable: "--font-jetbrains",
+	variable: "--font-mono",
 	display: "swap",
 });
 
@@ -70,8 +82,11 @@ const jsonLd = {
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
 	const nonce = await getNonce();
 	return (
-		<html lang="en" className={`${inter.variable} ${jetbrainsMono.variable}`}>
-			<body className="flex min-h-screen flex-col bg-forge-black font-sans text-steel-white antialiased">
+		<html
+			lang="en"
+			className={`${geist.variable} ${instrumentSerif.variable} ${jetbrainsMono.variable}`}
+		>
+			<body className="noise flex min-h-screen flex-col bg-bg-page font-sans text-text-primary antialiased">
 				{process.env.NEXT_PUBLIC_OPENPANEL_CLIENT_ID && (
 					<OpenPanelComponent
 						clientId={process.env.NEXT_PUBLIC_OPENPANEL_CLIENT_ID}
@@ -95,7 +110,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 				</a>
 				<Providers>
 					<Header />
-					<main id="main-content" className="flex-1">
+					<main id="main-content" className="flex-1 pt-[68px]">
 						{children}
 					</main>
 					<Footer />

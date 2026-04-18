@@ -1,150 +1,165 @@
 "use client";
 
-import { motion } from "framer-motion";
-import {
-	ArrowLeftRightIcon,
-	GiftIcon,
-	HammerIcon,
-	LockIcon,
-	RocketIcon,
-	SendIcon,
-} from "lucide-react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState } from "react";
 import { hasLaunchpad, hasSwap } from "@/lib/constants";
 import { hasClaimer } from "@/lib/contracts";
-import { fadeInUp, staggerContainer } from "@/lib/motion";
 
-const allTools = [
+type ToolKey = "create" | "multisend" | "lock" | "claim" | "launchpad" | "swap";
+
+interface Tool {
+	key: ToolKey;
+	title: string;
+	tagline: string;
+	description: string;
+	stat: string;
+	color: string;
+	href: string;
+	enabled: boolean;
+}
+
+const allTools: Tool[] = [
 	{
-		title: "Token Create",
+		key: "create",
+		title: "Create",
+		tagline: "Deploy a TIP-20 in 30 seconds",
 		description:
-			"Deploy your own TIP-20 token in seconds. Set name, symbol, supply — no Solidity required.",
+			"Name, symbol, supply — no Solidity, no compilers, no dev. Your token is live before your coffee cools.",
+		stat: "Instant deploy · 2 USDC fee",
+		color: "#f0d38a",
 		href: "/create",
-		icon: HammerIcon,
-		accent: "from-indigo/20 to-indigo/5",
-		iconColor: "text-indigo",
+		enabled: true,
 	},
 	{
+		key: "multisend",
 		title: "Multisend",
+		tagline: "Distribute to 500 in one tx",
 		description:
-			"Distribute tokens to up to 500 addresses in a single transaction. Airdrops made simple.",
+			"Batch transfers with gas savings built in. Payroll, airdrops, rewards — move tokens like a spreadsheet.",
+		stat: "500 recipients per tx",
+		color: "#4ade80",
 		href: "/multisend",
-		icon: SendIcon,
-		accent: "from-forge-green/20 to-forge-green/5",
-		iconColor: "text-forge-green",
+		enabled: true,
 	},
 	{
-		title: "Token Lock",
+		key: "lock",
+		title: "Lock",
+		tagline: "Vesting with teeth",
 		description:
-			"Lock tokens with vesting schedules, cliff periods, and optional revocation for trust.",
+			"Time-lock tokens with cliff, linear vesting, and optional revocation. Trust encoded in the contract.",
+		stat: "Cliff + linear vesting",
+		color: "#818cf8",
 		href: "/lock",
-		icon: LockIcon,
-		accent: "from-sky-500/20 to-sky-500/5",
-		iconColor: "text-sky-400",
+		enabled: true,
 	},
 	{
+		key: "claim",
 		title: "Claim",
+		tagline: "Merkle-proof airdrops",
 		description:
-			"Create Merkle-based claim campaigns. Let eligible wallets claim tokens with proof verification.",
+			"Publish a million eligible wallets with a single root hash. Gas-free for you, permissionless for them.",
+		stat: "Merkle tree · public proofs",
+		color: "#ff6b3d",
 		href: "/claim/create",
-		icon: GiftIcon,
-		accent: "from-purple-500/20 to-purple-500/5",
-		iconColor: "text-purple-400",
+		enabled: hasClaimer,
 	},
 	{
+		key: "launchpad",
 		title: "Launchpad",
+		tagline: "Fair-launch bonding curves",
 		description:
-			"Launch tokens with bonding curves. Fair price discovery, automatic liquidity, and graduation.",
+			"Price discovery by math, not market-makers. Liquidity graduates to Uniswap v4 automatically.",
+		stat: "Bonding curve · auto graduation",
+		color: "#f472b6",
 		href: "/launch",
-		icon: RocketIcon,
-		accent: "from-amber-500/20 to-amber-500/5",
-		iconColor: "text-amber-400",
+		enabled: hasLaunchpad,
 	},
 	{
+		key: "swap",
 		title: "Swap",
+		tagline: "Instant trade, flat fee",
 		description:
-			"Trade any TIP-20 token instantly. Best route across Uniswap v4 + transparent 0.25% fee.",
+			"Every TIP-20 tradable via Uniswap v4 routing + Tempo's native DEX. 0.25% protocol fee, transparent on-chain.",
+		stat: "v4 + enshrined DEX · 0.25% fee",
+		color: "#60a5fa",
 		href: "/swap",
-		icon: ArrowLeftRightIcon,
-		accent: "from-rose-500/20 to-rose-500/5",
-		iconColor: "text-rose-400",
+		enabled: hasSwap,
 	},
-] as const;
+];
 
 export function ToolCards() {
-	const tools = allTools.filter((tool) => {
-		if (tool.href === "/claim/create" && !hasClaimer) return false;
-		if (tool.href === "/launch" && !hasLaunchpad) return false;
-		if (tool.href === "/swap" && !hasSwap) return false;
-		return true;
-	});
+	const [hovered, setHovered] = useState<number | null>(null);
+	const tools = allTools.filter((t) => t.enabled);
+
 	return (
-		<section className="py-20 sm:py-24">
-			<div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-				<div className="text-center">
-					<p className="font-mono text-xs uppercase tracking-[0.2em] text-indigo">Tools</p>
-					<h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
-						Everything you need
+		<section className="px-6 pt-40 pb-20 lg:px-10">
+			<div className="mx-auto max-w-[1400px]">
+				<div className="reveal mb-20 max-w-[720px]">
+					<div className="mb-5 inline-flex items-center gap-2 font-mono text-[11px] text-gold uppercase tracking-[0.2em]">
+						<span className="h-px w-6 bg-gold" />
+						Six tools. One forge.
+					</div>
+					<h2 className="m-0 font-display font-normal text-[clamp(40px,6vw,80px)] leading-[1] tracking-[-0.035em]">
+						Everything a token needs,
+						<br />
+						<span className="text-text-secondary italic">from spark to scale.</span>
 					</h2>
-					<p className="mx-auto mt-3 max-w-xl text-base text-smoke-dark">
-						All-in-one toolkit to create, distribute, lock, claim, launch, and trade tokens on
-						Tempo.
-					</p>
 				</div>
 
-				<motion.div
-					className="mt-14 grid gap-6 md:grid-cols-6"
-					variants={staggerContainer}
-					initial="hidden"
-					whileInView="visible"
-					viewport={{ once: true, margin: "-50px" }}
+				<div
+					className="grid overflow-hidden rounded-3xl border border-border-hair md:grid-cols-2 lg:grid-cols-3"
+					style={{ background: "var(--color-border-hair)", gap: 1 }}
 				>
-					{tools.map((tool, index) => {
-						// 3+2 layout on md+ when 5 tools: first 3 span 2 cols, last 2 span 3 cols.
-						// For fewer tools, each spans 2 cols (3-up) to preserve visual balance.
-						const span = tools.length === 5 && index >= 3 ? "md:col-span-3" : "md:col-span-2";
-						return (
-							<motion.div key={tool.href} variants={fadeInUp} className={span}>
-								<Card
-									variant="interactive"
-									className="group relative h-full border-anvil-gray-light/60 bg-anvil-gray/50"
+					{tools.map((tool, i) => (
+						<Link
+							key={tool.key}
+							href={tool.href}
+							onMouseEnter={() => setHovered(i)}
+							onMouseLeave={() => setHovered(null)}
+							className="group reveal relative flex min-h-[320px] flex-col justify-between overflow-hidden bg-bg-page px-8 py-10"
+							style={{ transitionDelay: `${i * 0.05}s` }}
+						>
+							<div
+								aria-hidden
+								className="-top-20 -right-20 absolute size-60 blur-3xl transition-opacity duration-500"
+								style={{
+									background: `radial-gradient(circle, ${tool.color}30, transparent 70%)`,
+									opacity: hovered === i ? 1 : 0.3,
+								}}
+							/>
+							<div className="relative z-[2]">
+								<div
+									className="mb-7 size-14 rounded-xl border"
+									style={{
+										background: `linear-gradient(135deg, ${tool.color}25, ${tool.color}08)`,
+										borderColor: `${tool.color}30`,
+									}}
+								/>
+								<div className="mb-1.5 font-mono text-[10px] text-text-tertiary uppercase tracking-[0.15em]">
+									/{tool.key}
+								</div>
+								<h3 className="m-0 mb-1.5 font-display font-normal text-[34px] tracking-[-0.025em]">
+									{tool.title}
+								</h3>
+								<div className="mb-3.5 font-medium text-[13.5px]" style={{ color: tool.color }}>
+									{tool.tagline}
+								</div>
+								<p className="m-0 text-[14px] text-text-secondary leading-[1.6]">
+									{tool.description}
+								</p>
+							</div>
+							<div className="relative z-[2] mt-7 flex justify-between border-border-hair border-t pt-5 font-mono text-[12px] text-text-tertiary">
+								<span>{tool.stat}</span>
+								<span
+									className="transition-colors"
+									style={{ color: hovered === i ? tool.color : "var(--color-text-tertiary)" }}
 								>
-									{/* Top gradient accent line */}
-									<div
-										className={`absolute inset-x-0 top-0 h-px bg-gradient-to-r ${tool.accent}`}
-									/>
-
-									<CardHeader>
-										<div
-											className={`mb-2 flex size-11 items-center justify-center rounded-lg bg-anvil-gray-light ${tool.iconColor}`}
-										>
-											<tool.icon className="size-5" />
-										</div>
-										<CardTitle className="text-lg">{tool.title}</CardTitle>
-										<CardDescription className="text-smoke-dark">
-											{tool.description}
-										</CardDescription>
-									</CardHeader>
-
-									<CardFooter>
-										<Button
-											asChild
-											variant="ghost"
-											className="gap-1.5 px-0 text-sm text-smoke hover:text-steel-white"
-										>
-											<Link href={tool.href}>
-												Get started
-												<SendIcon className="size-3.5" />
-											</Link>
-										</Button>
-									</CardFooter>
-								</Card>
-							</motion.div>
-						);
-					})}
-				</motion.div>
+									Open →
+								</span>
+							</div>
+						</Link>
+					))}
+				</div>
 			</div>
 		</section>
 	);

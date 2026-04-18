@@ -1,11 +1,6 @@
 import { getGlobalStats } from "@/actions/stats";
 import { Cta } from "@/components/landing/cta";
-import { Features } from "@/components/landing/features";
 import { Hero } from "@/components/landing/hero";
-import { HeroStats } from "@/components/landing/hero-stats";
-import { HowItWorks } from "@/components/landing/how-it-works";
-import { SocialProof } from "@/components/landing/social-proof";
-import { Stats } from "@/components/landing/stats";
 import { ToolCards } from "@/components/landing/tool-cards";
 
 export default async function Home() {
@@ -13,23 +8,13 @@ export default async function Home() {
 
 	return (
 		<>
-			<Hero />
-			<HeroStats
-				tokensCreated={stats.tokensCreated}
+			<Hero
+				tokensCount={stats.tokensCreated}
 				launchesCount={stats.launchesCount}
-				uniqueCreators={stats.uniqueCreators}
+				creatorsCount={stats.uniqueCreators}
 			/>
 			<ToolCards />
-			<Features />
-			<Stats
-				tokensCreated={stats.tokensCreated}
-				multisendCount={stats.multisendCount}
-				locksCreated={stats.locksCreated}
-				launchesCount={stats.launchesCount}
-			/>
-			<HowItWorks />
-			<SocialProof />
-			<Cta uniqueCreators={stats.uniqueCreators} />
+			<Cta />
 		</>
 	);
 }
