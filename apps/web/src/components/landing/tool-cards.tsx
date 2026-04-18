@@ -4,6 +4,7 @@ import {
 	ArrowLeftRightIcon,
 	CoinsIcon,
 	GiftIcon,
+	LayersIcon,
 	LockIcon,
 	type LucideIcon,
 	RocketIcon,
@@ -14,7 +15,7 @@ import { useState } from "react";
 import { hasLaunchpad, hasSwap } from "@/lib/constants";
 import { hasClaimer } from "@/lib/contracts";
 
-type ToolKey = "create" | "multisend" | "lock" | "claim" | "launchpad" | "swap";
+type ToolKey = "create" | "multisend" | "lock" | "claim" | "launchpad" | "swap" | "tokens";
 
 interface Tool {
 	key: ToolKey;
@@ -101,6 +102,18 @@ const allTools: Tool[] = [
 		icon: ArrowLeftRightIcon,
 		enabled: hasSwap,
 	},
+	{
+		key: "tokens",
+		title: "Tokens",
+		tagline: "Every TIP-20, one index",
+		description:
+			"Search, filter, and inspect every token on Tempo — Forja-forged, launchpad, or external. Holders, signals, live price.",
+		stat: "Discovery hub · all sources",
+		color: "#f0d38a",
+		href: "/tokens",
+		icon: LayersIcon,
+		enabled: true,
+	},
 ];
 
 export function ToolCards() {
@@ -113,7 +126,7 @@ export function ToolCards() {
 				<div className="reveal mb-20 max-w-[720px]">
 					<div className="mb-5 inline-flex items-center gap-2 font-mono text-[11px] text-gold uppercase tracking-[0.2em]">
 						<span className="h-px w-6 bg-gold" />
-						Six tools. One forge.
+						Seven tools. One forge.
 					</div>
 					<h2 className="m-0 font-display font-normal text-[clamp(40px,6vw,80px)] leading-[1] tracking-[-0.035em]">
 						Everything a token needs,

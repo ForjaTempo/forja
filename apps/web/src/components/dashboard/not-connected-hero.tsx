@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { BarChart3Icon, BellIcon, LayersIcon, type LucideIcon } from "lucide-react";
 import { ConnectButton } from "@/components/layout/connect-button";
 import { PageContainer } from "@/components/layout/page-container";
+import { CursorGlow } from "@/components/shared/cursor-glow";
 import { fadeInUp, staggerContainer } from "@/lib/motion";
 
 interface Feature {
@@ -37,6 +38,7 @@ const FEATURES: Feature[] = [
 export function NotConnectedHero() {
 	return (
 		<PageContainer className="py-16 sm:py-24">
+			<CursorGlow color="rgba(129,140,248,0.06)" size={520} />
 			<div className="mx-auto max-w-4xl space-y-14 text-center">
 				<motion.div initial="hidden" animate="visible" variants={fadeInUp} className="space-y-4">
 					<div className="inline-flex items-center gap-2.5 rounded-full border border-[rgba(129,140,248,0.2)] bg-[rgba(129,140,248,0.08)] py-1 pl-1 pr-3 text-[12px] text-indigo">
