@@ -5,7 +5,6 @@ import { useCallback, useEffect, useState } from "react";
 import { formatUnits } from "viem";
 import { useAccount } from "wagmi";
 import { getSwapHistory, type SwapRow } from "@/actions/swaps";
-import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useExplorerUrl } from "@/hooks/use-explorer-url";
@@ -52,7 +51,7 @@ export function SwapsHistory() {
 		return (
 			<div className="space-y-3">
 				{Array.from({ length: 4 }).map((_, i) => (
-					<Skeleton key={`s-${i.toString()}`} className="h-16 rounded-lg" />
+					<Skeleton key={`s-${i.toString()}`} className="h-16 rounded-xl" />
 				))}
 			</div>
 		);
@@ -68,15 +67,10 @@ export function SwapsHistory() {
 		);
 	}
 
-	// Sum USD-denominated legs for a realistic volume/fee total. Swaps whose
-	// neither leg is a stablecoin are dropped from the USD totals (rare in
-	// practice since almost every swap involves pathUSD).
 	const usdVolume = swaps.reduce((acc, s) => acc + (estimateSwapUsdValue(s) ?? 0), 0);
 	const usdFees = swaps.reduce((acc, s) => {
 		const usd = estimateSwapUsdValue(s);
 		if (usd === null) return acc;
-		// Fee is 0.25% of input; if input was the stablecoin leg its ratio maps
-		// back to USD directly. Approximate by applying the same input ratio.
 		const inputBig = BigInt(s.amountIn);
 		if (inputBig === 0n) return acc;
 		const feeRatio = Number(BigInt(s.feeAmount)) / Number(inputBig);
@@ -84,71 +78,74 @@ export function SwapsHistory() {
 	}, 0);
 
 	return (
-		<div className="space-y-3">
-			<div className="flex items-center justify-between">
-				<div />
+		<div className="space-y-4">
+			<div className="flex justify-end">
 				<button
 					type="button"
 					onClick={() => refetch(true)}
 					disabled={isRefreshing}
-					className="flex items-center gap-1 text-xs text-smoke-dark transition-colors hover:text-indigo disabled:opacity-40"
+					className="inline-flex items-center gap-1.5 rounded-lg border border-border-hair bg-bg-field px-2.5 py-1 text-[11px] font-medium text-text-secondary transition-colors hover:border-border-subtle hover:text-gold disabled:opacity-40"
 				>
-					<RefreshCwIcon className={cn("size-3.5", isRefreshing && "animate-spin")} />
+					<RefreshCwIcon className={cn("size-3", isRefreshing && "animate-spin")} />
 					Refresh
 				</button>
 			</div>
-			<div className="grid grid-cols-3 gap-3 text-xs">
+			<div className="grid grid-cols-3 gap-3">
 				<StatCard label="Total swaps" value={swaps.length.toString()} />
-				<StatCard label="Volume (USD)" value={formatUsd(usdVolume)} />
-				<StatCard label="Fees paid (USD)" value={formatUsd(usdFees)} />
+				<StatCard label="Volume · USD" value={formatUsd(usdVolume)} />
+				<StatCard label="Fees paid · USD" value={formatUsd(usdFees)} />
 			</div>
 
-			<Card className="border-anvil-gray-light bg-deep-charcoal">
-				<CardContent className="p-0">
-					<ul className="divide-y divide-anvil-gray-light">
-						{swaps.map((s) => {
-							const usd = estimateSwapUsdValue(s);
-							return (
-								<li
-									key={`${s.txHash}-${s.logIndex}`}
-									className="flex items-center justify-between px-4 py-3 text-xs"
+			<div className="rounded-2xl border border-border-hair bg-bg-elevated">
+				<ul>
+					{swaps.map((s, i) => {
+						const usd = estimateSwapUsdValue(s);
+						return (
+							<li
+								key={`${s.txHash}-${s.logIndex}`}
+								className={cn(
+									"flex items-center justify-between px-5 py-3 text-[12.5px]",
+									i > 0 && "border-border-hair border-t",
+								)}
+							>
+								<div className="min-w-0">
+									<p className="truncate font-mono text-text-primary">
+										{formatUnits(BigInt(s.amountIn), TIP20_DECIMALS)} {TRUNCATE(s.tokenIn)}{" "}
+										<span className="text-text-tertiary">→</span>{" "}
+										{formatUnits(BigInt(s.amountOut), TIP20_DECIMALS)} {TRUNCATE(s.tokenOut)}
+									</p>
+									<p className="mt-0.5 font-mono text-[11px] text-text-tertiary">
+										{new Date(s.createdAt).toLocaleString()} · fee{" "}
+										{formatUnits(BigInt(s.feeAmount), TIP20_DECIMALS)}
+										{usd !== null && <span className="ml-2">≈ {formatUsd(usd)}</span>}
+									</p>
+								</div>
+								<a
+									href={`${explorer}/tx/${s.txHash}`}
+									target="_blank"
+									rel="noopener noreferrer"
+									className="ml-3 shrink-0 text-text-tertiary transition-colors hover:text-gold"
 								>
-									<div className="min-w-0">
-										<p className="truncate text-steel-white">
-											{formatUnits(BigInt(s.amountIn), TIP20_DECIMALS)} {TRUNCATE(s.tokenIn)} →{" "}
-											{formatUnits(BigInt(s.amountOut), TIP20_DECIMALS)} {TRUNCATE(s.tokenOut)}
-										</p>
-										<p className="text-smoke-dark">
-											{new Date(s.createdAt).toLocaleString()} · fee{" "}
-											{formatUnits(BigInt(s.feeAmount), TIP20_DECIMALS)}
-											{usd !== null && <span className="ml-2">≈ {formatUsd(usd)}</span>}
-										</p>
-									</div>
-									<a
-										href={`${explorer}/tx/${s.txHash}`}
-										target="_blank"
-										rel="noopener noreferrer"
-										className="ml-3 shrink-0 text-smoke-dark hover:text-indigo"
-									>
-										<ExternalLinkIcon className="size-3.5" />
-									</a>
-								</li>
-							);
-						})}
-					</ul>
-				</CardContent>
-			</Card>
+									<ExternalLinkIcon className="size-3.5" />
+								</a>
+							</li>
+						);
+					})}
+				</ul>
+			</div>
 		</div>
 	);
 }
 
 function StatCard({ label, value }: { label: string; value: string }) {
 	return (
-		<Card className="border-anvil-gray-light bg-deep-charcoal">
-			<CardContent className="p-3">
-				<p className="text-smoke-dark">{label}</p>
-				<p className="mt-1 truncate font-mono text-sm text-steel-white">{value}</p>
-			</CardContent>
-		</Card>
+		<div className="rounded-xl border border-border-hair bg-bg-elevated p-3.5">
+			<p className="font-mono text-[10px] text-text-tertiary uppercase tracking-[0.12em]">
+				{label}
+			</p>
+			<p className="mt-1 truncate font-display text-[18px] tracking-[-0.01em] text-text-primary">
+				{value}
+			</p>
+		</div>
 	);
 }

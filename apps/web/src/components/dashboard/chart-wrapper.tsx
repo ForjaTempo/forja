@@ -9,10 +9,12 @@ interface ChartWrapperProps {
 
 export function ChartWrapper({ title, loading, children }: ChartWrapperProps) {
 	return (
-		<div className="rounded-lg border border-anvil-gray-light bg-obsidian-black/50 p-4">
-			<h3 className="mb-4 text-sm font-medium text-smoke-dark">{title}</h3>
+		<div className="rounded-2xl border border-border-hair bg-bg-elevated p-5">
+			<h3 className="mb-4 font-mono text-[10px] text-text-tertiary uppercase tracking-[0.14em]">
+				{title}
+			</h3>
 			{loading ? (
-				<Skeleton className="h-64 w-full" />
+				<Skeleton className="h-64 w-full rounded-xl" />
 			) : (
 				<div className="h-64 w-full">{children}</div>
 			)}
@@ -21,7 +23,8 @@ export function ChartWrapper({ title, loading, children }: ChartWrapperProps) {
 }
 
 export const CHART_TOOLTIP_STYLE = {
-	backgroundColor: "#1a1a1a",
-	border: "1px solid #333",
-	borderRadius: "8px",
+	backgroundColor: "rgba(16,16,24,0.95)",
+	border: "1px solid rgba(255,255,255,0.09)",
+	borderRadius: "12px",
+	fontSize: "12px",
 } as const;

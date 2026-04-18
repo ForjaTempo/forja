@@ -13,8 +13,8 @@ interface UnlockCalendarProps {
 export function UnlockCalendar({ events }: UnlockCalendarProps) {
 	if (events.length === 0) {
 		return (
-			<div className="py-8 text-center">
-				<p className="text-sm text-smoke-dark">No upcoming unlocks</p>
+			<div className="rounded-2xl border border-border-hair bg-bg-elevated p-10 text-center">
+				<p className="text-[13px] text-text-tertiary">No upcoming unlocks.</p>
 			</div>
 		);
 	}
@@ -22,20 +22,16 @@ export function UnlockCalendar({ events }: UnlockCalendarProps) {
 	const now = BigInt(Math.floor(Date.now() / 1000));
 
 	return (
-		<div>
-			<h3 className="mb-4 flex items-center gap-2 text-sm font-medium text-steel-white">
-				<CalendarIcon className="size-4" />
-				Upcoming Unlocks
-			</h3>
+		<div className="rounded-2xl border border-border-hair bg-bg-elevated p-5">
+			<div className="mb-4 flex items-center gap-2 font-mono text-[10px] text-text-tertiary uppercase tracking-[0.14em]">
+				<CalendarIcon className="size-3.5" />
+				Upcoming unlocks
+			</div>
 			<div className="space-y-3">
 				{events.map((event) => {
 					const nextTimestamp = BigInt(Math.floor(new Date(event.nextUnlockDate).getTime() / 1000));
 					const isCliffPending = new Date(event.cliffEnd) > new Date();
 					const timeRemaining = nextTimestamp > now ? formatDuration(nextTimestamp - now) : "Ready";
-					// Label reflects the next meaningful event:
-					// - vesting + cliff pending → "Cliff ends" (vesting starts)
-					// - vesting + cliff passed → "Fully vested"
-					// - all-or-nothing → always "Unlocks" (cliff is not an unlock moment)
 					const eventLabel =
 						event.vestingEnabled && isCliffPending
 							? "Cliff ends"
@@ -46,40 +42,42 @@ export function UnlockCalendar({ events }: UnlockCalendarProps) {
 					return (
 						<div
 							key={event.lockId}
-							className="rounded-lg border border-anvil-gray-light bg-obsidian-black/50 p-4"
+							className="rounded-xl border border-border-hair bg-bg-field/60 p-4 transition-colors hover:border-border-subtle"
 						>
 							<div className="flex items-start justify-between gap-4">
 								<div className="min-w-0 flex-1">
-									<div className="flex items-center gap-2">
-										<span className="font-medium text-steel-white">{event.tokenName}</span>
-										<span className="text-xs text-smoke-dark">{event.tokenSymbol}</span>
+									<div className="flex flex-wrap items-center gap-2">
+										<span className="font-display text-[15px] tracking-[-0.01em] text-text-primary">
+											{event.tokenName}
+										</span>
+										<span className="rounded bg-bg-elevated px-1.5 py-0.5 font-mono text-[10px] text-gold uppercase tracking-[0.1em]">
+											{event.tokenSymbol}
+										</span>
 										{event.vestingEnabled && isCliffPending && (
-											<span className="rounded bg-yellow-600/20 px-1.5 py-0.5 text-[10px] text-yellow-500">
+											<span className="inline-flex items-center rounded-full border border-gold/30 bg-gold/10 px-2 py-0.5 font-mono text-[10px] text-gold uppercase tracking-[0.1em]">
 												Cliff
 											</span>
 										)}
 										{!event.vestingEnabled && (
-											<span className="rounded bg-blue-600/20 px-1.5 py-0.5 text-[10px] text-blue-400">
+											<span className="inline-flex items-center rounded-full border border-indigo/30 bg-indigo/10 px-2 py-0.5 font-mono text-[10px] text-indigo uppercase tracking-[0.1em]">
 												All-or-nothing
 											</span>
 										)}
 									</div>
-									<div className="mt-1 flex items-center gap-3 text-xs text-smoke-dark">
-										<span>
-											Beneficiary: <AddressDisplay address={event.beneficiary} />
-										</span>
+									<div className="mt-1 flex items-center gap-1.5 text-[12px] text-text-tertiary">
+										Beneficiary <AddressDisplay address={event.beneficiary} />
 									</div>
 								</div>
 								<div className="text-right">
-									<p className="font-mono text-sm text-steel-white">
+									<p className="font-mono text-[14px] text-text-primary">
 										{formatSupply(BigInt(event.remainingAmount))}
 									</p>
-									<p className="mt-0.5 text-xs text-smoke-dark">
-										{eventLabel}: {formatDate(event.nextUnlockDate)}
+									<p className="mt-0.5 font-mono text-[11px] text-text-tertiary">
+										{eventLabel} · {formatDate(event.nextUnlockDate)}
 									</p>
 								</div>
 							</div>
-							<div className="mt-2 flex items-center gap-1 text-xs text-smoke">
+							<div className="mt-3 inline-flex items-center gap-1.5 border-border-hair border-t pt-2.5 font-mono text-[11px] text-text-secondary">
 								<ClockIcon className="size-3" />
 								{timeRemaining}
 							</div>
