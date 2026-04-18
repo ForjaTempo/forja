@@ -38,6 +38,15 @@ const networkLinks = [
 	},
 ] as const;
 
+const resourceLinks = [
+	{ label: "Security", href: "/security", external: false },
+	{
+		label: "security.txt",
+		href: "/.well-known/security.txt",
+		external: true,
+	},
+] as const;
+
 export function Footer() {
 	return (
 		<footer className="mt-auto">
@@ -50,7 +59,7 @@ export function Footer() {
 				</div>
 
 				{/* Columns */}
-				<div className="grid gap-8 sm:grid-cols-3">
+				<div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
 					{/* Product */}
 					<div>
 						<p className="text-xs font-semibold uppercase tracking-widest text-smoke">Product</p>
@@ -104,6 +113,36 @@ export function Footer() {
 								</li>
 							))}
 							<li className="text-sm text-smoke-dark">Chain ID: 4217</li>
+						</ul>
+					</div>
+
+					{/* Resources */}
+					<div>
+						<p className="text-xs font-semibold uppercase tracking-widest text-smoke">Resources</p>
+						<ul className="mt-3 space-y-2">
+							{resourceLinks.map((link) =>
+								link.external ? (
+									<li key={link.href}>
+										<a
+											href={link.href}
+											target="_blank"
+											rel="noopener noreferrer"
+											className="text-sm text-smoke-dark transition-colors hover:text-steel-white"
+										>
+											{link.label}
+										</a>
+									</li>
+								) : (
+									<li key={link.href}>
+										<Link
+											href={link.href}
+											className="text-sm text-smoke-dark transition-colors hover:text-steel-white"
+										>
+											{link.label}
+										</Link>
+									</li>
+								),
+							)}
 						</ul>
 					</div>
 				</div>

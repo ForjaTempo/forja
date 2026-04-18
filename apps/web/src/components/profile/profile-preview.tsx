@@ -1,6 +1,7 @@
 "use client";
 
 import { GlobeIcon, MessageCircleIcon, XIcon as TwitterIcon } from "lucide-react";
+import { ExternalLinkGuard } from "@/components/shared/external-link-guard";
 import { ImageFallback } from "@/components/ui/image-fallback";
 
 interface ProfilePreviewProps {
@@ -74,11 +75,13 @@ export function ProfilePreview(props: ProfilePreviewProps) {
 					{(website || twitterHandle || telegramHandle) && (
 						<div className="mt-3 flex flex-wrap gap-2">
 							{website && (
-								<SocialChip
+								<ExternalLinkGuard
 									href={website.startsWith("http") ? website : `https://${website}`}
-									icon={<GlobeIcon className="size-3" />}
-									label="Website"
-								/>
+									className="inline-flex items-center gap-1.5 rounded-md border border-anvil-gray-light bg-anvil-gray/40 px-2.5 py-1 text-xs text-smoke hover:border-indigo/50 hover:text-indigo"
+								>
+									<GlobeIcon className="size-3" />
+									Website
+								</ExternalLinkGuard>
 							)}
 							{twitterHandle && (
 								<SocialChip
