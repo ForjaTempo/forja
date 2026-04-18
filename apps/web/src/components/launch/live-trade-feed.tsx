@@ -3,7 +3,6 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import type { LaunchTradeRow } from "@/actions/launches";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TIP20_DECIMALS } from "@/lib/constants";
 import { formatDate } from "@/lib/format";
@@ -69,29 +68,40 @@ export function LiveTradeFeed({
 	}, [visible]);
 
 	return (
-		<Card className="border-anvil-gray-light bg-deep-charcoal">
-			<CardHeader className="pb-2">
-				<CardTitle className="text-sm text-steel-white">Recent Trades ({total})</CardTitle>
-			</CardHeader>
-			<CardContent>
+		<div className="overflow-hidden rounded-2xl border border-border-hair bg-bg-elevated">
+			<div className="flex items-center justify-between border-border-hair border-b px-5 py-4">
+				<div className="font-display text-[16px] tracking-[-0.01em]">
+					Recent trades
+					<span className="ml-2 font-mono text-[12px] text-text-tertiary">
+						{total.toLocaleString()}
+					</span>
+				</div>
+				<span
+					aria-hidden
+					className="size-1.5 animate-[ember-flicker_2s_ease-in-out_infinite] rounded-full bg-green shadow-[0_0_6px_var(--color-green)]"
+				/>
+			</div>
+			<div className="px-5 py-2">
 				{isLoading && visible.length === 0 ? (
-					<div className="space-y-2">
+					<div className="space-y-2 py-3">
 						{Array.from({ length: 5 }).map((_, i) => (
-							<Skeleton key={`trade-skel-${i.toString()}`} className="h-10 rounded" />
+							<Skeleton key={`trade-skel-${i.toString()}`} className="h-10 rounded-lg" />
 						))}
 					</div>
 				) : visible.length === 0 ? (
-					<p className="py-8 text-center text-sm text-smoke-dark">No trades yet</p>
+					<p className="py-10 text-center font-mono text-[12px] text-text-tertiary uppercase tracking-[0.14em]">
+						No trades yet
+					</p>
 				) : (
 					<div className="overflow-x-auto">
-						<table className="w-full text-xs">
+						<table className="w-full text-[12.5px]">
 							<thead>
-								<tr className="border-b border-anvil-gray-light text-smoke-dark">
-									<th className="pb-2 text-left font-medium">Type</th>
-									<th className="pb-2 text-left font-medium">Amount</th>
-									<th className="pb-2 text-left font-medium">USDC</th>
-									<th className="pb-2 text-left font-medium">Trader</th>
-									<th className="pb-2 text-right font-medium">Time</th>
+								<tr className="font-mono text-[10px] text-text-tertiary uppercase tracking-[0.12em]">
+									<th className="py-2.5 text-left">Side</th>
+									<th className="py-2.5 text-left">Amount</th>
+									<th className="py-2.5 text-left">USDC</th>
+									<th className="py-2.5 text-left">Trader</th>
+									<th className="py-2.5 text-right">Time</th>
 								</tr>
 							</thead>
 							<tbody>
@@ -109,34 +119,36 @@ export function LiveTradeFeed({
 												exit={{ opacity: 0 }}
 												transition={{ duration: 0.25, ease: "easeOut" }}
 												className={cn(
-													"border-b border-anvil-gray-light/50 transition-colors",
-													isFlash && "bg-indigo/10",
+													"border-border-hair border-t transition-colors",
+													isFlash && "bg-[rgba(244,114,182,0.08)]",
 												)}
 											>
-												<td className="py-2">
+												<td className="py-2.5">
 													<span
 														className={cn(
 															"inline-flex items-center gap-1.5 font-medium",
-															isBuy ? "text-emerald-400" : "text-red-400",
+															isBuy ? "text-green" : "text-red",
 														)}
 													>
 														<span
 															className={cn(
 																"inline-block size-1.5 rounded-full",
-																isBuy ? "bg-emerald-400" : "bg-red-400",
+																isBuy ? "bg-green" : "bg-red",
 															)}
 														/>
 														{isBuy ? "Buy" : "Sell"}
 													</span>
 												</td>
-												<td className="py-2 text-smoke">
+												<td className="py-2.5 font-mono text-text-primary">
 													{formatAmount(trade.tokenAmount)} {tokenSymbol}
 												</td>
-												<td className="py-2 text-smoke">${formatAmount(trade.usdcAmount)}</td>
-												<td className="py-2 font-mono text-smoke-dark">
+												<td className="py-2.5 font-mono text-text-secondary">
+													${formatAmount(trade.usdcAmount)}
+												</td>
+												<td className="py-2.5 font-mono text-text-tertiary">
 													{shortenAddress(trade.traderAddress)}
 												</td>
-												<td className="py-2 text-right text-smoke-dark">
+												<td className="py-2.5 text-right font-mono text-text-tertiary">
 													{formatDate(trade.createdAt)}
 												</td>
 											</motion.tr>
@@ -147,7 +159,7 @@ export function LiveTradeFeed({
 						</table>
 					</div>
 				)}
-			</CardContent>
-		</Card>
+			</div>
+		</div>
 	);
 }

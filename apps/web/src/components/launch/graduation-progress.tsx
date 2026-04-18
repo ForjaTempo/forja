@@ -1,8 +1,6 @@
 "use client";
 
 import { TrophyIcon } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import { TIP20_DECIMALS } from "@/lib/constants";
 
 const GRADUATION_THRESHOLD = 69_000_000_000n;
@@ -28,44 +26,57 @@ export function GraduationProgress({
 
 	if (graduated) {
 		return (
-			<Card className="border-emerald-500/30 bg-emerald-500/5">
-				<CardContent className="flex flex-col items-center gap-3 p-6">
-					<TrophyIcon className="size-8 text-emerald-400" />
-					<p className="font-semibold text-emerald-400">Graduated!</p>
-					<p className="text-center text-xs text-smoke-dark">
-						This token has graduated to Uniswap v4 with permanent liquidity.
-					</p>
-				</CardContent>
-			</Card>
+			<div className="flex flex-col items-center gap-3 rounded-2xl border border-green/25 bg-green/5 p-6 text-center">
+				<div className="flex size-11 items-center justify-center rounded-xl border border-green/30 bg-green/10 text-green">
+					<TrophyIcon className="size-5" />
+				</div>
+				<div className="font-display text-[20px] text-green tracking-[-0.02em]">Graduated</div>
+				<p className="text-[12.5px] text-text-tertiary">
+					Liquidity migrated permanently to Uniswap v4.
+				</p>
+			</div>
 		);
 	}
 
 	return (
-		<Card className="border-anvil-gray-light bg-deep-charcoal">
-			<CardHeader className="pb-2">
-				<CardTitle className="text-sm text-steel-white">Graduation Progress</CardTitle>
-			</CardHeader>
-			<CardContent className="space-y-3">
-				<div className="flex items-center justify-between text-xs text-smoke-dark">
-					<span>${raisedFormatted} raised</span>
-					<span>${(69_000).toLocaleString()}</span>
-				</div>
-				<Progress value={progressPct} className="h-3" />
-				<p className="text-center text-sm font-semibold text-molten-amber">
+		<div className="rounded-2xl border border-border-hair bg-bg-elevated p-5">
+			<div className="font-mono text-[11px] text-text-tertiary uppercase tracking-[0.14em]">
+				Graduation progress
+			</div>
+			<div className="mt-3 flex items-baseline justify-between">
+				<div className="font-display text-[26px] tracking-[-0.02em]" style={{ color: "#f472b6" }}>
 					{progressPct.toFixed(1)}%
-				</p>
-
-				<div className="grid grid-cols-2 gap-3 pt-2 text-center">
-					<div>
-						<p className="text-lg font-semibold text-steel-white">{tradeCount}</p>
-						<p className="text-xs text-smoke-dark">Trades</p>
+				</div>
+				<div className="font-mono text-[11px] text-text-tertiary">${raisedFormatted} / $69,000</div>
+			</div>
+			<div className="mt-4 h-1 overflow-hidden rounded-full bg-bg-field">
+				<div
+					className="h-full rounded-full"
+					style={{
+						width: `${progressPct}%`,
+						background: "linear-gradient(90deg, #f472b6, #a78bfa)",
+						boxShadow: "0 0 8px rgba(244,114,182,0.6)",
+					}}
+				/>
+			</div>
+			<div className="mt-5 grid grid-cols-2 gap-3 border-border-hair border-t pt-4">
+				<div>
+					<div className="font-mono text-[10px] text-text-tertiary uppercase tracking-[0.14em]">
+						Trades
 					</div>
-					<div>
-						<p className="text-lg font-semibold text-steel-white">{uniqueTraders}</p>
-						<p className="text-xs text-smoke-dark">Traders</p>
+					<div className="mt-1 font-display text-[20px] tracking-[-0.02em]">
+						{tradeCount.toLocaleString()}
 					</div>
 				</div>
-			</CardContent>
-		</Card>
+				<div>
+					<div className="font-mono text-[10px] text-text-tertiary uppercase tracking-[0.14em]">
+						Traders
+					</div>
+					<div className="mt-1 font-display text-[20px] tracking-[-0.02em]">
+						{uniqueTraders.toLocaleString()}
+					</div>
+				</div>
+			</div>
+		</div>
 	);
 }

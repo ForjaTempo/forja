@@ -1,7 +1,7 @@
 "use client";
 
 import { ExternalLinkIcon, TrophyIcon } from "lucide-react";
-import { ScrollReveal } from "@/components/ui/scroll-reveal";
+import { useReveal } from "@/components/shared/use-reveal";
 import { TIP20_DECIMALS } from "@/lib/constants";
 import { formatDate } from "@/lib/format";
 
@@ -37,54 +37,71 @@ export function GraduationBanner({
 	uniqueTraders,
 	createdAt,
 }: GraduationBannerProps) {
+	useReveal();
 	const uniswapUrl = `https://app.uniswap.org/swap?outputCurrency=${tokenAddress}`;
 	const ttg = graduatedAt ? durationBetween(createdAt, graduatedAt) : null;
 
 	return (
-		<ScrollReveal>
-			<div className="overflow-hidden rounded-xl border border-emerald-500/30 bg-gradient-to-r from-emerald-500/10 via-emerald-500/5 to-transparent p-5 sm:p-6">
-				<div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-					<div className="flex items-start gap-3">
-						<div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400">
-							<TrophyIcon className="size-5" />
-						</div>
-						<div>
-							<h2 className="text-lg font-semibold text-emerald-400">This token graduated!</h2>
-							<p className="mt-1 text-sm text-smoke">
-								Liquidity migrated to Uniswap v4 with permanent LP.
-								{graduatedAt && (
-									<span className="text-smoke-dark"> Graduated {formatDate(graduatedAt)}.</span>
-								)}
-							</p>
-						</div>
+		<div
+			className="reveal relative overflow-hidden rounded-2xl border border-green/25 p-6 sm:p-8"
+			style={{
+				background:
+					"linear-gradient(135deg, rgba(74,222,128,0.08), rgba(74,222,128,0.02) 60%, transparent)",
+			}}
+		>
+			<div
+				aria-hidden
+				className="-top-24 -right-24 pointer-events-none absolute size-64 blur-3xl"
+				style={{ background: "radial-gradient(circle, rgba(74,222,128,0.25), transparent 70%)" }}
+			/>
+			<div className="relative flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+				<div className="flex items-start gap-4">
+					<div className="flex size-11 shrink-0 items-center justify-center rounded-xl border border-green/30 bg-green/10 text-green">
+						<TrophyIcon className="size-5" />
 					</div>
-
-					<a
-						href={uniswapUrl}
-						target="_blank"
-						rel="noopener noreferrer"
-						className="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-emerald-500/40 bg-emerald-500/10 px-4 py-2 text-sm font-medium text-emerald-400 transition-colors hover:border-emerald-500/60 hover:bg-emerald-500/20"
-					>
-						Trade on Uniswap
-						<ExternalLinkIcon className="size-3.5" />
-					</a>
+					<div>
+						<div className="font-mono text-[11px] text-green uppercase tracking-[0.2em]">
+							Graduated
+						</div>
+						<h2 className="mt-1 font-display text-[28px] leading-[1.1] tracking-[-0.02em] text-text-primary">
+							This launch made it to <span className="text-green italic">Uniswap v4.</span>
+						</h2>
+						<p className="mt-2 text-[13.5px] text-text-secondary">
+							Liquidity migrated permanently.
+							{graduatedAt && (
+								<span className="text-text-tertiary"> Graduated {formatDate(graduatedAt)}.</span>
+							)}
+						</p>
+					</div>
 				</div>
 
-				<div className="mt-4 grid grid-cols-3 gap-3 border-t border-emerald-500/20 pt-4 text-center">
-					<BannerStat label="Total Volume" value={`$${formatUsdc(totalVolume)}`} />
-					<BannerStat label="Unique Traders" value={uniqueTraders.toString()} />
-					<BannerStat label="Time to Graduate" value={ttg ?? "—"} />
-				</div>
+				<a
+					href={uniswapUrl}
+					target="_blank"
+					rel="noopener noreferrer"
+					className="inline-flex shrink-0 items-center gap-1.5 self-start rounded-xl border border-green/40 bg-green/10 px-4 py-2.5 font-medium text-[13px] text-green transition-colors hover:border-green/60 hover:bg-green/20"
+				>
+					Trade on Uniswap
+					<ExternalLinkIcon className="size-3.5" />
+				</a>
 			</div>
-		</ScrollReveal>
+
+			<div className="relative mt-6 grid grid-cols-3 gap-3 border-green/20 border-t pt-5">
+				<BannerStat label="Total volume" value={`$${formatUsdc(totalVolume)}`} />
+				<BannerStat label="Unique traders" value={uniqueTraders.toLocaleString()} />
+				<BannerStat label="Time to graduate" value={ttg ?? "—"} />
+			</div>
+		</div>
 	);
 }
 
 function BannerStat({ label, value }: { label: string; value: string }) {
 	return (
 		<div>
-			<p className="text-lg font-semibold text-emerald-400">{value}</p>
-			<p className="mt-0.5 text-xs text-smoke-dark">{label}</p>
+			<div className="font-mono text-[10px] text-text-tertiary uppercase tracking-[0.14em]">
+				{label}
+			</div>
+			<div className="mt-1 font-display text-[24px] text-green tracking-[-0.02em]">{value}</div>
 		</div>
 	);
 }
