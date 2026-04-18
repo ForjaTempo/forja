@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { isAddress } from "viem";
 import { PageHeader } from "@/components/ui/page-header";
 import { useTokenInfo } from "@/hooks/use-token-info";
@@ -32,6 +32,8 @@ export function SwapClient() {
 
 	const [initialIn, setInitialIn] = useState<TokenOption | undefined>();
 	const [initialOut, setInitialOut] = useState<TokenOption | undefined>();
+	const [historyKey, setHistoryKey] = useState(0);
+	const onSwapSuccess = useCallback(() => setHistoryKey((k) => k + 1), []);
 
 	useEffect(() => {
 		// Default tokenIn = USDC if not specified.
@@ -75,12 +77,16 @@ export function SwapClient() {
 					</div>
 				)}
 				<div className="mx-auto max-w-md">
-					<SwapPanel initialTokenIn={initialIn} initialTokenOut={initialOut} />
+					<SwapPanel
+						initialTokenIn={initialIn}
+						initialTokenOut={initialOut}
+						onSwapSuccess={onSwapSuccess}
+					/>
 				</div>
 			</div>
 			<aside className="space-y-4 lg:pt-16">
-				<SwapHistory scope="user" limit={5} />
-				<SwapHistory scope="global" limit={5} />
+				<SwapHistory scope="user" limit={5} refreshKey={historyKey} />
+				<SwapHistory scope="global" limit={5} refreshKey={historyKey} />
 			</aside>
 		</div>
 	);

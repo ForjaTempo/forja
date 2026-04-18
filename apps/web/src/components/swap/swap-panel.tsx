@@ -1,6 +1,14 @@
 "use client";
 
-import { AlertTriangleIcon, ArrowDownIcon, ArrowRightIcon, SettingsIcon } from "lucide-react";
+import {
+	AlertTriangleIcon,
+	ArrowDownIcon,
+	ArrowRightIcon,
+	CheckCircle2Icon,
+	ExternalLinkIcon,
+	Loader2Icon,
+	SettingsIcon,
+} from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { formatUnits, type Hex, parseUnits } from "viem";
 import { useAccount, useChainId, useSwitchChain } from "wagmi";
@@ -8,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useExplorerUrl } from "@/hooks/use-explorer-url";
 import { usePermit2Approval } from "@/hooks/use-permit2-approval";
 import { useSwap } from "@/hooks/use-swap";
 import { useSwapQuote } from "@/hooks/use-swap-quote";
@@ -37,13 +46,15 @@ const DEFAULT_DEADLINE_SEC = 20 * 60; // 20 minutes
 interface SwapPanelProps {
 	initialTokenIn?: TokenOption;
 	initialTokenOut?: TokenOption;
+	onSwapSuccess?: () => void;
 }
 
-export function SwapPanel({ initialTokenIn, initialTokenOut }: SwapPanelProps) {
+export function SwapPanel({ initialTokenIn, initialTokenOut, onSwapSuccess }: SwapPanelProps) {
 	const { isConnected } = useAccount();
 	const chainId = useChainId();
 	const { switchChain } = useSwitchChain();
 	const { txConfirmed } = useTransactionToast();
+	const explorer = useExplorerUrl();
 
 	const isSupportedChain = SUPPORTED_CHAIN_IDS.has(chainId);
 	const isTestnet = chainId === TEMPO_MODERATO_CHAIN_ID;
@@ -96,10 +107,20 @@ export function SwapPanel({ initialTokenIn, initialTokenOut }: SwapPanelProps) {
 		if (swap.isConfirmed && swap.txHash) {
 			txConfirmed(swap.txHash);
 			setAmount("");
-			swap.reset();
 			inBalance.refetch();
+			// Nudge the history card to re-fetch on a short cadence until the
+			// indexer picks the event up — three retries over ~1 minute cover
+			// the worst-case cron delay.
+			[3_000, 15_000, 40_000].forEach((delay) => {
+				setTimeout(() => onSwapSuccess?.(), delay);
+			});
+			onSwapSuccess?.();
+			// Let the user acknowledge the confirmed tx via the success card
+			// before wiping state — otherwise the explorer link disappears.
+			const t = setTimeout(() => swap.reset(), 15_000);
+			return () => clearTimeout(t);
 		}
-	}, [swap.isConfirmed, swap.txHash, swap.reset, txConfirmed, inBalance]);
+	}, [swap.isConfirmed, swap.txHash, swap.reset, txConfirmed, inBalance, onSwapSuccess]);
 
 	const insufficientBalance =
 		!!inBalance.balance && parsedAmountIn > 0n && parsedAmountIn > inBalance.balance;
@@ -327,6 +348,42 @@ export function SwapPanel({ initialTokenIn, initialTokenOut }: SwapPanelProps) {
 				)}
 
 				{quoteError && <p className="text-center text-xs text-red-400">{quoteError}</p>}
+
+				{/* Wallet-prompt hint — after permit signature, some wallets (OKX,
+				    Rabby queued flows) don't auto-focus the second prompt. Tell
+				    users explicitly to open the wallet when they're mid-flow. */}
+				{(swap.isSigning || swap.isSwapping) && (
+					<div className="flex items-center gap-2 rounded-lg border border-indigo/30 bg-indigo/5 px-3 py-2 text-xs text-indigo">
+						<Loader2Icon className="size-4 shrink-0 animate-spin" />
+						<span>
+							{swap.isSigning
+								? "Sign the permit in your wallet…"
+								: "Confirm the swap transaction in your wallet. If the prompt didn't appear, open the wallet extension manually."}
+						</span>
+					</div>
+				)}
+
+				{/* Success card — stays visible for 15s after confirm so the user
+				    can open the explorer link even if the indexer is still catching
+				    up. History card polls in parallel. */}
+				{swap.isConfirmed && swap.txHash && (
+					<div className="flex items-start gap-2 rounded-lg border border-forge-green/30 bg-forge-green/5 px-3 py-2 text-xs">
+						<CheckCircle2Icon className="size-4 shrink-0 text-forge-green" />
+						<div className="flex-1">
+							<p className="font-medium text-forge-green">Swap confirmed</p>
+							<a
+								href={`${explorer}/tx/${swap.txHash}`}
+								target="_blank"
+								rel="noopener noreferrer"
+								className="mt-0.5 inline-flex items-center gap-1 text-forge-green/80 hover:text-forge-green"
+							>
+								View on explorer
+								<ExternalLinkIcon className="size-3" />
+							</a>
+							<p className="mt-1 text-smoke-dark">Appearing in your history in a few seconds…</p>
+						</div>
+					</div>
+				)}
 
 				{/* Action buttons */}
 				{!hasSwap && (
