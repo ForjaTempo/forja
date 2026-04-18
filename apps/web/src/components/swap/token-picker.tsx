@@ -8,7 +8,6 @@ import { getOnchainTokenMetadata, getSwappableTokens } from "@/actions/swaps";
 import { getTokenList } from "@/actions/token-hub";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ImageFallback } from "@/components/ui/image-fallback";
-import { Input } from "@/components/ui/input";
 import { PATHUSDC_ADDRESS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
@@ -162,19 +161,22 @@ export function TokenPicker({
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className="max-w-md">
+			<DialogContent className="max-w-md border-border-subtle bg-bg-elevated">
 				<DialogHeader>
-					<DialogTitle>Select a token</DialogTitle>
+					<DialogTitle className="font-display text-[20px] tracking-[-0.01em] text-text-primary">
+						Select a token
+					</DialogTitle>
 				</DialogHeader>
 
 				<div className="relative">
-					<SearchIcon className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-text-tertiary" />
-					<Input
+					<SearchIcon className="-translate-y-1/2 pointer-events-none absolute top-1/2 left-3 size-4 text-text-tertiary" />
+					<input
 						autoFocus
+						type="text"
 						value={search}
 						onChange={(e) => setSearch(e.target.value)}
-						placeholder="Search name, symbol, or paste address"
-						className="pl-9"
+						placeholder="Search name, symbol, or paste address…"
+						className="w-full rounded-xl border border-border-hair bg-bg-field py-2.5 pr-3 pl-9 text-[14px] text-text-primary placeholder:text-text-tertiary focus:border-gold/60 focus:outline-none transition-colors"
 					/>
 				</div>
 
