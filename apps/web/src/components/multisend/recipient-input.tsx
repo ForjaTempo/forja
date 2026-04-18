@@ -4,15 +4,20 @@ import { DownloadIcon, PlusIcon, TrashIcon, UploadIcon, XIcon } from "lucide-rea
 import { type ChangeEvent, useCallback, useMemo, useRef } from "react";
 import type { Hex } from "viem";
 import { formatUnits, parseUnits } from "viem";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { TIP20_DECIMALS } from "@/lib/constants";
 import { detectDelimiter, downloadCsvTemplate, stripBom } from "@/lib/csv-utils";
+import { cn } from "@/lib/utils";
 
 const MAX_RECIPIENTS = 500;
 const ADDRESS_RE = /^0x[0-9a-fA-F]{40}$/;
 const AMOUNT_RE = /^\d+(\.\d{1,6})?$/;
 const HEADER_RE = /^(address|recipient|wallet|to)[,\t]/i;
+
+const labelCls = "font-mono text-[11px] uppercase tracking-[0.12em] text-text-tertiary";
+const inputCls =
+	"w-full rounded-xl border border-border-hair bg-bg-field px-4 py-3 text-[15px] text-text-primary placeholder:text-text-tertiary focus:border-gold/60 focus:outline-none transition-colors";
+const chipBtnCls =
+	"inline-flex items-center gap-1 rounded-lg border border-border-hair bg-bg-field px-2.5 py-1 text-[11px] font-medium text-text-secondary transition-colors hover:border-border-subtle hover:text-text-primary disabled:cursor-not-allowed disabled:opacity-50";
 
 export interface Recipient {
 	address: Hex;
@@ -37,10 +42,6 @@ function isHeaderRow(line: string): boolean {
 	return HEADER_RE.test(line) || line.toLowerCase().includes("amount");
 }
 
-/**
- * Parse text lines into recipients.
- * When addressOnly=true (equal distribution), only address is required per line.
- */
 function parseLines(text: string, addressOnly = false): ParseResult {
 	const cleaned = stripBom(text);
 	const delimiter = detectDelimiter(cleaned);
@@ -51,7 +52,6 @@ function parseLines(text: string, addressOnly = false): ParseResult {
 		.map((l) => l.trim())
 		.filter((l) => l.length > 0);
 
-	// Skip header row if detected
 	const lines =
 		rawLines.length > 0 && isHeaderRow(rawLines[0] as string) ? rawLines.slice(1) : rawLines;
 
@@ -112,10 +112,6 @@ function parseLines(text: string, addressOnly = false): ParseResult {
 	return { recipients, totalAmount, errors, warnings };
 }
 
-/**
- * Parse manual rows into recipients.
- * When addressOnly=true (equal distribution), only address is required per row.
- */
 function parseManualRows(rows: ManualRow[], addressOnly = false): ParseResult {
 	const recipients: Recipient[] = [];
 	const errors: string[] = [];
@@ -178,7 +174,6 @@ interface RecipientInputProps {
 	onInputModeChange: (mode: InputMode) => void;
 	tokenSymbol: string | undefined;
 	addressOnly: boolean;
-	/** When provided, preview uses this instead of internal parse result */
 	displayParsed?: ParseResult;
 }
 
@@ -203,7 +198,6 @@ export function RecipientInput({
 		[inputMode, value, manualRows, addressOnly],
 	);
 
-	// Use parent-provided parsed data for preview (e.g. equalized amounts)
 	const parsed = displayParsed ?? internalParsed;
 
 	const handleTextChange = useCallback(
@@ -283,50 +277,36 @@ export function RecipientInput({
 		inputMode === "paste" ? value.trim().length > 0 : manualRows.some((r) => r.address || r.amount);
 
 	const pasteplaceholder = addressOnly
-		? "0x1234...abcd\n0x5678...efgh\n0xabcd...1234"
-		: "0x1234...abcd,100\n0x5678...efgh,250.5\n0xabcd...1234,75";
+		? "0x1234…abcd\n0x5678…efgh\n0xabcd…1234"
+		: "0x1234…abcd,100\n0x5678…efgh,250.5\n0xabcd…1234,75";
 
 	return (
 		<div className="space-y-3">
-			<div className="flex items-center justify-between">
-				<span id="recipients-label" className="text-sm font-medium text-smoke">
+			<div className="flex items-center justify-between gap-2">
+				<span id="recipients-label" className={labelCls}>
 					Recipients
 				</span>
-				<div className="flex items-center gap-2">
+				<div className="flex flex-wrap items-center gap-1.5">
 					{hasContent && (
-						<Button
-							type="button"
-							variant="ghost"
-							size="sm"
-							className="h-7 px-2 text-xs"
-							onClick={handleClear}
-						>
+						<button type="button" className={chipBtnCls} onClick={handleClear}>
 							<XIcon className="size-3" />
 							Clear
-						</Button>
+						</button>
 					)}
 					{inputMode === "paste" && (
 						<>
-							<Button
-								type="button"
-								variant="ghost"
-								size="sm"
-								className="h-7 px-2 text-xs"
-								onClick={handleDownloadTemplate}
-							>
+							<button type="button" className={chipBtnCls} onClick={handleDownloadTemplate}>
 								<DownloadIcon className="size-3" />
 								Template
-							</Button>
-							<Button
+							</button>
+							<button
 								type="button"
-								variant="ghost"
-								size="sm"
-								className="h-7 px-2 text-xs"
+								className={chipBtnCls}
 								onClick={() => fileInputRef.current?.click()}
 							>
 								<UploadIcon className="size-3" />
 								Upload CSV
-							</Button>
+							</button>
 							<input
 								ref={fileInputRef}
 								type="file"
@@ -339,9 +319,8 @@ export function RecipientInput({
 				</div>
 			</div>
 
-			{/* Mode toggle */}
 			<div
-				className="flex gap-1 rounded-md border border-anvil-gray-light bg-obsidian-black p-1"
+				className="flex gap-1 rounded-xl border border-border-hair bg-bg-field p-1"
 				role="tablist"
 				aria-label="Input mode"
 			>
@@ -349,9 +328,12 @@ export function RecipientInput({
 					type="button"
 					role="tab"
 					aria-selected={inputMode === "paste"}
-					className={`flex-1 rounded px-3 py-1.5 text-xs font-medium transition-colors ${
-						inputMode === "paste" ? "bg-anvil-gray text-smoke" : "text-smoke-dark hover:text-smoke"
-					}`}
+					className={cn(
+						"flex-1 rounded-lg px-3 py-1.5 text-[12.5px] font-medium transition-colors",
+						inputMode === "paste"
+							? "bg-bg-elevated text-text-primary"
+							: "text-text-tertiary hover:text-text-secondary",
+					)}
 					onClick={() => onInputModeChange("paste")}
 				>
 					Paste / CSV
@@ -360,12 +342,15 @@ export function RecipientInput({
 					type="button"
 					role="tab"
 					aria-selected={inputMode === "manual"}
-					className={`flex-1 rounded px-3 py-1.5 text-xs font-medium transition-colors ${
-						inputMode === "manual" ? "bg-anvil-gray text-smoke" : "text-smoke-dark hover:text-smoke"
-					}`}
+					className={cn(
+						"flex-1 rounded-lg px-3 py-1.5 text-[12.5px] font-medium transition-colors",
+						inputMode === "manual"
+							? "bg-bg-elevated text-text-primary"
+							: "text-text-tertiary hover:text-text-secondary",
+					)}
 					onClick={() => onInputModeChange("manual")}
 				>
-					Manual Entry
+					Manual entry
 				</button>
 			</div>
 
@@ -373,7 +358,7 @@ export function RecipientInput({
 				<textarea
 					id="recipients-textarea"
 					aria-labelledby="recipients-label"
-					className="min-h-[120px] w-full rounded-md border border-anvil-gray-light bg-obsidian-black px-3 py-2 font-mono text-sm text-smoke placeholder:text-smoke-dark focus:border-forge-green focus:outline-none focus:ring-1 focus:ring-forge-green"
+					className="min-h-[140px] w-full rounded-xl border border-border-hair bg-bg-field px-4 py-3 font-mono text-[13px] text-text-primary placeholder:text-text-tertiary focus:border-gold/60 focus:outline-none transition-colors"
 					placeholder={pasteplaceholder}
 					value={value}
 					onChange={handleTextChange}
@@ -383,106 +368,100 @@ export function RecipientInput({
 				<div className="space-y-2">
 					{manualRows.map((row, i) => (
 						<div key={`row-${i.toString()}`} className="flex items-center gap-2">
-							<Input
+							<input
+								type="text"
 								aria-label={`Recipient ${i + 1} address`}
-								placeholder="0x..."
+								placeholder="0x…"
 								value={row.address}
 								onChange={(e) => handleRowChange(i, "address", e.target.value)}
-								className="flex-[2] font-mono text-sm"
+								className={cn(inputCls, "flex-[2] py-2.5 font-mono text-[13px]")}
 								autoComplete="off"
 								spellCheck={false}
 							/>
 							{!addressOnly && (
-								<Input
+								<input
+									type="text"
 									aria-label={`Recipient ${i + 1} amount`}
 									placeholder="Amount"
 									value={row.amount}
 									onChange={(e) => handleRowChange(i, "amount", e.target.value)}
-									className="flex-1 font-mono text-sm"
+									className={cn(inputCls, "flex-1 py-2.5 font-mono text-[13px]")}
 									inputMode="decimal"
 									autoComplete="off"
 								/>
 							)}
-							<Button
+							<button
 								type="button"
-								variant="ghost"
-								size="sm"
-								className="h-9 w-9 shrink-0 p-0"
+								className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg border border-border-hair bg-bg-field text-text-tertiary transition-colors hover:border-border-subtle hover:text-red disabled:cursor-not-allowed disabled:opacity-40"
 								onClick={() => handleRemoveRow(i)}
 								disabled={manualRows.length <= 1}
 								aria-label={`Remove recipient ${i + 1}`}
 							>
-								<TrashIcon className="size-3.5 text-smoke-dark" />
-							</Button>
+								<TrashIcon className="size-3.5" />
+							</button>
 						</div>
 					))}
-					<Button
+					<button
 						type="button"
-						variant="ghost"
-						size="sm"
-						className="h-8 text-xs text-smoke-dark"
+						className="inline-flex items-center gap-1.5 rounded-lg border border-border-hair bg-bg-field px-3 py-2 text-[12px] font-medium text-text-secondary transition-colors hover:border-border-subtle hover:text-text-primary disabled:cursor-not-allowed disabled:opacity-40"
 						onClick={handleAddRow}
 						disabled={manualRows.length >= MAX_RECIPIENTS}
 					>
 						<PlusIcon className="size-3" />
-						Add Recipient
-					</Button>
+						Add recipient
+					</button>
 				</div>
 			)}
 
-			{/* Show errors from internal parse (validation) */}
 			{internalParsed.errors.length > 0 && (
 				<div className="space-y-1" role="alert">
 					{internalParsed.errors.map((err) => (
-						<p key={err} className="text-xs text-ember-red">
+						<p key={err} className="text-[12px] text-red">
 							{err}
 						</p>
 					))}
 				</div>
 			)}
 
-			{/* Show warnings from internal parse */}
 			{internalParsed.warnings.length > 0 && (
 				<div className="space-y-1">
 					{internalParsed.warnings.map((warn) => (
-						<p key={warn} className="text-xs text-molten-amber">
+						<p key={warn} className="text-[12px] text-gold">
 							{warn}
 						</p>
 					))}
 				</div>
 			)}
 
-			{/* Preview table — uses displayParsed (equalized) when available */}
 			{parsed.recipients.length > 0 &&
 				internalParsed.errors.length === 0 &&
 				parsed.totalAmount > 0n && (
-					<div className="rounded-lg border border-anvil-gray-light bg-obsidian-black/50 p-3">
-						<div className="mb-2 flex items-center justify-between text-xs text-smoke-dark">
-							<span>Preview ({parsed.recipients.length} recipients)</span>
-							<span className="font-mono text-smoke">
-								Total: {formatUnits(parsed.totalAmount, TIP20_DECIMALS)} {tokenSymbol ?? "tokens"}
+					<div className="rounded-xl border border-border-hair bg-bg-field/60 p-3.5">
+						<div className="mb-2.5 flex items-center justify-between text-[12px]">
+							<span className="text-text-tertiary">
+								Preview · {parsed.recipients.length} recipients
+							</span>
+							<span className="font-mono text-text-primary">
+								Total {formatUnits(parsed.totalAmount, TIP20_DECIMALS)} {tokenSymbol ?? "tokens"}
 							</span>
 						</div>
 						<div className="max-h-[200px] overflow-y-auto">
-							<table className="w-full text-xs" aria-label="Recipients preview">
+							<table className="w-full text-[12px]" aria-label="Recipients preview">
 								<thead>
-									<tr className="border-b border-anvil-gray-light text-smoke-dark">
-										<th className="pb-1 text-left font-medium">#</th>
-										<th className="pb-1 text-left font-medium">Address</th>
-										<th className="pb-1 text-right font-medium">Amount</th>
+									<tr className="font-mono text-[10px] text-text-tertiary uppercase tracking-[0.12em]">
+										<th className="pb-1.5 text-left font-medium">#</th>
+										<th className="pb-1.5 text-left font-medium">Address</th>
+										<th className="pb-1.5 text-right font-medium">Amount</th>
 									</tr>
 								</thead>
 								<tbody>
 									{parsed.recipients.map((r, i) => (
-										<tr
-											key={r.address + i.toString()}
-											className="border-b border-anvil-gray-light/50"
-										>
-											<td className="py-1 text-smoke-dark">{i + 1}</td>
-											<td className="py-1 font-mono text-smoke">
-												{r.address.slice(0, 8)}...{r.address.slice(-6)}
+										<tr key={r.address + i.toString()} className="border-border-hair border-t">
+											<td className="py-1.5 text-text-tertiary">{i + 1}</td>
+											<td className="py-1.5 font-mono text-text-secondary">
+												{r.address.slice(0, 8)}…{r.address.slice(-6)}
 											</td>
-											<td className="py-1 text-right font-mono text-smoke">{r.amount}</td>
+											<td className="py-1.5 text-right font-mono text-text-primary">{r.amount}</td>
 										</tr>
 									))}
 								</tbody>

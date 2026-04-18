@@ -3,9 +3,6 @@
 import { type FormEvent, useCallback, useMemo, useRef, useState } from "react";
 import { formatUnits, type Hex, parseUnits } from "viem";
 import { useAccount } from "wagmi";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
 import { TransactionStatus } from "@/components/ui/transaction-status";
 import { useMultisend } from "@/hooks/use-multisend";
 import { useMultisendFee } from "@/hooks/use-multisend-fee";
@@ -18,6 +15,7 @@ import { useUsdcBalance } from "@/hooks/use-usdc-balance";
 import { TIP20_DECIMALS } from "@/lib/constants";
 import { multisendConfig } from "@/lib/contracts";
 import { deriveTxState, formatErrorMessage } from "@/lib/format";
+import { cn } from "@/lib/utils";
 import {
 	type ManualRow,
 	type ParseResult,
@@ -31,6 +29,10 @@ type InputMode = "paste" | "manual";
 type DistributionMode = "custom" | "equal";
 
 const VALID_AMOUNT = /^\d+(\.\d{1,6})?$/;
+
+const labelCls = "font-mono text-[11px] uppercase tracking-[0.12em] text-text-tertiary";
+const inputCls =
+	"w-full rounded-xl border border-border-hair bg-bg-field px-4 py-3 text-[15px] text-text-primary placeholder:text-text-tertiary focus:border-gold/60 focus:outline-none transition-colors";
 
 interface MultisendFormProps {
 	onSuccess?: (data: {
@@ -71,8 +73,6 @@ export function MultisendForm({ onSuccess, initialToken }: MultisendFormProps) {
 
 	const isEqual = distribution === "equal";
 
-	// Parse recipients based on input mode
-	// When equal distribution, only validate addresses (addressOnly=true)
 	const baseParsed = useMemo<ParseResult>(
 		() =>
 			inputMode === "paste"
@@ -81,7 +81,6 @@ export function MultisendForm({ onSuccess, initialToken }: MultisendFormProps) {
 		[inputMode, recipientText, manualRows, isEqual],
 	);
 
-	// Apply equal distribution if selected — uses bigint math exclusively
 	const parsed = useMemo<ParseResult>(() => {
 		if (!isEqual) return baseParsed;
 
@@ -114,7 +113,6 @@ export function MultisendForm({ onSuccess, initialToken }: MultisendFormProps) {
 			};
 		}
 
-		// Use formatUnits for bigint-safe string conversion (no Number precision loss)
 		const perAmount = formatUnits(perRecipient, TIP20_DECIMALS);
 		const firstAmount = formatUnits(perRecipient + remainder, TIP20_DECIMALS);
 
@@ -130,7 +128,6 @@ export function MultisendForm({ onSuccess, initialToken }: MultisendFormProps) {
 
 	const feeAmount = fee ?? parseUnits(String(feeFormatted), TIP20_DECIMALS);
 
-	// Non-standard decimals warning (Tempo TIP-20 is always 6)
 	const nonStandardDecimals = tokenDecimals !== undefined && tokenDecimals !== TIP20_DECIMALS;
 
 	const {
@@ -228,186 +225,183 @@ export function MultisendForm({ onSuccess, initialToken }: MultisendFormProps) {
 
 	return (
 		<>
-			<Card className="border-anvil-gray-light bg-deep-charcoal">
-				<CardContent>
-					<form onSubmit={handleSubmit} className="space-y-5">
-						<div className="space-y-2">
-							<label htmlFor="token-address" className="text-sm font-medium text-smoke">
-								Token Address
+			<form onSubmit={handleSubmit} className="space-y-6">
+				<div className="space-y-2">
+					<label htmlFor="token-address" className={labelCls}>
+						Token address
+					</label>
+					<input
+						id="token-address"
+						type="text"
+						placeholder="0x…"
+						value={tokenAddress}
+						onChange={(e) => setTokenAddress(e.target.value)}
+						autoComplete="off"
+						spellCheck={false}
+						className={cn(inputCls, "font-mono text-[14px]")}
+					/>
+					{validTokenAddress && isTokenInfoLoading && (
+						<p className="text-[12px] text-text-tertiary">Loading token info…</p>
+					)}
+					{validTokenAddress && isTokenError && (
+						<p className="text-[12px] text-red">
+							Invalid token address — could not read token contract.
+						</p>
+					)}
+					{nonStandardDecimals && (
+						<p className="text-[12px] text-red">
+							This token uses {tokenDecimals} decimals instead of 6. Only TIP-20 tokens (6 decimals)
+							are supported.
+						</p>
+					)}
+					{validTokenAddress && tokenName && tokenSymbol && !nonStandardDecimals && (
+						<div className="flex items-center gap-2 text-[13px]">
+							<span className="text-text-secondary">{tokenName}</span>
+							<span className="rounded bg-bg-elevated px-1.5 py-0.5 font-mono text-[10px] text-gold uppercase tracking-[0.1em]">
+								{tokenSymbol}
+							</span>
+							{tokenBalanceFormatted !== undefined && (
+								<span className="ml-auto font-mono text-[12px] text-text-tertiary">
+									Balance:{" "}
+									{Number.parseFloat(tokenBalanceFormatted).toLocaleString("en-US", {
+										maximumFractionDigits: 2,
+									})}{" "}
+									{tokenSymbol}
+								</span>
+							)}
+						</div>
+					)}
+				</div>
+
+				<div className="space-y-2">
+					<span className={labelCls}>Distribution</span>
+					<div
+						className="flex gap-1 rounded-xl border border-border-hair bg-bg-field p-1"
+						role="tablist"
+						aria-label="Amount distribution"
+					>
+						<button
+							type="button"
+							role="tab"
+							aria-selected={distribution === "custom"}
+							className={cn(
+								"flex-1 rounded-lg px-3 py-2 text-[12.5px] font-medium transition-colors",
+								distribution === "custom"
+									? "bg-bg-elevated text-text-primary"
+									: "text-text-tertiary hover:text-text-secondary",
+							)}
+							onClick={() => setDistribution("custom")}
+						>
+							Custom amounts
+						</button>
+						<button
+							type="button"
+							role="tab"
+							aria-selected={distribution === "equal"}
+							className={cn(
+								"flex-1 rounded-lg px-3 py-2 text-[12.5px] font-medium transition-colors",
+								distribution === "equal"
+									? "bg-bg-elevated text-text-primary"
+									: "text-text-tertiary hover:text-text-secondary",
+							)}
+							onClick={() => setDistribution("equal")}
+						>
+							Equal split
+						</button>
+					</div>
+					{isEqual && (
+						<div className="space-y-1.5">
+							<label htmlFor="equal-total" className="sr-only">
+								Total amount to distribute
 							</label>
-							<Input
-								id="token-address"
-								placeholder="0x..."
-								value={tokenAddress}
-								onChange={(e) => setTokenAddress(e.target.value)}
+							<input
+								id="equal-total"
+								type="text"
+								placeholder="Total amount to distribute"
+								value={equalTotalAmount}
+								onChange={(e) => setEqualTotalAmount(e.target.value)}
+								inputMode="decimal"
 								autoComplete="off"
-								spellCheck={false}
-								className="font-mono"
+								className={cn(inputCls, "font-mono")}
 							/>
-							{validTokenAddress && isTokenInfoLoading && (
-								<p className="text-xs text-smoke-dark">Loading token info...</p>
-							)}
-							{validTokenAddress && isTokenError && (
-								<p className="text-xs text-ember-red">
-									Invalid token address — could not read token contract
-								</p>
-							)}
-							{nonStandardDecimals && (
-								<p className="text-xs text-ember-red">
-									This token uses {tokenDecimals} decimals instead of 6. Only TIP-20 tokens (6
-									decimals) are supported.
-								</p>
-							)}
-							{validTokenAddress && tokenName && tokenSymbol && !nonStandardDecimals && (
-								<div className="flex items-center gap-2 text-sm">
-									<span className="text-smoke">{tokenName}</span>
-									<span className="rounded bg-anvil-gray px-1.5 py-0.5 font-mono text-xs text-smoke-dark">
-										{tokenSymbol}
-									</span>
-									{tokenBalanceFormatted !== undefined && (
-										<span className="ml-auto font-mono text-xs text-smoke-dark">
-											Balance:{" "}
-											{Number.parseFloat(tokenBalanceFormatted).toLocaleString("en-US", {
-												maximumFractionDigits: 2,
-											})}{" "}
-											{tokenSymbol}
-										</span>
-									)}
-								</div>
-							)}
+							{baseParsed.recipients.length > 0 &&
+								equalTotalAmount &&
+								VALID_AMOUNT.test(equalTotalAmount) && (
+									<p className="text-[12px] text-text-tertiary">
+										Each recipient gets ~
+										{(Number(equalTotalAmount) / baseParsed.recipients.length).toFixed(6)}{" "}
+										{tokenSymbol ?? "tokens"}
+									</p>
+								)}
 						</div>
+					)}
+				</div>
 
-						{/* Distribution mode toggle */}
-						<div className="space-y-3">
-							<span className="text-sm font-medium text-smoke">Distribution</span>
-							<div
-								className="flex gap-1 rounded-md border border-anvil-gray-light bg-obsidian-black p-1"
-								role="tablist"
-								aria-label="Amount distribution"
-							>
-								<button
-									type="button"
-									role="tab"
-									aria-selected={distribution === "custom"}
-									className={`flex-1 rounded px-3 py-1.5 text-xs font-medium transition-colors ${
-										distribution === "custom"
-											? "bg-anvil-gray text-smoke"
-											: "text-smoke-dark hover:text-smoke"
-									}`}
-									onClick={() => setDistribution("custom")}
-								>
-									Custom Amounts
-								</button>
-								<button
-									type="button"
-									role="tab"
-									aria-selected={distribution === "equal"}
-									className={`flex-1 rounded px-3 py-1.5 text-xs font-medium transition-colors ${
-										distribution === "equal"
-											? "bg-anvil-gray text-smoke"
-											: "text-smoke-dark hover:text-smoke"
-									}`}
-									onClick={() => setDistribution("equal")}
-								>
-									Equal Split
-								</button>
-							</div>
-							{isEqual && (
-								<div className="space-y-1">
-									<label htmlFor="equal-total" className="sr-only">
-										Total amount to distribute
-									</label>
-									<Input
-										id="equal-total"
-										placeholder="Total amount to distribute"
-										value={equalTotalAmount}
-										onChange={(e) => setEqualTotalAmount(e.target.value)}
-										inputMode="decimal"
-										autoComplete="off"
-										className="font-mono"
-									/>
-									{baseParsed.recipients.length > 0 &&
-										equalTotalAmount &&
-										VALID_AMOUNT.test(equalTotalAmount) && (
-											<p className="text-xs text-smoke-dark">
-												Each recipient gets ~
-												{(Number(equalTotalAmount) / baseParsed.recipients.length).toFixed(6)}{" "}
-												{tokenSymbol ?? "tokens"}
-											</p>
-										)}
-								</div>
-							)}
+				<RecipientInput
+					value={recipientText}
+					onChange={setRecipientText}
+					manualRows={manualRows}
+					onManualRowsChange={setManualRows}
+					inputMode={inputMode}
+					onInputModeChange={setInputMode}
+					tokenSymbol={tokenSymbol}
+					addressOnly={isEqual}
+					displayParsed={isEqual ? parsed : undefined}
+				/>
+
+				<div className="space-y-2 border-border-hair border-t pt-5">
+					<div className="flex items-center justify-between text-[13px]">
+						<span className={labelCls}>Multisend fee</span>
+						<span className="font-mono text-text-primary">{feeFormatted} USDC</span>
+					</div>
+					{isConnected && (
+						<div className="flex items-center justify-between text-[13px]">
+							<span className={labelCls}>Your balance</span>
+							<span className="font-mono text-text-secondary">
+								{usdcBalanceFormatted !== undefined
+									? `${Number.parseFloat(usdcBalanceFormatted).toLocaleString("en-US", { maximumFractionDigits: 2 })} USDC`
+									: "—"}
+							</span>
 						</div>
+					)}
+					{insufficientUsdc && (
+						<p className="text-[12px] text-red">
+							Insufficient USDC balance to cover the multisend fee.
+						</p>
+					)}
+					{insufficientToken && (
+						<p className="text-[12px] text-red">
+							Insufficient {tokenSymbol ?? "token"} balance to cover the total send amount.
+						</p>
+					)}
+				</div>
 
-						<RecipientInput
-							value={recipientText}
-							onChange={setRecipientText}
-							manualRows={manualRows}
-							onManualRowsChange={setManualRows}
-							inputMode={inputMode}
-							onInputModeChange={setInputMode}
-							tokenSymbol={tokenSymbol}
-							addressOnly={isEqual}
-							displayParsed={isEqual ? parsed : undefined}
-						/>
-
-						<Separator className="bg-anvil-gray-light" />
-
-						<div className="space-y-2">
-							<div className="flex items-center justify-between text-sm">
-								<span className="text-smoke-dark">Multisend fee</span>
-								<span className="font-mono text-smoke">{feeFormatted} USDC</span>
-							</div>
-							{isConnected && (
-								<div className="flex items-center justify-between text-sm">
-									<span className="text-smoke-dark">USDC balance</span>
-									<span className="font-mono text-smoke">
-										{usdcBalanceFormatted !== undefined
-											? `${Number.parseFloat(usdcBalanceFormatted).toLocaleString("en-US", { maximumFractionDigits: 2 })} USDC`
-											: "\u2014"}
-									</span>
-								</div>
-							)}
-							{insufficientUsdc && (
-								<p className="text-xs text-ember-red">
-									Insufficient USDC balance to cover the multisend fee
-								</p>
-							)}
-							{insufficientToken && (
-								<p className="text-xs text-ember-red">
-									Insufficient {tokenSymbol ?? "token"} balance to cover the total send amount
-								</p>
-							)}
-						</div>
-
-						<SendButton
-							needsUsdcApproval={needsUsdcApproval}
-							needsTokenApproval={needsTokenApproval}
-							isAllowanceLoading={isUsdcAllowanceLoading || isTokenAllowanceLoading}
-							insufficientUsdc={insufficientUsdc}
-							insufficientToken={insufficientToken}
-							isUsdcApproving={isUsdcApproving}
-							isUsdcApprovalConfirming={isUsdcApprovalConfirming}
-							isTokenApproving={isTokenApproving}
-							isTokenApprovalConfirming={isTokenApprovalConfirming}
-							isSending={isSending}
-							isConfirming={isConfirming}
-							disabled={!formValid}
-							tokenSymbol={tokenSymbol}
-							onApproveUsdc={approveUsdc}
-							onApproveToken={approveToken}
-							onSend={handleSend}
-						/>
-					</form>
-				</CardContent>
-			</Card>
+				<SendButton
+					needsUsdcApproval={needsUsdcApproval}
+					needsTokenApproval={needsTokenApproval}
+					isAllowanceLoading={isUsdcAllowanceLoading || isTokenAllowanceLoading}
+					insufficientUsdc={insufficientUsdc}
+					insufficientToken={insufficientToken}
+					isUsdcApproving={isUsdcApproving}
+					isUsdcApprovalConfirming={isUsdcApprovalConfirming}
+					isTokenApproving={isTokenApproving}
+					isTokenApprovalConfirming={isTokenApprovalConfirming}
+					isSending={isSending}
+					isConfirming={isConfirming}
+					disabled={!formValid}
+					tokenSymbol={tokenSymbol}
+					onApproveUsdc={approveUsdc}
+					onApproveToken={approveToken}
+					onSend={handleSend}
+				/>
+			</form>
 
 			<TransactionStatus
 				open={txDialogOpen && txState !== "idle"}
 				onOpenChange={handleTxDialogClose}
 				state={txState}
 				txHash={txHash}
-				title="Sending Tokens"
+				title="Dispatching batch"
 				onRetry={error ? handleRetry : undefined}
 				error={error ? formatErrorMessage(error, 120) : undefined}
 			/>
