@@ -292,7 +292,7 @@ export function LaunchPageClient({ initialData, initialStats }: Props) {
 							<button
 								type="button"
 								onClick={clearTags}
-								className="inline-flex items-center gap-1 rounded-full border border-border-hair px-2.5 py-1 text-xs text-text-tertiary hover:border-red-500/40 hover:text-red-400"
+								className="inline-flex items-center gap-1 rounded-full border border-border-hair px-2.5 py-1 text-xs text-text-tertiary hover:border-red/40 hover:text-red"
 							>
 								<XIcon className="size-3" />
 								Clear
@@ -383,19 +383,20 @@ export function LaunchPageClient({ initialData, initialStats }: Props) {
 								strokeWidth="2.5"
 							/>
 							<path d="M 40 240 Q 180 240 240 180 T 380 40 L 380 240 Z" fill="url(#curveFill)" />
-							<circle cx="280" cy="120" r="6" fill="#f472b6" />
-							<circle cx="280" cy="120" r="14" fill="#f472b6" opacity="0.3">
-								<animate attributeName="r" values="14;24;14" dur="2s" repeatCount="indefinite" />
+							{/* Graduation target — sits at the top of the curve. Not a live data point;
+							    this is an explainer diagram, so we anchor only at the $0 start and $69k
+							    graduation cap instead of showing an arbitrary NOW marker that would lie
+							    about a specific launch's current position. */}
+							<circle cx="380" cy="40" r="5" fill="var(--color-green)" />
+							<circle cx="380" cy="40" r="12" fill="var(--color-green)" opacity="0.25">
+								<animate attributeName="r" values="12;20;12" dur="2.4s" repeatCount="indefinite" />
 								<animate
 									attributeName="opacity"
-									values="0.3;0;0.3"
-									dur="2s"
+									values="0.25;0;0.25"
+									dur="2.4s"
 									repeatCount="indefinite"
 								/>
 							</circle>
-							<text x="290" y="118" fontSize="11" fill="#f472b6" fontFamily="var(--font-mono)">
-								NOW
-							</text>
 							<text
 								x="40"
 								y="260"
@@ -403,7 +404,7 @@ export function LaunchPageClient({ initialData, initialStats }: Props) {
 								fill="var(--color-text-tertiary)"
 								fontFamily="var(--font-mono)"
 							>
-								$0
+								$0 · START
 							</text>
 							<text
 								x="360"
@@ -411,8 +412,9 @@ export function LaunchPageClient({ initialData, initialStats }: Props) {
 								fontSize="10"
 								fill="var(--color-green)"
 								fontFamily="var(--font-mono)"
+								textAnchor="end"
 							>
-								$69k
+								$69k · GRADUATE
 							</text>
 						</svg>
 					</div>
