@@ -7,10 +7,29 @@ const NONCE_COOKIE = "forja_auth_nonce";
 const SESSION_DURATION = 24 * 60 * 60; // 24h in seconds
 const NONCE_MAX_AGE = 5 * 60; // 5 minutes
 
-function getSecret(): string {
+// Fail-fast at module load in production so missing secrets can't ship silently.
+if (!process.env.SESSION_SECRET && process.env.NODE_ENV === "production") {
+	throw new Error("SESSION_SECRET env var is required in production");
+}
+
+let warnedDevFallback = false;
+const SECRET: string = (() => {
+	const explicit = process.env.SESSION_SECRET;
+	if (explicit) return explicit;
+	// Dev/test fallback — derive from DATABASE_URL but warn once so it's visible.
+	if (!warnedDevFallback) {
+		warnedDevFallback = true;
+		console.warn(
+			"[session] SESSION_SECRET missing — using dev fallback. Set SESSION_SECRET in production.",
+		);
+	}
 	return createHmac("sha256", "forja-session-salt")
 		.update(process.env.DATABASE_URL || "dev-fallback")
 		.digest("hex");
+})();
+
+function getSecret(): Uint8Array {
+	return Buffer.from(SECRET);
 }
 
 function sign(payload: string): string {

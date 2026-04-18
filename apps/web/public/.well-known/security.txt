@@ -1,0 +1,6 @@
+Contact: mailto:security@forja.fun
+Expires: 2027-04-18T00:00:00.000Z
+Acknowledgments: https://forja.fun/security
+Canonical: https://forja.fun/.well-known/security.txt
+Policy: https://forja.fun/security
+Preferred-Languages: en, tr
