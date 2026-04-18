@@ -7,6 +7,33 @@ export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 export const revalidate = 3600;
 
+const FORJA_MARK = (
+	<svg width="48" height="48" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+		<title>Forja</title>
+		<defs>
+			<linearGradient id="forjaGold" x1="0" x2="1" y1="0" y2="1">
+				<stop offset="0" stopColor="#ffe5a8" />
+				<stop offset="0.5" stopColor="#f0d38a" />
+				<stop offset="1" stopColor="#e8b860" />
+			</linearGradient>
+		</defs>
+		<path
+			d="M4 10 L28 10 L26 14 L22 14 L22 20 L25 23 L25 26 L7 26 L7 23 L10 20 L10 14 L6 14 Z"
+			fill="url(#forjaGold)"
+		/>
+		<rect x="14" y="6" width="4" height="4" rx="0.5" fill="#ff6b3d" />
+	</svg>
+);
+
+const GOLD_TEXT_STYLE = {
+	background: "linear-gradient(135deg, #ffe5a8, #f0d38a 50%, #e8b860)",
+	backgroundClip: "text",
+	color: "transparent",
+} as const;
+
+const PAGE_BG =
+	"radial-gradient(circle at 30% 20%, rgba(240,211,138,0.18) 0%, transparent 55%), radial-gradient(circle at 75% 80%, rgba(255,107,61,0.12) 0%, transparent 55%), #0a0910";
+
 export default async function TokenOgImage({ params }: { params: Promise<{ address: string }> }) {
 	const { address } = await params;
 	const token = await getTokenDetail(address);
@@ -21,37 +48,32 @@ export default async function TokenOgImage({ params }: { params: Promise<{ addre
 					flexDirection: "column",
 					alignItems: "center",
 					justifyContent: "center",
-					backgroundColor: "#0F1116",
+					background: PAGE_BG,
 				}}
 			>
-				<div
-					style={{
-						fontSize: 96,
-						fontWeight: 700,
-						color: "#5b6ada",
-						letterSpacing: "-0.02em",
-					}}
-				>
-					FORJA
+				<div style={{ display: "flex", alignItems: "center", gap: 24 }}>
+					{FORJA_MARK}
+					<div
+						style={{
+							fontSize: 110,
+							fontWeight: 400,
+							letterSpacing: "-0.04em",
+							lineHeight: 1,
+							...GOLD_TEXT_STYLE,
+						}}
+					>
+						Forja
+					</div>
 				</div>
 				<div
 					style={{
-						fontSize: 36,
+						fontSize: 32,
 						fontWeight: 500,
-						color: "#F5F5F5",
+						color: "#ededf0",
 						marginTop: 16,
 					}}
 				>
-					Create. Send. Lock.
-				</div>
-				<div
-					style={{
-						fontSize: 22,
-						color: "#9CA3AF",
-						marginTop: 12,
-					}}
-				>
-					Token Toolkit for Tempo Blockchain
+					Token not found
 				</div>
 			</div>,
 			{ ...size },
@@ -67,11 +89,10 @@ export default async function TokenOgImage({ params }: { params: Promise<{ addre
 				height: "100%",
 				display: "flex",
 				flexDirection: "column",
-				backgroundColor: "#0F1116",
+				background: PAGE_BG,
 				padding: "60px 80px",
 			}}
 		>
-			{/* Top: FORJA branding */}
 			<div
 				style={{
 					display: "flex",
@@ -80,27 +101,32 @@ export default async function TokenOgImage({ params }: { params: Promise<{ addre
 					marginBottom: 48,
 				}}
 			>
-				<div
-					style={{
-						fontSize: 32,
-						fontWeight: 700,
-						color: "#5b6ada",
-						letterSpacing: "-0.02em",
-					}}
-				>
-					FORJA
+				<div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+					{FORJA_MARK}
+					<div
+						style={{
+							fontSize: 36,
+							fontWeight: 400,
+							letterSpacing: "-0.02em",
+							...GOLD_TEXT_STYLE,
+						}}
+					>
+						Forja
+					</div>
 				</div>
 				<div
 					style={{
-						fontSize: 18,
-						color: "#6B7280",
+						fontSize: 15,
+						color: "#7a7e93",
+						letterSpacing: "0.14em",
+						textTransform: "uppercase",
+						fontFamily: "monospace",
 					}}
 				>
-					Token Toolkit for Tempo
+					Token · Tempo
 				</div>
 			</div>
 
-			{/* Center: Token info */}
 			<div
 				style={{
 					display: "flex",
@@ -109,19 +135,19 @@ export default async function TokenOgImage({ params }: { params: Promise<{ addre
 					gap: 40,
 				}}
 			>
-				{/* Token icon placeholder */}
 				<div
 					style={{
-						width: 120,
-						height: 120,
-						borderRadius: 24,
-						backgroundColor: "#1F2937",
+						width: 130,
+						height: 130,
+						borderRadius: 28,
+						background: "linear-gradient(135deg, rgba(240,211,138,0.25), rgba(240,211,138,0.08))",
+						border: "1px solid rgba(240,211,138,0.35)",
 						display: "flex",
 						alignItems: "center",
 						justifyContent: "center",
-						fontSize: 56,
+						fontSize: 64,
 						fontWeight: 700,
-						color: "#5b6ada",
+						color: "#f0d38a",
 						flexShrink: 0,
 					}}
 				>
@@ -132,57 +158,112 @@ export default async function TokenOgImage({ params }: { params: Promise<{ addre
 					style={{
 						display: "flex",
 						flexDirection: "column",
-						gap: 8,
+						gap: 10,
 					}}
 				>
 					<div
 						style={{
-							fontSize: 52,
-							fontWeight: 700,
-							color: "#F5F5F5",
+							fontSize: 62,
+							fontWeight: 400,
+							color: "#ededf0",
 							letterSpacing: "-0.02em",
-							lineHeight: 1.1,
+							lineHeight: 1.05,
 						}}
 					>
 						{token.name}
 					</div>
 					<div
 						style={{
-							fontSize: 28,
+							fontSize: 22,
 							fontWeight: 500,
-							color: "#9CA3AF",
+							color: "#f0d38a",
+							letterSpacing: "0.12em",
+							textTransform: "uppercase",
+							fontFamily: "monospace",
 						}}
 					>
-						{`$${token.symbol}`}
+						${token.symbol}
 					</div>
 				</div>
 			</div>
 
-			{/* Bottom: Stats */}
 			<div
 				style={{
 					display: "flex",
 					gap: 48,
-					borderTop: "1px solid #374151",
+					borderTop: "1px solid rgba(255,255,255,0.08)",
 					paddingTop: 32,
 				}}
 			>
 				<div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-					<div style={{ fontSize: 16, color: "#6B7280" }}>Holders</div>
-					<div style={{ fontSize: 28, fontWeight: 600, color: "#F5F5F5" }}>
+					<div
+						style={{
+							fontSize: 13,
+							color: "#7a7e93",
+							letterSpacing: "0.14em",
+							textTransform: "uppercase",
+							fontFamily: "monospace",
+						}}
+					>
+						Holders
+					</div>
+					<div
+						style={{
+							fontSize: 30,
+							fontWeight: 500,
+							color: "#ededf0",
+							fontFamily: "monospace",
+						}}
+					>
 						{(token.holderCount ?? 0).toLocaleString()}
 					</div>
 				</div>
 				<div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-					<div style={{ fontSize: 16, color: "#6B7280" }}>Transfers</div>
-					<div style={{ fontSize: 28, fontWeight: 600, color: "#F5F5F5" }}>
+					<div
+						style={{
+							fontSize: 13,
+							color: "#7a7e93",
+							letterSpacing: "0.14em",
+							textTransform: "uppercase",
+							fontFamily: "monospace",
+						}}
+					>
+						Transfers
+					</div>
+					<div
+						style={{
+							fontSize: 30,
+							fontWeight: 500,
+							color: "#ededf0",
+							fontFamily: "monospace",
+						}}
+					>
 						{(token.transferCount ?? 0).toLocaleString()}
 					</div>
 				</div>
 				{token.isForjaCreated && (
 					<div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-						<div style={{ fontSize: 16, color: "#6B7280" }}>Created on</div>
-						<div style={{ fontSize: 28, fontWeight: 600, color: "#5b6ada" }}>FORJA</div>
+						<div
+							style={{
+								fontSize: 13,
+								color: "#7a7e93",
+								letterSpacing: "0.14em",
+								textTransform: "uppercase",
+								fontFamily: "monospace",
+							}}
+						>
+							Forged on
+						</div>
+						<div
+							style={{
+								fontSize: 30,
+								fontWeight: 500,
+								letterSpacing: "-0.01em",
+								...GOLD_TEXT_STYLE,
+							}}
+						>
+							FORJA
+						</div>
 					</div>
 				)}
 			</div>

@@ -7,8 +7,35 @@ export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 export const revalidate = 3600;
 
+const FORJA_MARK = (
+	<svg width="48" height="48" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+		<title>Forja</title>
+		<defs>
+			<linearGradient id="forjaGold" x1="0" x2="1" y1="0" y2="1">
+				<stop offset="0" stopColor="#ffe5a8" />
+				<stop offset="0.5" stopColor="#f0d38a" />
+				<stop offset="1" stopColor="#e8b860" />
+			</linearGradient>
+		</defs>
+		<path
+			d="M4 10 L28 10 L26 14 L22 14 L22 20 L25 23 L25 26 L7 26 L7 23 L10 20 L10 14 L6 14 Z"
+			fill="url(#forjaGold)"
+		/>
+		<rect x="14" y="6" width="4" height="4" rx="0.5" fill="#ff6b3d" />
+	</svg>
+);
+
+const GOLD_TEXT_STYLE = {
+	background: "linear-gradient(135deg, #ffe5a8, #f0d38a 50%, #e8b860)",
+	backgroundClip: "text",
+	color: "transparent",
+} as const;
+
+const PAGE_BG =
+	"radial-gradient(circle at 25% 20%, rgba(129,140,248,0.18) 0%, transparent 55%), radial-gradient(circle at 80% 85%, rgba(240,211,138,0.12) 0%, transparent 55%), #0a0910";
+
 function truncateAddress(address: string): string {
-	return `${address.slice(0, 8)}...${address.slice(-6)}`;
+	return `${address.slice(0, 8)}…${address.slice(-6)}`;
 }
 
 export default async function CreatorOgImage({ params }: { params: Promise<{ address: string }> }) {
@@ -25,38 +52,24 @@ export default async function CreatorOgImage({ params }: { params: Promise<{ add
 					flexDirection: "column",
 					alignItems: "center",
 					justifyContent: "center",
-					backgroundColor: "#0F1116",
+					background: PAGE_BG,
 				}}
 			>
-				<div
-					style={{
-						fontSize: 96,
-						fontWeight: 700,
-						color: "#5b6ada",
-						letterSpacing: "-0.02em",
-					}}
-				>
-					FORJA
+				<div style={{ display: "flex", alignItems: "center", gap: 24 }}>
+					{FORJA_MARK}
+					<div
+						style={{
+							fontSize: 110,
+							fontWeight: 400,
+							letterSpacing: "-0.04em",
+							lineHeight: 1,
+							...GOLD_TEXT_STYLE,
+						}}
+					>
+						Forja
+					</div>
 				</div>
-				<div
-					style={{
-						fontSize: 36,
-						fontWeight: 500,
-						color: "#F5F5F5",
-						marginTop: 16,
-					}}
-				>
-					Create. Send. Lock.
-				</div>
-				<div
-					style={{
-						fontSize: 22,
-						color: "#9CA3AF",
-						marginTop: 12,
-					}}
-				>
-					Token Toolkit for Tempo Blockchain
-				</div>
+				<div style={{ fontSize: 32, color: "#ededf0", marginTop: 16 }}>Creator not found</div>
 			</div>,
 			{ ...size },
 		);
@@ -69,11 +82,10 @@ export default async function CreatorOgImage({ params }: { params: Promise<{ add
 				height: "100%",
 				display: "flex",
 				flexDirection: "column",
-				backgroundColor: "#0F1116",
+				background: PAGE_BG,
 				padding: "60px 80px",
 			}}
 		>
-			{/* Top: FORJA branding */}
 			<div
 				style={{
 					display: "flex",
@@ -82,67 +94,60 @@ export default async function CreatorOgImage({ params }: { params: Promise<{ add
 					marginBottom: 48,
 				}}
 			>
-				<div
-					style={{
-						fontSize: 32,
-						fontWeight: 700,
-						color: "#5b6ada",
-						letterSpacing: "-0.02em",
-					}}
-				>
-					FORJA
+				<div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+					{FORJA_MARK}
+					<div
+						style={{
+							fontSize: 36,
+							fontWeight: 400,
+							letterSpacing: "-0.02em",
+							...GOLD_TEXT_STYLE,
+						}}
+					>
+						Forja
+					</div>
 				</div>
 				<div
 					style={{
-						fontSize: 18,
-						color: "#6B7280",
+						fontSize: 15,
+						color: "#7a7e93",
+						letterSpacing: "0.14em",
+						textTransform: "uppercase",
+						fontFamily: "monospace",
 					}}
 				>
-					Creator Profile
+					Creator · Tempo
 				</div>
 			</div>
 
-			{/* Center: Creator info */}
-			<div
-				style={{
-					display: "flex",
-					alignItems: "center",
-					flex: 1,
-					gap: 40,
-				}}
-			>
-				{/* Avatar placeholder */}
+			<div style={{ display: "flex", alignItems: "center", flex: 1, gap: 40 }}>
 				<div
 					style={{
-						width: 120,
-						height: 120,
-						borderRadius: 60,
-						backgroundColor: "#1F2937",
+						width: 130,
+						height: 130,
+						borderRadius: 65,
+						background: "linear-gradient(135deg, rgba(129,140,248,0.3), rgba(129,140,248,0.1))",
+						border: "1px solid rgba(129,140,248,0.4)",
 						display: "flex",
 						alignItems: "center",
 						justifyContent: "center",
-						fontSize: 48,
+						fontSize: 52,
 						fontWeight: 700,
-						color: "#5b6ada",
+						color: "#818cf8",
 						flexShrink: 0,
 					}}
 				>
 					{address.slice(2, 4).toUpperCase()}
 				</div>
 
-				<div
-					style={{
-						display: "flex",
-						flexDirection: "column",
-						gap: 12,
-					}}
-				>
+				<div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
 					<div
 						style={{
-							fontSize: 44,
-							fontWeight: 700,
-							color: "#F5F5F5",
+							fontSize: 54,
+							fontWeight: 400,
+							color: "#ededf0",
 							letterSpacing: "-0.02em",
+							lineHeight: 1.05,
 						}}
 					>
 						{profile.displayName ?? truncateAddress(address)}
@@ -150,9 +155,10 @@ export default async function CreatorOgImage({ params }: { params: Promise<{ add
 					{profile.displayName && (
 						<div
 							style={{
-								fontSize: 20,
-								color: "#9CA3AF",
+								fontSize: 18,
+								color: "#a7b0c5",
 								fontFamily: "monospace",
+								letterSpacing: "0.04em",
 							}}
 						>
 							{truncateAddress(address)}
@@ -160,52 +166,75 @@ export default async function CreatorOgImage({ params }: { params: Promise<{ add
 					)}
 					<div
 						style={{
-							fontSize: 24,
-							color: "#9CA3AF",
+							fontSize: 16,
+							color: "#7a7e93",
+							letterSpacing: "0.14em",
+							textTransform: "uppercase",
+							fontFamily: "monospace",
 						}}
 					>
-						Token Creator on Tempo
+						Token creator · Tempo
 					</div>
 				</div>
 			</div>
 
-			{/* Bottom: Stats */}
 			<div
 				style={{
 					display: "flex",
 					gap: 48,
-					borderTop: "1px solid #374151",
+					borderTop: "1px solid rgba(255,255,255,0.08)",
 					paddingTop: 32,
 				}}
 			>
-				<div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-					<div style={{ fontSize: 16, color: "#6B7280" }}>Tokens Created</div>
-					<div style={{ fontSize: 28, fontWeight: 600, color: "#F5F5F5" }}>
-						{(profile.tokensCreated ?? 0).toLocaleString()}
-					</div>
-				</div>
-				<div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-					<div style={{ fontSize: 16, color: "#6B7280" }}>Multisends</div>
-					<div style={{ fontSize: 28, fontWeight: 600, color: "#F5F5F5" }}>
-						{(profile.multisendCount ?? 0).toLocaleString()}
-					</div>
-				</div>
-				<div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-					<div style={{ fontSize: 16, color: "#6B7280" }}>Locks</div>
-					<div style={{ fontSize: 28, fontWeight: 600, color: "#F5F5F5" }}>
-						{(profile.lockCount ?? 0).toLocaleString()}
-					</div>
-				</div>
+				<StatCol label="Tokens" value={(profile.tokensCreated ?? 0).toLocaleString()} />
+				<StatCol label="Multisends" value={(profile.multisendCount ?? 0).toLocaleString()} />
+				<StatCol label="Locks" value={(profile.lockCount ?? 0).toLocaleString()} />
 				{profile.totalValueLocked && (
-					<div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-						<div style={{ fontSize: 16, color: "#6B7280" }}>Total Value Locked</div>
-						<div style={{ fontSize: 28, fontWeight: 600, color: "#5b6ada" }}>
-							{profile.totalValueLocked}
-						</div>
-					</div>
+					<StatCol
+						label="Value locked"
+						value={profile.totalValueLocked}
+						valueStyle={GOLD_TEXT_STYLE}
+					/>
 				)}
 			</div>
 		</div>,
 		{ ...size },
+	);
+}
+
+function StatCol({
+	label,
+	value,
+	valueStyle,
+}: {
+	label: string;
+	value: string;
+	valueStyle?: Record<string, string | number>;
+}) {
+	return (
+		<div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+			<div
+				style={{
+					fontSize: 13,
+					color: "#7a7e93",
+					letterSpacing: "0.14em",
+					textTransform: "uppercase",
+					fontFamily: "monospace",
+				}}
+			>
+				{label}
+			</div>
+			<div
+				style={{
+					fontSize: 30,
+					fontWeight: 500,
+					color: "#ededf0",
+					fontFamily: "monospace",
+					...(valueStyle ?? {}),
+				}}
+			>
+				{value}
+			</div>
+		</div>
 	);
 }
