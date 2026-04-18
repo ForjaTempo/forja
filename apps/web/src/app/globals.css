@@ -1,48 +1,74 @@
 @import "tailwindcss";
 
 @theme inline {
-	/* ── Surfaces (Tempo-aligned grayscale) ── */
-	--color-surface-page: #121212;
-	--color-surface-card: #1d1d1d;
-	--color-surface-field: #242424;
-	--color-surface-elevated: #2a2a2a;
+	/* ── Surfaces (forge editorial) ── */
+	--color-bg-page: #0b0b10;
+	--color-bg-void: #06060a;
+	--color-bg-elevated: #12121a;
+	--color-bg-card: #16161f;
+	--color-bg-field: #1c1c26;
 
-	/* ── Legacy aliases (backward compat — point to new values) ── */
-	--color-forge-black: #121212;
-	--color-anvil-gray: #1d1d1d;
-	--color-anvil-gray-light: #333333;
-	--color-deep-charcoal: #1d1d1d;
-	--color-obsidian-black: #121212;
+	/* ── Legacy aliases → map to new bg tokens so existing code doesn't break ── */
+	--color-surface-page: #0b0b10;
+	--color-surface-card: #16161f;
+	--color-surface-field: #1c1c26;
+	--color-surface-elevated: #12121a;
+	--color-forge-black: #0b0b10;
+	--color-anvil-gray: #16161f;
+	--color-anvil-gray-light: #1c1c26;
+	--color-deep-charcoal: #16161f;
+	--color-obsidian-black: #06060a;
 
-	/* ── Borders ── */
-	--color-border-subtle: #2a2a2a;
-	--color-border-standard: #333333;
-	--color-border-strong: #3a3a3a;
+	/* ── Borders (hair-thin, semantically layered) ── */
+	--color-border-hair: rgba(255, 255, 255, 0.06);
+	--color-border-subtle: rgba(255, 255, 255, 0.09);
+	--color-border-strong: rgba(255, 255, 255, 0.14);
+	--color-border-gold: rgba(240, 211, 138, 0.22);
+	/* Legacy aliases */
+	--color-border-standard: rgba(255, 255, 255, 0.09);
 
-	/* ── Text (5-tier) ── */
-	--color-steel-white: #ffffff;
-	--color-smoke: #a0a0a0;
-	--color-smoke-dark: #858585;
-	--color-text-muted: #666666;
+	/* ── Text (3-tier premium) ── */
+	--color-text-primary: #f5f5f0;
+	--color-text-secondary: #a6a6a0;
+	--color-text-tertiary: #666663;
+	/* Legacy aliases */
+	--color-steel-white: #f5f5f0;
+	--color-smoke: #a6a6a0;
+	--color-smoke-dark: #666663;
+	--color-text-muted: #666663;
 	--color-text-disabled: #4a4a4a;
 
-	/* ── Primary (Indigo) ── */
-	--color-indigo: #5b6ada;
-	--color-indigo-hover: #4553b6;
-	--color-indigo-dimmed: #2e356d;
+	/* ── Gold (primary accent, metallic) ── */
+	--color-gold: #f0d38a;
+	--color-gold-deep: #c9a24a;
+	--color-gold-bright: #ffe5a8;
+	--color-gold-glow: rgba(240, 211, 138, 0.5);
 
-	/* ── Accent (Amber — warning/heat ONLY) ── */
-	--color-molten-amber: #f59e0b;
-	--color-molten-amber-hover: #d97706;
+	/* ── Ember (hot accent, fire/heat) ── */
+	--color-ember: #ff6b3d;
+	--color-ember-deep: #d94a1f;
+	--color-ember-glow: rgba(255, 107, 61, 0.45);
+	/* Legacy aliases */
+	--color-molten-amber: #ff6b3d;
+	--color-molten-amber-hover: #d94a1f;
+
+	/* ── Indigo (secondary cool accent) ── */
+	--color-indigo: #818cf8;
+	--color-indigo-glow: rgba(129, 140, 248, 0.45);
+	--color-indigo-hover: #6366f1;
+	--color-indigo-dimmed: #3730a3;
 
 	/* ── Status ── */
-	--color-ember-red: #ef4444;
-	--color-forge-green: #34d399;
-	--color-warning: #f59e0b;
-	--color-info: #3b82f6;
+	--color-green: #4ade80;
+	--color-red: #f87171;
+	--color-forge-green: #4ade80;
+	--color-ember-red: #f87171;
+	--color-warning: #ff6b3d;
+	--color-info: #818cf8;
 
 	/* ── Fonts ── */
-	--font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+	--font-display: "Instrument Serif", "Times New Roman", serif;
+	--font-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
 	--font-mono: "JetBrains Mono", ui-monospace, monospace;
 
 	/* ── Radius ── */
@@ -50,32 +76,131 @@
 	--radius-md: 0.5rem;
 	--radius-lg: 0.75rem;
 	--radius-xl: 1rem;
+	--radius-2xl: 1.25rem;
+	--radius-3xl: 1.75rem;
 
-	/* ── Semantic Mappings (shadcn/ui) ── */
-	--color-background: var(--color-surface-page);
-	--color-foreground: var(--color-steel-white);
-	--color-card: var(--color-surface-card);
-	--color-card-foreground: var(--color-steel-white);
-	--color-popover: var(--color-surface-elevated);
-	--color-popover-foreground: var(--color-steel-white);
-	--color-primary: var(--color-indigo);
-	--color-primary-foreground: #ffffff;
-	--color-secondary: var(--color-surface-field);
-	--color-secondary-foreground: var(--color-steel-white);
-	--color-muted: var(--color-surface-field);
-	--color-muted-foreground: var(--color-smoke);
-	--color-accent: var(--color-surface-field);
-	--color-accent-foreground: var(--color-steel-white);
-	--color-destructive: var(--color-ember-red);
-	--color-border: var(--color-border-standard);
-	--color-input: var(--color-border-standard);
-	--color-ring: #51a2ff;
+	/* ── Easing ── */
+	--ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+	--ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+	/* ── shadcn/ui semantic tokens ── */
+	--color-background: #0b0b10;
+	--color-foreground: #f5f5f0;
+	--color-card: #16161f;
+	--color-card-foreground: #f5f5f0;
+	--color-popover: #12121a;
+	--color-popover-foreground: #f5f5f0;
+	--color-primary: #f0d38a;
+	--color-primary-foreground: #1a1307;
+	--color-secondary: #1c1c26;
+	--color-secondary-foreground: #f5f5f0;
+	--color-muted: #1c1c26;
+	--color-muted-foreground: #a6a6a0;
+	--color-accent: #1c1c26;
+	--color-accent-foreground: #f5f5f0;
+	--color-destructive: #f87171;
+	--color-border: rgba(255, 255, 255, 0.09);
+	--color-input: rgba(255, 255, 255, 0.09);
+	--color-ring: #f0d38a;
 
 	/* ── Animations ── */
 	--animate-fade-in: fade-in 0.3s ease-out both;
 	--animate-fade-in-up: fade-in-up 0.3s ease-out both;
 	--animate-pulse-glow: pulse-glow 3s ease-in-out infinite;
 	--animate-shimmer: shimmer 1.5s infinite;
+	--animate-ember-flicker: ember-flicker 2s ease-in-out infinite;
+	--animate-gold-sweep: gold-sweep 3s ease-in-out infinite;
+	--animate-float-slow: float-slow 6s ease-in-out infinite;
+	--animate-blur-in: blur-in 0.9s var(--ease-out) both;
+}
+
+* {
+	box-sizing: border-box;
+	margin: 0;
+	padding: 0;
+}
+
+html,
+body {
+	background: var(--color-bg-page);
+	color: var(--color-text-primary);
+	font-family: var(--font-sans);
+	-webkit-font-smoothing: antialiased;
+	text-rendering: optimizeLegibility;
+}
+
+body {
+	overflow-x: hidden;
+}
+
+a {
+	color: inherit;
+	text-decoration: none;
+}
+
+button {
+	font-family: inherit;
+	cursor: pointer;
+}
+
+input,
+textarea,
+select {
+	font-family: inherit;
+	outline: none;
+}
+
+::selection {
+	background: var(--color-gold);
+	color: #000;
+}
+
+.font-display {
+	font-family: var(--font-display);
+	font-weight: 400;
+}
+
+.gold-text {
+	background: linear-gradient(135deg, #ffe5a8 0%, #f0d38a 50%, #c9a24a 100%);
+	-webkit-background-clip: text;
+	background-clip: text;
+	-webkit-text-fill-color: transparent;
+	color: transparent;
+}
+
+.ember-text {
+	background: linear-gradient(135deg, #ff9466 0%, #ff6b3d 50%, #d94a1f 100%);
+	-webkit-background-clip: text;
+	background-clip: text;
+	-webkit-text-fill-color: transparent;
+	color: transparent;
+}
+
+/* Fine noise grain overlay — apply with <div class="noise"> wrapper */
+.noise {
+	position: relative;
+	min-height: 100vh;
+}
+.noise::before {
+	content: "";
+	position: fixed;
+	inset: 0;
+	pointer-events: none;
+	z-index: 1;
+	opacity: 0.04;
+	background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence baseFrequency='0.9' numOctaves='3'/></filter><rect width='200' height='200' filter='url(%23n)' opacity='0.8'/></svg>");
+}
+
+.reveal {
+	opacity: 0;
+	transform: translateY(24px);
+	transition:
+		opacity 0.9s var(--ease-out),
+		transform 0.9s var(--ease-out);
+}
+.reveal.in {
+	opacity: 1;
+	transform: translateY(0);
 }
 
 @keyframes fade-in {
@@ -86,7 +211,6 @@
 		opacity: 1;
 	}
 }
-
 @keyframes fade-in-up {
 	from {
 		opacity: 0;
@@ -97,7 +221,6 @@
 		transform: translateY(0);
 	}
 }
-
 @keyframes pulse-glow {
 	0%,
 	100% {
@@ -107,13 +230,50 @@
 		opacity: 0.8;
 	}
 }
-
 @keyframes shimmer {
 	0% {
 		background-position: -200% 0;
 	}
 	100% {
 		background-position: 200% 0;
+	}
+}
+@keyframes ember-flicker {
+	0%,
+	100% {
+		opacity: 1;
+	}
+	50% {
+		opacity: 0.55;
+	}
+}
+@keyframes gold-sweep {
+	0% {
+		background-position: -200% 0;
+	}
+	100% {
+		background-position: 200% 0;
+	}
+}
+@keyframes float-slow {
+	0%,
+	100% {
+		transform: translateY(0);
+	}
+	50% {
+		transform: translateY(-12px);
+	}
+}
+@keyframes blur-in {
+	from {
+		opacity: 0;
+		filter: blur(12px);
+		transform: translateY(12px);
+	}
+	to {
+		opacity: 1;
+		filter: blur(0);
+		transform: translateY(0);
 	}
 }
 
@@ -129,6 +289,6 @@
 }
 
 :focus-visible {
-	outline: 2px solid var(--color-ring);
+	outline: 2px solid var(--color-gold);
 	outline-offset: 2px;
 }

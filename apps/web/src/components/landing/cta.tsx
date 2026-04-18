@@ -1,32 +1,46 @@
 "use client";
 
-import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { ScrollReveal } from "@/components/ui/scroll-reveal";
+import Link from "next/link";
 
-interface CtaProps {
-	uniqueCreators?: number;
-}
-
-export function Cta({ uniqueCreators }: CtaProps) {
+export function Cta() {
 	return (
-		<section className="relative isolate overflow-hidden py-20 sm:py-24">
-			{/* Subtle radial glow */}
-			<div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10">
-				<div className="absolute bottom-0 left-1/2 h-[300px] w-[600px] -translate-x-1/2 rounded-full bg-indigo/6 blur-[100px]" />
-			</div>
-
-			<div className="mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
-				<ScrollReveal>
-					<h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Ready to forge?</h2>
-					<p className="mt-4 text-base text-smoke-dark sm:text-lg">
-						{uniqueCreators && uniqueCreators > 0
-							? `Join ${uniqueCreators} creator${uniqueCreators !== 1 ? "s" : ""} building on Tempo.`
-							: "Connect your wallet and start building on Tempo."}
-					</p>
-					<div className="mt-8 flex justify-center">
-						<ConnectButton />
+		<section className="px-6 pt-20 pb-16 lg:px-10">
+			<div className="mx-auto max-w-[1200px]">
+				<div
+					className="reveal relative overflow-hidden rounded-[28px] border border-border-gold px-16 py-20 text-center"
+					style={{
+						background: "linear-gradient(135deg, #1a1307 0%, #0b0b10 40%)",
+					}}
+				>
+					<div
+						aria-hidden
+						className="-top-52 -translate-x-1/2 absolute left-1/2 h-[400px] w-[800px] blur-3xl"
+						style={{
+							background: "radial-gradient(ellipse, rgba(240,211,138,0.5), transparent 70%)",
+						}}
+					/>
+					<div className="relative">
+						<div className="mb-5 font-mono text-[11px] text-gold uppercase tracking-[0.25em]">
+							Ready when you are
+						</div>
+						<h2 className="m-0 mb-7 font-display font-normal text-[clamp(44px,7vw,96px)] leading-[1] tracking-[-0.04em]">
+							The forge is <span className="gold-text italic">hot.</span>
+						</h2>
+						<p className="mx-auto mb-10 max-w-[540px] text-[18px] text-text-secondary leading-[1.5]">
+							Connect a wallet, pick a tool, ship a token in the next minute.
+						</p>
+						<Link
+							href="/create"
+							className="inline-flex items-center gap-2.5 rounded-[14px] px-7 py-4 font-semibold text-[#1a1307] text-[16px] transition-transform hover:-translate-y-0.5"
+							style={{
+								background: "linear-gradient(135deg, #ffe5a8, #f0d38a 50%, #e8b860)",
+								boxShadow: "0 6px 40px rgba(240,211,138,0.35)",
+							}}
+						>
+							Launch the app →
+						</Link>
 					</div>
-				</ScrollReveal>
+				</div>
 			</div>
 		</section>
 	);

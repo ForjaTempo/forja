@@ -1,9 +1,9 @@
 import Link from "next/link";
-import { Separator } from "@/components/ui/separator";
+import { ForjaLogo } from "@/components/shared/forja-logo";
 import { hasLaunchpad, hasSwap } from "@/lib/constants";
 import { hasClaimer } from "@/lib/contracts";
 
-const allProductLinks = [
+const allToolsLinks = [
 	{ label: "Create", href: "/create" },
 	{ label: "Multisend", href: "/multisend" },
 	{ label: "Lock", href: "/lock" },
@@ -13,148 +13,114 @@ const allProductLinks = [
 	{ label: "Tokens", href: "/tokens" },
 ] as const;
 
-const productLinks = allProductLinks.filter((link) => {
+const toolsLinks = allToolsLinks.filter((link) => {
 	if (link.href === "/claim/create" && !hasClaimer) return false;
 	if (link.href === "/launch" && !hasLaunchpad) return false;
 	if (link.href === "/swap" && !hasSwap) return false;
 	return true;
 });
 
-const communityLinks = [
-	{
-		label: "Twitter / X",
-		href: "https://x.com/ForjaTempo",
-		external: true,
-	},
-	{
-		label: "GitHub",
-		href: "https://github.com/ForjaTempo/forja",
-		external: true,
-	},
-] as const;
+const discoverLinks: Array<{ label: string; href: string; external?: boolean }> = [
+	{ label: "Trending", href: "/tokens?sort=trending" },
+	{ label: "New launches", href: "/launch" },
+	{ label: "Creators", href: "/tokens?source=forja" },
+];
 
-const networkLinks = [
-	{
-		label: "Tempo Explorer",
-		href: "https://explore.tempo.xyz",
-		external: true,
-	},
-] as const;
+const buildLinks: Array<{ label: string; href: string; external?: boolean }> = [
+	{ label: "GitHub", href: "https://github.com/ForjaTempo/forja", external: true },
+	{ label: "Contracts", href: "/security", external: false },
+	{ label: "security.txt", href: "/.well-known/security.txt", external: true },
+];
 
-const resourceLinks = [
-	{ label: "Security", href: "/security", external: false },
-	{
-		label: "security.txt",
-		href: "/.well-known/security.txt",
-		external: true,
-	},
-] as const;
+const connectLinks: Array<{ label: string; href: string; external?: boolean }> = [
+	{ label: "Twitter / X", href: "https://x.com/ForjaTempo", external: true },
+	{ label: "Tempo Explorer", href: "https://explore.tempo.xyz", external: true },
+];
+
+type FooterLink = { label: string; href: string; external?: boolean };
+
+const columns: Array<{ title: string; links: FooterLink[] }> = [
+	{ title: "Tools", links: toolsLinks.map((l) => ({ label: l.label, href: l.href })) },
+	{ title: "Discover", links: discoverLinks },
+	{ title: "Build", links: buildLinks },
+	{ title: "Connect", links: connectLinks },
+];
+
+function FooterLink({ label, href, external }: FooterLink) {
+	if (external) {
+		return (
+			<a
+				href={href}
+				target="_blank"
+				rel="noopener noreferrer"
+				className="text-[14px] text-text-secondary transition-colors hover:text-text-primary"
+			>
+				{label}
+			</a>
+		);
+	}
+	return (
+		<Link
+			href={href}
+			className="text-[14px] text-text-secondary transition-colors hover:text-text-primary"
+		>
+			{label}
+		</Link>
+	);
+}
 
 export function Footer() {
 	return (
-		<footer className="mt-auto">
-			<Separator className="bg-anvil-gray-light" />
-			<div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-				{/* Top — Branding */}
-				<div className="mb-10">
-					<p className="text-lg font-bold text-steel-white">FORJA</p>
-					<p className="mt-1 text-sm text-smoke-dark">Token platform for Tempo</p>
+		<footer className="relative mt-32 border-t border-border-hair">
+			<div className="mx-auto max-w-[1400px] px-6 py-20 lg:px-10">
+				<div className="grid gap-12 lg:grid-cols-[2fr_1fr_1fr_1fr_1fr]">
+					<div>
+						<div className="mb-5 flex items-center gap-2.5">
+							<ForjaLogo size={32} />
+							<span className="font-display text-[28px] tracking-[-0.02em]">Forja</span>
+						</div>
+						<p className="max-w-[340px] text-[14px] leading-[1.6] text-text-secondary">
+							The token forge for Tempo. Create, distribute, lock, claim, launch and trade — all on
+							the payments-first blockchain incubated by Stripe and Paradigm.
+						</p>
+					</div>
+					{columns.map((col) => (
+						<div key={col.title}>
+							<div className="mb-5 font-mono text-[11px] uppercase tracking-[0.14em] text-text-tertiary">
+								{col.title}
+							</div>
+							<ul className="flex flex-col gap-3">
+								{col.links.map((link) => (
+									<li key={`${col.title}-${link.href}`}>
+										<FooterLink {...link} />
+									</li>
+								))}
+							</ul>
+						</div>
+					))}
 				</div>
 
-				{/* Columns */}
-				<div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-					{/* Product */}
-					<div>
-						<p className="text-xs font-semibold uppercase tracking-widest text-smoke">Product</p>
-						<ul className="mt-3 space-y-2">
-							{productLinks.map((link) => (
-								<li key={link.href}>
-									<Link
-										href={link.href}
-										className="text-sm text-smoke-dark transition-colors hover:text-steel-white"
-									>
-										{link.label}
-									</Link>
-								</li>
-							))}
-						</ul>
+				<div className="mt-20 flex items-end justify-between border-border-hair border-t pt-10">
+					<div
+						aria-hidden
+						className="select-none font-display text-[clamp(80px,18vw,260px)] leading-[0.85] tracking-[-0.05em]"
+						style={{
+							background:
+								"linear-gradient(180deg, rgba(240,211,138,0.9) 0%, rgba(240,211,138,0.1) 70%, transparent 100%)",
+							WebkitBackgroundClip: "text",
+							backgroundClip: "text",
+							WebkitTextFillColor: "transparent",
+						}}
+					>
+						Forja
 					</div>
-
-					{/* Community */}
-					<div>
-						<p className="text-xs font-semibold uppercase tracking-widest text-smoke">Community</p>
-						<ul className="mt-3 space-y-2">
-							{communityLinks.map((link) => (
-								<li key={link.href}>
-									<a
-										href={link.href}
-										target="_blank"
-										rel="noopener noreferrer"
-										className="text-sm text-smoke-dark transition-colors hover:text-steel-white"
-									>
-										{link.label}
-									</a>
-								</li>
-							))}
-						</ul>
-					</div>
-
-					{/* Network */}
-					<div>
-						<p className="text-xs font-semibold uppercase tracking-widest text-smoke">Network</p>
-						<ul className="mt-3 space-y-2">
-							{networkLinks.map((link) => (
-								<li key={link.href}>
-									<a
-										href={link.href}
-										target="_blank"
-										rel="noopener noreferrer"
-										className="text-sm text-smoke-dark transition-colors hover:text-steel-white"
-									>
-										{link.label}
-									</a>
-								</li>
-							))}
-							<li className="text-sm text-smoke-dark">Chain ID: 4217</li>
-						</ul>
-					</div>
-
-					{/* Resources */}
-					<div>
-						<p className="text-xs font-semibold uppercase tracking-widest text-smoke">Resources</p>
-						<ul className="mt-3 space-y-2">
-							{resourceLinks.map((link) =>
-								link.external ? (
-									<li key={link.href}>
-										<a
-											href={link.href}
-											target="_blank"
-											rel="noopener noreferrer"
-											className="text-sm text-smoke-dark transition-colors hover:text-steel-white"
-										>
-											{link.label}
-										</a>
-									</li>
-								) : (
-									<li key={link.href}>
-										<Link
-											href={link.href}
-											className="text-sm text-smoke-dark transition-colors hover:text-steel-white"
-										>
-											{link.label}
-										</Link>
-									</li>
-								),
-							)}
-						</ul>
+					<div className="flex flex-col items-end gap-2 pb-5">
+						<div className="font-mono text-[12px] text-text-tertiary">
+							© 2026 — All rights forged
+						</div>
+						<div className="text-[12px] text-text-tertiary">Built on Tempo · Open source</div>
 					</div>
 				</div>
-
-				{/* Bottom */}
-				<Separator className="mt-10 bg-anvil-gray-light" />
-				<p className="mt-6 text-center text-xs text-smoke-dark">
-					&copy; 2026 FORJA. Built on Tempo.
-				</p>
 			</div>
 		</footer>
 	);
