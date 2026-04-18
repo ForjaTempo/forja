@@ -102,9 +102,11 @@ export const CLAIM_CAP_USD = Number(process.env.CLAIM_CAP_USD ?? "1000");
 export const CLAIMER_DEPLOY_TIMESTAMP = Number(process.env.CLAIMER_DEPLOY_TIMESTAMP ?? "0");
 export const CANARY_WINDOW_SECONDS = 7 * 24 * 60 * 60;
 
-export const APP_NAME = "FORJA";
+export const APP_NAME = "Forja";
+// Hero-synced tagline + explicit trust phrasing. Social cards should read
+// the same voice as the landing page so first-impression is consistent.
 export const APP_DESCRIPTION =
-	"Create, send, lock, claim, and launch tokens on Tempo blockchain — the all-in-one token platform.";
+	"Forge tokens at the speed of payments. The non-custodial token toolkit for Tempo — create, send, lock, claim, launch, and trade. No seed phrase needed. All contracts verified on-chain.";
 export const APP_URL = "https://forja.fun";
 
 if (typeof window === "undefined") {

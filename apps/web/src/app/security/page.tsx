@@ -64,9 +64,50 @@ export default function SecurityPage() {
 						Disclose safely. <span className="gold-text italic">Ship trust.</span>
 					</h1>
 					<p className="max-w-xl text-[14.5px] text-text-secondary">
-						Vulnerability disclosure, scope, and safe-harbor terms for FORJA.
+						Vulnerability disclosure, scope, and safe-harbor terms for Forja.
 					</p>
 				</header>
+
+				{/* Trust-at-a-glance — primary anti-phishing copy. These 4 points
+				    are the first thing a skeptical prospect reads after the hero. */}
+				<div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+					<div className="rounded-2xl border border-green/30 bg-green/5 p-4">
+						<div className="mb-1 font-mono text-[10px] text-green uppercase tracking-[0.14em]">
+							Non-custodial
+						</div>
+						<p className="text-[13px] text-text-secondary">
+							Your keys stay in your wallet. Forja never touches private keys or moves funds on
+							your behalf.
+						</p>
+					</div>
+					<div className="rounded-2xl border border-green/30 bg-green/5 p-4">
+						<div className="mb-1 font-mono text-[10px] text-green uppercase tracking-[0.14em]">
+							No seed phrase
+						</div>
+						<p className="text-[13px] text-text-secondary">
+							We never ask for your seed phrase. We sign on-chain transactions only — wallet
+							popup, you approve.
+						</p>
+					</div>
+					<div className="rounded-2xl border border-green/30 bg-green/5 p-4">
+						<div className="mb-1 font-mono text-[10px] text-green uppercase tracking-[0.14em]">
+							Verified contracts
+						</div>
+						<p className="text-[13px] text-text-secondary">
+							All 7 contracts have canonical source verified on Sourcify. Bytecode ↔ Solidity
+							match, fully inspectable.
+						</p>
+					</div>
+					<div className="rounded-2xl border border-green/30 bg-green/5 p-4">
+						<div className="mb-1 font-mono text-[10px] text-green uppercase tracking-[0.14em]">
+							Open source
+						</div>
+						<p className="text-[13px] text-text-secondary">
+							Frontend + contracts live on GitHub. Every line reviewable, every deploy
+							reproducible.
+						</p>
+					</div>
+				</div>
 
 				<div className="mt-10 space-y-5">
 					<section className={cardCls}>

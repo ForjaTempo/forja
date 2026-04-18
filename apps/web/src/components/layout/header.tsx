@@ -121,6 +121,21 @@ export function Header() {
 				</nav>
 
 				<div className="ml-auto flex shrink-0 items-center gap-2">
+					{/* Verify/security chip — primary trust signal in header so prospects
+					    researching forja.fun during the OKX phishing-alert period can
+					    reach the security policy in one click without scrolling to the
+					    footer. Opens /security (contract list + disclosure + safe harbor). */}
+					<Link
+						href="/security"
+						className="hidden items-center gap-1.5 rounded-full border border-green/30 bg-green/10 px-2.5 py-1 font-mono text-[11px] text-green transition-colors hover:border-green/50 hover:bg-green/15 sm:inline-flex"
+						title="Verify contracts · security policy"
+					>
+						<span
+							aria-hidden
+							className="size-1.5 rounded-full bg-green shadow-[0_0_6px_var(--color-green)]"
+						/>
+						<span className="tracking-[0.1em]">VERIFIED</span>
+					</Link>
 					<div className="hidden items-center gap-2 rounded-full border border-border-subtle bg-bg-elevated px-3 py-1.5 font-mono text-[12px] text-text-secondary xl:flex">
 						<span
 							aria-hidden
