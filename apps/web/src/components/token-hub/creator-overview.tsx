@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useAccount } from "wagmi";
+import { ExternalLinkGuard } from "@/components/shared/external-link-guard";
 import { AddressDisplay } from "@/components/ui/address-display";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -157,19 +158,17 @@ export function CreatorOverview({ profile }: CreatorOverviewProps) {
 					{(profile.website || profile.twitterHandle || profile.telegramHandle) && (
 						<div className="mt-4 flex flex-wrap items-center gap-2">
 							{profile.website && (
-								<a
+								<ExternalLinkGuard
 									href={
 										profile.website.startsWith("http")
 											? profile.website
 											: `https://${profile.website}`
 									}
-									target="_blank"
-									rel="noopener noreferrer"
 									className="inline-flex items-center gap-1.5 rounded-md border border-anvil-gray-light bg-anvil-gray/40 px-2.5 py-1 text-xs text-smoke hover:border-indigo/50 hover:text-indigo"
 								>
 									<GlobeIcon className="size-3" />
 									Website
-								</a>
+								</ExternalLinkGuard>
 							)}
 							{profile.twitterHandle && (
 								<a
