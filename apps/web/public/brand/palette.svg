@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 600" fill="none" role="img" aria-label="Forja color palette">
+  <title>Forja color palette</title>
+  <defs>
+    <linearGradient id="pgold" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#ffe5a8"/>
+      <stop offset="0.5" stop-color="#f0d38a"/>
+      <stop offset="1" stop-color="#e8b860"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="600" fill="#0a0910"/>
+
+  <!-- Title -->
+  <text x="60" y="72" font-family="'Instrument Serif', serif" font-size="56" font-weight="400" letter-spacing="-1" fill="#f5f5f0">Forge palette</text>
+  <text x="60" y="108" font-family="'JetBrains Mono', monospace" font-size="13" letter-spacing="2" fill="#7a7e93">CORE TOKENS · CTA PRIMARY · ACCENT</text>
+
+  <!-- Row 1: Accent colors -->
+  <g transform="translate(60, 160)">
+    <!-- Gold -->
+    <rect width="180" height="180" rx="16" fill="url(#pgold)"/>
+    <text x="16" y="148" font-family="'JetBrains Mono', monospace" font-size="14" fill="#1a1307">GOLD</text>
+    <text x="16" y="168" font-family="'JetBrains Mono', monospace" font-size="12" fill="#1a1307" opacity="0.7">#F0D38A</text>
+
+    <!-- Ember -->
+    <rect x="200" width="180" height="180" rx="16" fill="#ff6b3d"/>
+    <text x="216" y="148" font-family="'JetBrains Mono', monospace" font-size="14" fill="#2b0a00">EMBER</text>
+    <text x="216" y="168" font-family="'JetBrains Mono', monospace" font-size="12" fill="#2b0a00" opacity="0.7">#FF6B3D</text>
+
+    <!-- Indigo -->
+    <rect x="400" width="180" height="180" rx="16" fill="#818cf8"/>
+    <text x="416" y="148" font-family="'JetBrains Mono', monospace" font-size="14" fill="#0b0b1a">INDIGO</text>
+    <text x="416" y="168" font-family="'JetBrains Mono', monospace" font-size="12" fill="#0b0b1a" opacity="0.7">#818CF8</text>
+
+    <!-- Green -->
+    <rect x="600" width="180" height="180" rx="16" fill="#4ade80"/>
+    <text x="616" y="148" font-family="'JetBrains Mono', monospace" font-size="14" fill="#062017">GREEN</text>
+    <text x="616" y="168" font-family="'JetBrains Mono', monospace" font-size="12" fill="#062017" opacity="0.7">#4ADE80</text>
+
+    <!-- Red -->
+    <rect x="800" width="180" height="180" rx="16" fill="#f87171"/>
+    <text x="816" y="148" font-family="'JetBrains Mono', monospace" font-size="14" fill="#2b0505">RED</text>
+    <text x="816" y="168" font-family="'JetBrains Mono', monospace" font-size="12" fill="#2b0505" opacity="0.7">#F87171</text>
+
+    <!-- Pink (launchpad) -->
+    <rect x="1000" width="80" height="180" rx="16" fill="#f472b6"/>
+    <text x="1012" y="148" font-family="'JetBrains Mono', monospace" font-size="12" fill="#2b071a">PINK</text>
+  </g>
+
+  <!-- Row 2: Surfaces -->
+  <g transform="translate(60, 384)">
+    <text y="-16" font-family="'JetBrains Mono', monospace" font-size="11" letter-spacing="2" fill="#7a7e93">SURFACES</text>
+
+    <rect width="180" height="120" rx="12" fill="#0a0910" stroke="rgba(255,255,255,0.06)"/>
+    <text x="16" y="92" font-family="'JetBrains Mono', monospace" font-size="12" fill="#a6a6a0">bg-page</text>
+    <text x="16" y="110" font-family="'JetBrains Mono', monospace" font-size="11" fill="#666663">#0B0B10</text>
+
+    <rect x="200" width="180" height="120" rx="12" fill="#06060a" stroke="rgba(255,255,255,0.06)"/>
+    <text x="216" y="92" font-family="'JetBrains Mono', monospace" font-size="12" fill="#a6a6a0">bg-void</text>
+    <text x="216" y="110" font-family="'JetBrains Mono', monospace" font-size="11" fill="#666663">#06060A</text>
+
+    <rect x="400" width="180" height="120" rx="12" fill="#12121a" stroke="rgba(255,255,255,0.09)"/>
+    <text x="416" y="92" font-family="'JetBrains Mono', monospace" font-size="12" fill="#f5f5f0">bg-elevated</text>
+    <text x="416" y="110" font-family="'JetBrains Mono', monospace" font-size="11" fill="#a6a6a0">#12121A</text>
+
+    <rect x="600" width="180" height="120" rx="12" fill="#16161f" stroke="rgba(255,255,255,0.09)"/>
+    <text x="616" y="92" font-family="'JetBrains Mono', monospace" font-size="12" fill="#f5f5f0">bg-card</text>
+    <text x="616" y="110" font-family="'JetBrains Mono', monospace" font-size="11" fill="#a6a6a0">#16161F</text>
+
+    <rect x="800" width="180" height="120" rx="12" fill="#1c1c26" stroke="rgba(255,255,255,0.09)"/>
+    <text x="816" y="92" font-family="'JetBrains Mono', monospace" font-size="12" fill="#f5f5f0">bg-field</text>
+    <text x="816" y="110" font-family="'JetBrains Mono', monospace" font-size="11" fill="#a6a6a0">#1C1C26</text>
+  </g>
+
+  <!-- Footer -->
+  <text x="60" y="568" font-family="'JetBrains Mono', monospace" font-size="11" letter-spacing="2" fill="#7a7e93">FORJA BRAND · FORGE EDITORIAL · 2026</text>
+</svg>

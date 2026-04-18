@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" fill="none" role="img" aria-label="Forja avatar">
+  <title>Forja</title>
+  <defs>
+    <linearGradient id="avBg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#14131a"/>
+      <stop offset="1" stop-color="#0a0910"/>
+    </linearGradient>
+    <radialGradient id="avGlow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="rgba(240,211,138,0.22)"/>
+      <stop offset="1" stop-color="rgba(240,211,138,0)"/>
+    </radialGradient>
+    <linearGradient id="avGold" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#ffe5a8"/>
+      <stop offset="0.5" stop-color="#f0d38a"/>
+      <stop offset="1" stop-color="#e8b860"/>
+    </linearGradient>
+  </defs>
+  <!-- Dark base -->
+  <rect width="400" height="400" fill="url(#avBg)"/>
+  <!-- Gold radial glow behind the mark -->
+  <rect width="400" height="400" fill="url(#avGlow)"/>
+  <!-- Subtle hairline border -->
+  <rect x="0.5" y="0.5" width="399" height="399" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+  <!-- Forja mark centered, 240px wide -->
+  <g transform="translate(80, 80) scale(7.5)">
+    <path d="M4 10 L28 10 L26 14 L22 14 L22 20 L25 23 L25 26 L7 26 L7 23 L10 20 L10 14 L6 14 Z" fill="url(#avGold)"/>
+    <rect x="14" y="6" width="4" height="4" rx="0.5" fill="#ff6b3d"/>
+  </g>
+</svg>

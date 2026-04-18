@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1500 500" fill="none" role="img" aria-label="Forja X banner">
+  <title>Forja — Token toolkit for Tempo</title>
+  <defs>
+    <linearGradient id="bnBg" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#0a0910"/>
+      <stop offset="1" stop-color="#12121a"/>
+    </linearGradient>
+    <radialGradient id="bnGlow1" cx="0.3" cy="0.4" r="0.45">
+      <stop offset="0" stop-color="rgba(240,211,138,0.22)"/>
+      <stop offset="1" stop-color="rgba(240,211,138,0)"/>
+    </radialGradient>
+    <radialGradient id="bnGlow2" cx="0.75" cy="0.7" r="0.35">
+      <stop offset="0" stop-color="rgba(255,107,61,0.15)"/>
+      <stop offset="1" stop-color="rgba(255,107,61,0)"/>
+    </radialGradient>
+    <linearGradient id="bnMark" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#ffe5a8"/>
+      <stop offset="0.5" stop-color="#f0d38a"/>
+      <stop offset="1" stop-color="#e8b860"/>
+    </linearGradient>
+    <linearGradient id="bnText" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#ffe5a8"/>
+      <stop offset="0.5" stop-color="#f0d38a"/>
+      <stop offset="1" stop-color="#c9a24a"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Base -->
+  <rect width="1500" height="500" fill="url(#bnBg)"/>
+  <rect width="1500" height="500" fill="url(#bnGlow1)"/>
+  <rect width="1500" height="500" fill="url(#bnGlow2)"/>
+
+  <!-- Horizontal grid lines, very subtle -->
+  <g stroke="rgba(255,255,255,0.04)" stroke-width="1">
+    <line x1="0" y1="125" x2="1500" y2="125"/>
+    <line x1="0" y1="250" x2="1500" y2="250"/>
+    <line x1="0" y1="375" x2="1500" y2="375"/>
+  </g>
+
+  <!-- Left block: mark + wordmark + tagline -->
+  <g transform="translate(90, 168)">
+    <!-- Mark 120px -->
+    <g transform="scale(3.75)">
+      <path d="M4 10 L28 10 L26 14 L22 14 L22 20 L25 23 L25 26 L7 26 L7 23 L10 20 L10 14 L6 14 Z" fill="url(#bnMark)"/>
+      <rect x="14" y="6" width="4" height="4" rx="0.5" fill="#ff6b3d"/>
+    </g>
+  </g>
+
+  <!-- Wordmark right of mark -->
+  <text
+    x="240"
+    y="278"
+    font-family="'Instrument Serif', 'Times New Roman', serif"
+    font-size="152"
+    font-weight="400"
+    letter-spacing="-5"
+    fill="url(#bnText)"
+  >Forja</text>
+
+  <!-- Eyebrow line above tagline -->
+  <g transform="translate(90, 335)">
+    <rect width="36" height="1" fill="#f0d38a" opacity="0.7"/>
+  </g>
+
+  <!-- Tagline -->
+  <text
+    x="90"
+    y="378"
+    font-family="'Geist', system-ui, sans-serif"
+    font-size="28"
+    font-weight="500"
+    letter-spacing="-0.3"
+    fill="#ededf0"
+  >Create. Send. Lock. Claim. Launch. Trade.</text>
+
+  <!-- Sub-tagline / mono eyebrow (right-bottom or below main tagline) -->
+  <text
+    x="90"
+    y="416"
+    font-family="'JetBrains Mono', ui-monospace, monospace"
+    font-size="16"
+    font-weight="500"
+    letter-spacing="3.5"
+    fill="#a6a6a0"
+  >TOKEN TOOLKIT · TEMPO MAINNET · FORJA.FUN</text>
+
+  <!-- Decorative right-side spark -->
+  <g transform="translate(1200, 220)">
+    <circle cx="40" cy="40" r="6" fill="#ff6b3d" opacity="0.9"/>
+    <circle cx="40" cy="40" r="14" fill="none" stroke="rgba(255,107,61,0.4)" stroke-width="1"/>
+    <circle cx="40" cy="40" r="28" fill="none" stroke="rgba(255,107,61,0.2)" stroke-width="1"/>
+    <circle cx="40" cy="40" r="48" fill="none" stroke="rgba(255,107,61,0.1)" stroke-width="1"/>
+  </g>
+
+  <!-- Bottom accent line -->
+  <rect x="0" y="498" width="1500" height="2" fill="url(#bnMark)" opacity="0.5"/>
+</svg>
