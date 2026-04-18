@@ -222,6 +222,64 @@ export async function getSwapQuote(params: {
 }
 
 /**
+ * Fetch ERC-20 metadata (name, symbol, decimals) directly from chain. Used by
+ * the Token Picker's "import by address" path for tokens that aren't in
+ * token_hub_cache (e.g. non-TIP-20 ERC-20s that nonetheless have Uniswap v4
+ * pools and should be tradeable).
+ */
+export async function getOnchainTokenMetadata(
+	address: string,
+): Promise<{ address: string; name: string; symbol: string; decimals: number } | null> {
+	if (!isAddress(address)) return null;
+	const erc20 = [
+		{
+			type: "function",
+			name: "name",
+			stateMutability: "view",
+			inputs: [],
+			outputs: [{ type: "string" }],
+		},
+		{
+			type: "function",
+			name: "symbol",
+			stateMutability: "view",
+			inputs: [],
+			outputs: [{ type: "string" }],
+		},
+		{
+			type: "function",
+			name: "decimals",
+			stateMutability: "view",
+			inputs: [],
+			outputs: [{ type: "uint8" }],
+		},
+	] as const;
+	try {
+		const [name, symbol, decimals] = await Promise.all([
+			indexerClient.readContract({
+				address: address as Address,
+				abi: erc20,
+				functionName: "name",
+			}) as Promise<string>,
+			indexerClient.readContract({
+				address: address as Address,
+				abi: erc20,
+				functionName: "symbol",
+			}) as Promise<string>,
+			indexerClient.readContract({
+				address: address as Address,
+				abi: erc20,
+				functionName: "decimals",
+			}) as Promise<number>,
+		]);
+		return { address, name, symbol, decimals: Number(decimals) };
+	} catch (err) {
+		console.error("[swaps] getOnchainTokenMetadata failed:", err);
+		return null;
+	}
+}
+
+/**
  * Cheap pool-existence check. Used by Token Hub / detail pages to gate the
  * Swap CTA without computing a full quote.
  */
