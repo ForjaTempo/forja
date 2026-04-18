@@ -117,37 +117,58 @@ export function useSwap(): UseSwapReturn {
 				setIsSigning(false);
 			}
 
-			await writeContractAsync({
-				address: swapRouterConfig.address,
-				abi: swapRouterConfig.abi,
-				functionName: "swapExactInputSingle",
-				args: [
-					{
-						poolKey: {
-							currency0: quote.poolKey.currency0 as `0x${string}`,
-							currency1: quote.poolKey.currency1 as `0x${string}`,
-							fee: quote.poolKey.fee,
-							tickSpacing: quote.poolKey.tickSpacing,
-							hooks: quote.poolKey.hooks as `0x${string}`,
+			const permit = {
+				permitted: {
+					token: quote.tokenIn as `0x${string}`,
+					amount: BigInt(quote.amountIn),
+				},
+				nonce,
+				deadline,
+			};
+
+			if (quote.venue === "enshrined") {
+				await writeContractAsync({
+					address: swapRouterConfig.address,
+					abi: swapRouterConfig.abi,
+					functionName: "swapStablecoinExactInput",
+					args: [
+						{
+							tokenIn: quote.tokenIn as `0x${string}`,
+							tokenOut: quote.tokenOut as `0x${string}`,
+							amountIn: BigInt(quote.amountIn),
+							minAmountOut: BigInt(quote.minAmountOut),
+							deadline,
 						},
-						zeroForOne: quote.zeroForOne,
-						amountIn: BigInt(quote.amountIn),
-						minAmountOut: BigInt(quote.minAmountOut),
-						sqrtPriceLimitX96: BigInt(quote.sqrtPriceLimitX96),
-						deadline,
-						hookData: "0x",
-					},
-					{
-						permitted: {
-							token: quote.tokenIn as `0x${string}`,
-							amount: BigInt(quote.amountIn),
+						permit,
+						signature,
+					],
+				});
+			} else {
+				await writeContractAsync({
+					address: swapRouterConfig.address,
+					abi: swapRouterConfig.abi,
+					functionName: "swapExactInputSingle",
+					args: [
+						{
+							poolKey: {
+								currency0: quote.poolKey.currency0 as `0x${string}`,
+								currency1: quote.poolKey.currency1 as `0x${string}`,
+								fee: quote.poolKey.fee,
+								tickSpacing: quote.poolKey.tickSpacing,
+								hooks: quote.poolKey.hooks as `0x${string}`,
+							},
+							zeroForOne: quote.zeroForOne,
+							amountIn: BigInt(quote.amountIn),
+							minAmountOut: BigInt(quote.minAmountOut),
+							sqrtPriceLimitX96: BigInt(quote.sqrtPriceLimitX96),
+							deadline,
+							hookData: "0x",
 						},
-						nonce,
-						deadline,
-					},
-					signature,
-				],
-			});
+						permit,
+						signature,
+					],
+				});
+			}
 		},
 		[address, chainId, signTypedDataAsync, writeContractAsync],
 	);

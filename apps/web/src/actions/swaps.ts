@@ -142,9 +142,11 @@ export async function getSwapVolumeByToken(
 
 /**
  * Serializable shape of a SwapQuote — all bigints become decimal strings so
- * the result crosses the server-action boundary cleanly.
+ * the result crosses the server-action boundary cleanly. A discriminated
+ * union on `venue` distinguishes Uniswap v4 routes (with poolKey + sqrt price
+ * metadata) from the enshrined-DEX route (no pool key needed).
  */
-export interface SerializedSwapQuote {
+interface SerializedSwapQuoteBase {
 	tokenIn: string;
 	tokenOut: string;
 	amountIn: string;
@@ -153,21 +155,27 @@ export interface SerializedSwapQuote {
 	amountOut: string;
 	minAmountOut: string;
 	priceImpactBps: number;
-	poolKey: {
-		currency0: string;
-		currency1: string;
-		fee: number;
-		tickSpacing: number;
-		hooks: string;
-	};
-	zeroForOne: boolean;
-	sqrtPriceLimitX96: string;
-	sqrtPriceX96Before: string;
-	sqrtPriceX96After: string;
 }
 
+export type SerializedSwapQuote =
+	| (SerializedSwapQuoteBase & {
+			venue: "v4";
+			poolKey: {
+				currency0: string;
+				currency1: string;
+				fee: number;
+				tickSpacing: number;
+				hooks: string;
+			};
+			zeroForOne: boolean;
+			sqrtPriceLimitX96: string;
+			sqrtPriceX96Before: string;
+			sqrtPriceX96After: string;
+	  })
+	| (SerializedSwapQuoteBase & { venue: "enshrined" });
+
 function serializeQuote(q: SwapQuote): SerializedSwapQuote {
-	return {
+	const base = {
 		tokenIn: q.tokenIn,
 		tokenOut: q.tokenOut,
 		amountIn: q.amountIn.toString(),
@@ -176,6 +184,13 @@ function serializeQuote(q: SwapQuote): SerializedSwapQuote {
 		amountOut: q.amountOut.toString(),
 		minAmountOut: q.minAmountOut.toString(),
 		priceImpactBps: q.priceImpactBps,
+	};
+	if (q.venue === "enshrined") {
+		return { ...base, venue: "enshrined" };
+	}
+	return {
+		...base,
+		venue: "v4",
 		poolKey: { ...q.poolKey },
 		zeroForOne: q.zeroForOne,
 		sqrtPriceLimitX96: q.sqrtPriceLimitX96.toString(),

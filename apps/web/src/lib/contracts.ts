@@ -83,6 +83,42 @@ export const swapRouterConfig = {
 			inputs: [],
 			outputs: [{ type: "uint256" }],
 		},
+		{
+			type: "function",
+			name: "swapStablecoinExactInput",
+			stateMutability: "nonpayable",
+			inputs: [
+				{
+					name: "params",
+					type: "tuple",
+					components: [
+						{ name: "tokenIn", type: "address" },
+						{ name: "tokenOut", type: "address" },
+						{ name: "amountIn", type: "uint256" },
+						{ name: "minAmountOut", type: "uint256" },
+						{ name: "deadline", type: "uint256" },
+					],
+				},
+				{
+					name: "permit",
+					type: "tuple",
+					components: [
+						{
+							name: "permitted",
+							type: "tuple",
+							components: [
+								{ name: "token", type: "address" },
+								{ name: "amount", type: "uint256" },
+							],
+						},
+						{ name: "nonce", type: "uint256" },
+						{ name: "deadline", type: "uint256" },
+					],
+				},
+				{ name: "signature", type: "bytes" },
+			],
+			outputs: [{ name: "amountOut", type: "uint256" }],
+		},
 	],
 } as const;
 
