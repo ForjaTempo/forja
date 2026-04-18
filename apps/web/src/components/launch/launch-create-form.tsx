@@ -1,6 +1,5 @@
 "use client";
 
-import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useQuery } from "@tanstack/react-query";
 import {
 	ArrowLeftIcon,
@@ -21,6 +20,7 @@ import { type ChangeEvent, useCallback, useEffect, useRef, useState } from "reac
 import { parseUnits } from "viem";
 import { useAccount } from "wagmi";
 import { getLaunchDbId, saveLaunchMetadata } from "@/actions/launches";
+import { ConnectCta } from "@/components/shared/connect-cta";
 import { triggerConfetti } from "@/components/ui/confetti";
 import { FilterChip } from "@/components/ui/filter-chip";
 import { ImageUpload } from "@/components/ui/image-upload";
@@ -150,7 +150,7 @@ export function LaunchCreateForm() {
 				<WalletIcon className="size-12 text-text-tertiary" />
 				<h2 className="font-display text-2xl font-normal text-text-primary">Connect your wallet</h2>
 				<p className="text-sm text-text-secondary">Connect your wallet to create a launch.</p>
-				<ConnectButton />
+				<ConnectCta fullWidth={false} />
 			</div>
 		);
 	}

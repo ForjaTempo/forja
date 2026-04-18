@@ -1,9 +1,9 @@
 "use client";
 
-import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { LoaderIcon } from "lucide-react";
 import type { CSSProperties } from "react";
 import { useAccount } from "wagmi";
+import { ConnectCta } from "@/components/shared/connect-cta";
 import { cn } from "@/lib/utils";
 
 interface LockButtonProps {
@@ -57,20 +57,7 @@ export function LockButton({
 	const { isConnected } = useAccount();
 
 	if (!isConnected) {
-		return (
-			<ConnectButton.Custom>
-				{({ openConnectModal }) => (
-					<button
-						type="button"
-						className={goldButtonCls}
-						style={goldButtonStyle}
-						onClick={openConnectModal}
-					>
-						Connect wallet
-					</button>
-				)}
-			</ConnectButton.Custom>
-		);
+		return <ConnectCta />;
 	}
 
 	if (isAllowanceLoading) {

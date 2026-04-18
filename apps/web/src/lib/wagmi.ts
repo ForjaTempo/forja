@@ -21,9 +21,27 @@ if (walletConnectProjectId === "00000000000000000000000000000000") {
 	}
 }
 
+/**
+ * Tempo uses USDC as its native gas token (not ETH). wagmi/chains ships
+ * a nativeCurrency for Tempo, but some wallet providers fall back to 18
+ * decimals when the metadata is read loosely — which causes balance reads
+ * to format as "NaN USD" in the RainbowKit account modal. We force the
+ * correct { symbol: "USDC", decimals: 6 } shape here so downstream
+ * useBalance calls always parse cleanly.
+ */
+const tempoMainnet = {
+	...tempo,
+	nativeCurrency: { name: "USD Coin", symbol: "USDC", decimals: 6 },
+} as const;
+
+const tempoTestnet = {
+	...tempoModerato,
+	nativeCurrency: { name: "USD Coin", symbol: "USDC", decimals: 6 },
+} as const;
+
 export const config: Config = getDefaultConfig({
 	appName: APP_NAME,
 	projectId: walletConnectProjectId,
-	chains: [tempo, tempoModerato],
+	chains: [tempoMainnet, tempoTestnet],
 	ssr: true,
 });

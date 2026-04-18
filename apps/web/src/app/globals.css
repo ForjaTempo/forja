@@ -1,11 +1,9 @@
-/* External vendor CSS must import BEFORE `@import "tailwindcss"` so it sits
-   in the base cascade layer. When imported after tailwindcss, Tailwind v4's
-   compiler inlines its output then treats any trailing @import as invalid
-   per CSS spec (imports must precede style rules) — silently dropping it on
-   production builds and causing FOUC on cold load. Defensive modal CSS at
-   the bottom of this file keeps the modal background even if cascade shifts. */
-@import "@rainbow-me/rainbowkit/styles.css";
 @import "tailwindcss";
+/* RainbowKit CSS is NOT imported here. Nested @import in a Tailwind v4 entry
+   caused cold-load FOUC on production builds — the global CSS chunk and the
+   vendor chunk raced. We now import @rainbow-me/rainbowkit/styles.css from
+   layout.tsx so Next 16's cssChunking:"strict" ordering places it
+   deterministically alongside globals.css. */
 
 @theme inline {
 	/* ── Surfaces (forge editorial) ── */
