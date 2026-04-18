@@ -8,21 +8,28 @@ import { computePoolId, type PoolKey } from "./pool";
  * read pool state without each pool needing its own getter. We use this to
  * fetch slot0 (current price + tick) and liquidity for a candidate pool.
  *
- * Storage layout (PoolManager.sol → Pools.sol):
- *   mapping(PoolId => Pool.State) internal _pools;   // slot 6 in v4-core 1.0.x
+ * Storage layout (Tempo-deployed PoolManager, empirically verified 2026-04-18
+ * by extsload probing a known Initialize'd pool):
+ *   slot 6: mapping(PoolId => Pool.State) _pools
+ *   (Tempo's deployment has more ancestor state than stock Ethereum v4-core;
+ *    the docs page listed slot 2 but on-chain probe returns slot0 data at 6.)
+ *
  *   struct Pool.State {
- *     Slot0 slot0;            // slot 0 of struct
- *     uint256 feeGrowthGlobal0X128;
- *     uint256 feeGrowthGlobal1X128;
- *     uint128 liquidity;       // slot 3 of struct
- *     ...
+ *     Slot0 slot0;                    // offset 0
+ *     uint256 feeGrowthGlobal0X128;   // offset 1
+ *     uint256 feeGrowthGlobal1X128;   // offset 2
+ *     uint128 liquidity;              // offset 3
+ *     mapping(int24 => TickInfo) ticks;
+ *     mapping(int16 => uint256) tickBitmap;
+ *     mapping(bytes32 => Position.State) positions;
  *   }
  *
- *   Slot0 packs (lower → upper bits):
- *     uint160 sqrtPriceX96
- *     int24   tick
- *     uint24  protocolFee
- *     uint24  lpFee
+ *   Slot0 packs (MSB → LSB):
+ *     24 bits unused
+ *     uint24  lpFee           (bits 208..231)
+ *     uint24  protocolFee     (bits 184..207)
+ *     int24   tick            (bits 160..183, sign-extended)
+ *     uint160 sqrtPriceX96    (bits 0..159)
  */
 
 /** Storage slot of `_pools` mapping inside PoolManager. */

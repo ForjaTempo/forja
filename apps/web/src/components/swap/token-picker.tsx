@@ -1,9 +1,10 @@
 "use client";
 
-import { CheckIcon, SearchIcon } from "lucide-react";
+import { CheckIcon, PlusIcon, SearchIcon } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { isAddress } from "viem";
+import { getOnchainTokenMetadata } from "@/actions/swaps";
 import { getTokenList } from "@/actions/token-hub";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ImageFallback } from "@/components/ui/image-fallback";
@@ -45,6 +46,8 @@ export function TokenPicker({
 	const [search, setSearch] = useState("");
 	const [tokens, setTokens] = useState<TokenOption[]>([PATHUSDC_OPTION]);
 	const [isLoading, setIsLoading] = useState(false);
+	const [importCandidate, setImportCandidate] = useState<TokenOption | null>(null);
+	const [importStatus, setImportStatus] = useState<"idle" | "loading" | "error">("idle");
 
 	useEffect(() => {
 		if (!open) return;
@@ -97,6 +100,46 @@ export function TokenPicker({
 		(t) => !excludeAddress || t.address.toLowerCase() !== excludeAddress.toLowerCase(),
 	);
 
+	// When the user pastes a 0x address that isn't already in the DB list,
+	// fetch its on-chain metadata so they can pick it. This is essential on
+	// Tempo because most pools are against non-TIP-20 ERC-20s we don't index.
+	useEffect(() => {
+		const q = search.trim();
+		if (!isAddress(q)) {
+			setImportCandidate(null);
+			setImportStatus("idle");
+			return;
+		}
+		const already = tokens.some((t) => t.address.toLowerCase() === q.toLowerCase());
+		if (already) {
+			setImportCandidate(null);
+			setImportStatus("idle");
+			return;
+		}
+
+		let cancelled = false;
+		setImportStatus("loading");
+		(async () => {
+			const meta = await getOnchainTokenMetadata(q);
+			if (cancelled) return;
+			if (!meta) {
+				setImportCandidate(null);
+				setImportStatus("error");
+				return;
+			}
+			setImportCandidate({
+				address: meta.address as `0x${string}`,
+				symbol: meta.symbol,
+				name: meta.name,
+				decimals: meta.decimals,
+			});
+			setImportStatus("idle");
+		})();
+		return () => {
+			cancelled = true;
+		};
+	}, [search, tokens]);
+
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogContent className="max-w-md">
@@ -116,13 +159,40 @@ export function TokenPicker({
 				</div>
 
 				<div className="-mx-1 max-h-[60vh] overflow-y-auto pr-1">
-					{isLoading && filtered.length === 0 && (
+					{isLoading && filtered.length === 0 && !importCandidate && (
 						<p className="py-8 text-center text-sm text-smoke-dark">Loading…</p>
 					)}
-					{!isLoading && filtered.length === 0 && (
+					{!isLoading && filtered.length === 0 && !importCandidate && (
 						<p className="py-8 text-center text-sm text-smoke-dark">
-							{isAddress(search.trim()) ? "No token found at that address" : "No matches"}
+							{importStatus === "loading"
+								? "Fetching token…"
+								: importStatus === "error"
+									? "Could not read token metadata at that address"
+									: isAddress(search.trim())
+										? "No token found — not a valid ERC-20"
+										: "No matches"}
 						</p>
+					)}
+
+					{importCandidate && (
+						<button
+							type="button"
+							onClick={() => {
+								onSelect(importCandidate);
+								onOpenChange(false);
+							}}
+							className="mb-1 flex w-full items-center gap-3 rounded-lg border border-dashed border-indigo/40 bg-indigo/5 px-3 py-2.5 text-left transition-colors hover:bg-indigo/10"
+						>
+							<ImageFallback name={importCandidate.symbol} size={36} variant="circle" />
+							<div className="min-w-0 flex-1">
+								<div className="flex items-center gap-2">
+									<span className="font-medium text-steel-white">{importCandidate.symbol}</span>
+									<PlusIcon className="size-4 text-indigo" />
+									<span className="text-xs text-indigo">Import</span>
+								</div>
+								<p className="truncate text-xs text-smoke-dark">{importCandidate.name}</p>
+							</div>
+						</button>
 					)}
 					{filtered.map((token) => {
 						const isSelected = selectedAddress?.toLowerCase() === token.address.toLowerCase();
