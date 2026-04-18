@@ -14,7 +14,7 @@ export function HeroStats({ tokensCreated, launchesCount, uniqueCreators }: Hero
 	];
 
 	return (
-		<section className="border-t border-anvil-gray-light/40">
+		<section className="border-t border-border-hair/40">
 			<div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
 				<div className="grid grid-cols-3 gap-4 text-center">
 					{stats.map((stat) => (
@@ -22,7 +22,7 @@ export function HeroStats({ tokensCreated, launchesCount, uniqueCreators }: Hero
 							<p className="font-mono text-2xl font-bold text-indigo sm:text-3xl">
 								<AnimatedCounter value={stat.value} />
 							</p>
-							<p className="mt-1 text-xs text-smoke-dark sm:text-sm">{stat.label}</p>
+							<p className="mt-1 text-xs text-text-tertiary sm:text-sm">{stat.label}</p>
 						</div>
 					))}
 				</div>

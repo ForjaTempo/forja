@@ -195,7 +195,7 @@ export function ImageUpload({ type, value, onChange, ensureAuth, className }: Im
 						<button
 							type="button"
 							onClick={handleRemove}
-							className="absolute -top-2 -right-2 flex size-6 items-center justify-center rounded-full bg-surface-elevated border border-border-standard text-smoke hover:text-steel-white hover:bg-ember-red transition-colors"
+							className="absolute -top-2 -right-2 flex size-6 items-center justify-center rounded-full bg-bg-elevated border border-border-standard text-text-secondary hover:text-text-primary hover:bg-red transition-colors"
 						>
 							<XIcon className="size-3.5" />
 						</button>
@@ -225,21 +225,21 @@ export function ImageUpload({ type, value, onChange, ensureAuth, className }: Im
 						"flex flex-col items-center justify-center gap-1.5 border-2 border-dashed transition-colors cursor-pointer",
 						dragOver
 							? "border-indigo bg-indigo/10"
-							: "border-border-standard bg-surface-field hover:border-indigo/50",
+							: "border-border-standard bg-bg-field hover:border-indigo/50",
 					)}
 				>
 					{type === "banner" ? (
-						<ImageIcon className="size-6 text-smoke-dark" />
+						<ImageIcon className="size-6 text-text-tertiary" />
 					) : (
-						<UploadIcon className="size-5 text-smoke-dark" />
+						<UploadIcon className="size-5 text-text-tertiary" />
 					)}
-					<span className="text-xs text-smoke-dark">
+					<span className="text-xs text-text-tertiary">
 						{type === "banner" ? "Upload banner" : "Upload"}
 					</span>
 				</button>
 			)}
 
-			{error && <p className="text-xs text-ember-red">{error}</p>}
+			{error && <p className="text-xs text-red">{error}</p>}
 		</div>
 	);
 }

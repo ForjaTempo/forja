@@ -475,8 +475,16 @@ function normalizeUrl(raw: string | undefined): string | null {
 	const trimmed = raw.trim();
 	if (trimmed.length > 200) return null;
 	try {
-		const url = new URL(trimmed.startsWith("http") ? trimmed : `https://${trimmed}`);
-		if (url.protocol !== "http:" && url.protocol !== "https:") return null;
+		// Bare domains get https:// prepended; explicit http:// URLs get rewritten
+		// to https:// rather than accepted. Prevents mixed-content warnings + the
+		// downgrade attack vector that lets an MITM rewrite page content.
+		const candidate = trimmed.startsWith("http://")
+			? trimmed.replace(/^http:\/\//, "https://")
+			: trimmed.startsWith("https://")
+				? trimmed
+				: `https://${trimmed}`;
+		const url = new URL(candidate);
+		if (url.protocol !== "https:") return null;
 		return url.toString();
 	} catch {
 		return null;

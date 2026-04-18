@@ -27,15 +27,11 @@ export function AddressDisplay({ address, showExplorer = false, className }: Add
 			<button
 				type="button"
 				onClick={handleCopy}
-				className="inline-flex items-center gap-1 font-mono text-sm text-smoke transition-colors hover:text-steel-white"
+				className="inline-flex items-center gap-1 font-mono text-sm text-text-secondary transition-colors hover:text-text-primary"
 				title="Copy address"
 			>
 				{short}
-				{copied ? (
-					<CheckIcon className="size-3 text-forge-green" />
-				) : (
-					<CopyIcon className="size-3" />
-				)}
+				{copied ? <CheckIcon className="size-3 text-green" /> : <CopyIcon className="size-3" />}
 			</button>
 
 			{showExplorer && (
@@ -43,7 +39,7 @@ export function AddressDisplay({ address, showExplorer = false, className }: Add
 					href={`${explorerUrl}/address/${address}`}
 					target="_blank"
 					rel="noopener noreferrer"
-					className="text-smoke-dark transition-colors hover:text-indigo"
+					className="text-text-tertiary transition-colors hover:text-indigo"
 					title="View on explorer"
 				>
 					<ExternalLinkIcon className="size-3" />

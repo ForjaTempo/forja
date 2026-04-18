@@ -42,11 +42,11 @@ const stateConfig = {
 		label: "Transaction pending...",
 	},
 	confirmed: {
-		icon: <CheckCircleIcon className="size-8 text-forge-green" />,
+		icon: <CheckCircleIcon className="size-8 text-green" />,
 		label: "Transaction confirmed",
 	},
 	failed: {
-		icon: <XCircleIcon className="size-8 text-ember-red" />,
+		icon: <XCircleIcon className="size-8 text-red" />,
 		label: "Transaction failed",
 	},
 } as const;
@@ -77,9 +77,9 @@ export function TransactionStatus({
 					<p
 						className={cn(
 							"text-sm font-medium",
-							state === "confirmed" && "text-forge-green",
-							state === "failed" && "text-ember-red",
-							(state === "waiting" || state === "pending") && "text-smoke",
+							state === "confirmed" && "text-green",
+							state === "failed" && "text-red",
+							(state === "waiting" || state === "pending") && "text-text-secondary",
 						)}
 					>
 						{config.label}
@@ -90,16 +90,14 @@ export function TransactionStatus({
 							href={`${explorerUrl}/tx/${txHash}`}
 							target="_blank"
 							rel="noopener noreferrer"
-							className="inline-flex items-center gap-1.5 font-mono text-xs text-smoke-dark transition-colors hover:text-indigo"
+							className="inline-flex items-center gap-1.5 font-mono text-xs text-text-tertiary transition-colors hover:text-indigo"
 						>
 							{`${txHash.slice(0, 10)}...${txHash.slice(-8)}`}
 							<ExternalLinkIcon className="size-3" />
 						</a>
 					)}
 
-					{error && (
-						<p className="max-w-full break-words text-center text-xs text-ember-red">{error}</p>
-					)}
+					{error && <p className="max-w-full break-words text-center text-xs text-red">{error}</p>}
 				</div>
 
 				{canClose && (

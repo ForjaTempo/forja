@@ -18,7 +18,7 @@ function FilterChip({ active, children, onClick, className }: FilterChipProps) {
 				"inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
 				active
 					? "border-indigo bg-indigo/10 text-indigo"
-					: "border-border-subtle bg-surface-field text-smoke hover:text-steel-white",
+					: "border-border-subtle bg-bg-field text-text-secondary hover:text-text-primary",
 				className,
 			)}
 		>

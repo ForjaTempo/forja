@@ -50,7 +50,7 @@ function StatCard({
 }: StatCardProps) {
 	if (loading) {
 		return (
-			<div className={cn("rounded-xl border border-border-subtle bg-surface-card p-4", className)}>
+			<div className={cn("rounded-xl border border-border-subtle bg-bg-card p-4", className)}>
 				<Skeleton className="mb-2 h-4 w-20" />
 				<Skeleton className="h-8 w-28" />
 			</div>
@@ -58,20 +58,20 @@ function StatCard({
 	}
 
 	return (
-		<div className={cn("rounded-xl border border-border-subtle bg-surface-card p-4", className)}>
+		<div className={cn("rounded-xl border border-border-subtle bg-bg-card p-4", className)}>
 			<div className="flex items-center justify-between">
-				<p className="text-sm text-smoke">{label}</p>
-				{icon && <span className="text-smoke-dark">{icon}</span>}
+				<p className="text-sm text-text-secondary">{label}</p>
+				{icon && <span className="text-text-tertiary">{icon}</span>}
 			</div>
 			<div className="mt-1 flex items-baseline gap-2">
-				<p className="font-mono text-2xl font-semibold text-steel-white">
+				<p className="font-mono text-2xl font-semibold text-text-primary">
 					{formatStatValue(value, format)}
 				</p>
 				{delta !== undefined && delta !== 0 && (
 					<span
 						className={cn(
 							"inline-flex items-center gap-0.5 text-xs font-medium",
-							delta > 0 ? "text-forge-green" : "text-ember-red",
+							delta > 0 ? "text-green" : "text-red",
 						)}
 					>
 						{delta > 0 ? <ArrowUpIcon className="size-3" /> : <ArrowDownIcon className="size-3" />}

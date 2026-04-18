@@ -15,7 +15,11 @@ export function SocialProof() {
 				<ScrollReveal>
 					<div className="flex flex-wrap items-center justify-center gap-3">
 						{trustBadges.map((badge) => (
-							<Badge key={badge} variant="outline" className="px-4 py-1.5 text-sm text-smoke-dark">
+							<Badge
+								key={badge}
+								variant="outline"
+								className="px-4 py-1.5 text-sm text-text-tertiary"
+							>
 								{badge}
 							</Badge>
 						))}
