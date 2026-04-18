@@ -12,6 +12,7 @@ import Image from "next/image";
 import Link from "next/link";
 import type { TrustSignals } from "@/actions/trust-signals";
 import { AddressDisplay } from "@/components/ui/address-display";
+import { ImageFallback } from "@/components/ui/image-fallback";
 import { useExplorerUrl } from "@/hooks/use-explorer-url";
 import { formatDate, formatSupply } from "@/lib/format";
 import { TrustBadges } from "./trust-badges";
@@ -28,7 +29,6 @@ export function TokenOverview({ token, trustSignals }: TokenOverviewProps) {
 
 	return (
 		<div className="space-y-6">
-			{/* Header */}
 			<div className="flex items-start gap-4">
 				{token.logoUri ? (
 					<Image
@@ -36,85 +36,84 @@ export function TokenOverview({ token, trustSignals }: TokenOverviewProps) {
 						alt={token.symbol}
 						width={56}
 						height={56}
-						className="rounded-full"
+						className="size-14 rounded-full"
 					/>
 				) : (
-					<div className="flex size-14 items-center justify-center rounded-full bg-anvil-gray">
-						<CoinsIcon className="size-7 text-smoke-dark" />
-					</div>
+					<ImageFallback name={token.symbol} size={56} variant="circle" />
 				)}
-				<div className="flex-1">
-					<div className="flex items-center gap-2">
-						<h1 className="text-2xl font-bold text-steel-white">{token.name}</h1>
-						<span className="text-lg text-smoke-dark">{token.symbol}</span>
+				<div className="min-w-0 flex-1">
+					<div className="flex flex-wrap items-center gap-2">
+						<h1 className="font-display text-[28px] leading-[1.1] tracking-[-0.02em] text-text-primary sm:text-[32px]">
+							{token.name}
+						</h1>
+						<span className="rounded bg-bg-field px-1.5 py-0.5 font-mono text-[11px] text-gold uppercase tracking-[0.12em]">
+							{token.symbol}
+						</span>
 						{trustSignals && <TrustBadges signals={trustSignals} />}
 					</div>
-					<div className="mt-1 flex items-center gap-2">
+					<div className="mt-2">
 						<AddressDisplay address={token.address} showExplorer />
 					</div>
 				</div>
 			</div>
 
-			{/* Stats Grid */}
-			<div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-				<div className="rounded-lg border border-anvil-gray-light bg-obsidian-black/50 p-3">
-					<div className="flex items-center gap-1.5 text-xs text-smoke-dark">
-						<CoinsIcon className="size-3" />
-						Total Supply
-					</div>
-					<p className="mt-1 font-mono text-sm font-semibold text-steel-white">
-						{token.totalSupply ? formatSupply(BigInt(token.totalSupply)) : "—"}
-					</p>
-				</div>
-				<div className="rounded-lg border border-anvil-gray-light bg-obsidian-black/50 p-3">
-					<div className="flex items-center gap-1.5 text-xs text-smoke-dark">
-						<UsersIcon className="size-3" />
-						Holders
-					</div>
-					<p className="mt-1 font-mono text-sm font-semibold text-steel-white">
-						{formatter.format(token.holderCount)}
-					</p>
-				</div>
-				<div className="rounded-lg border border-anvil-gray-light bg-obsidian-black/50 p-3">
-					<div className="flex items-center gap-1.5 text-xs text-smoke-dark">
-						<ArrowRightLeftIcon className="size-3" />
-						Transfers
-					</div>
-					<p className="mt-1 font-mono text-sm font-semibold text-steel-white">
-						{formatter.format(token.transferCount)}
-					</p>
-				</div>
-				<div className="rounded-lg border border-anvil-gray-light bg-obsidian-black/50 p-3">
-					<div className="flex items-center gap-1.5 text-xs text-smoke-dark">
-						<ClockIcon className="size-3" />
-						{token.isForjaCreated ? "Created" : "Listed"}
-					</div>
-					<p className="mt-1 text-sm font-semibold text-steel-white">
-						{formatDate(token.createdAt)}
-					</p>
-				</div>
+			<div
+				className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-border-hair sm:grid-cols-4"
+				style={{ background: "var(--color-border-hair)" }}
+			>
+				<StatTile
+					icon={<CoinsIcon className="size-3" />}
+					label="Total supply"
+					value={token.totalSupply ? formatSupply(BigInt(token.totalSupply)) : "—"}
+				/>
+				<StatTile
+					icon={<UsersIcon className="size-3" />}
+					label="Holders"
+					value={formatter.format(token.holderCount)}
+				/>
+				<StatTile
+					icon={<ArrowRightLeftIcon className="size-3" />}
+					label="Transfers"
+					value={formatter.format(token.transferCount)}
+				/>
+				<StatTile
+					icon={<ClockIcon className="size-3" />}
+					label={token.isForjaCreated ? "Created" : "Listed"}
+					value={formatDate(token.createdAt)}
+				/>
 			</div>
 
-			{/* Links */}
-			<div className="flex flex-wrap gap-3">
+			<div className="flex flex-wrap items-center gap-4 border-border-hair border-t pt-4 text-[13px]">
 				{token.creatorAddress && token.isForjaCreated && (
 					<Link
 						href={`/creators/${token.creatorAddress}`}
-						className="inline-flex items-center gap-1 text-sm text-smoke transition-colors hover:text-indigo"
+						className="inline-flex items-center gap-1 text-text-secondary transition-colors hover:text-gold"
 					>
-						Creator: <AddressDisplay address={token.creatorAddress} />
+						Creator <AddressDisplay address={token.creatorAddress} />
 					</Link>
 				)}
 				<a
 					href={`${explorerUrl}/address/${token.address}`}
 					target="_blank"
 					rel="noopener noreferrer"
-					className="inline-flex items-center gap-1 text-sm text-smoke transition-colors hover:text-indigo"
+					className="inline-flex items-center gap-1 text-text-secondary transition-colors hover:text-gold"
 				>
-					View on Explorer
+					View on explorer
 					<ExternalLinkIcon className="size-3" />
 				</a>
 			</div>
+		</div>
+	);
+}
+
+function StatTile({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+	return (
+		<div className="bg-bg-elevated px-4 py-3.5">
+			<div className="flex items-center gap-1.5 font-mono text-[10px] text-text-tertiary uppercase tracking-[0.12em]">
+				{icon}
+				{label}
+			</div>
+			<p className="mt-1.5 font-mono text-[14px] text-text-primary">{value}</p>
 		</div>
 	);
 }

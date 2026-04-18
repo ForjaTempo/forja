@@ -10,7 +10,6 @@ import {
 	ZapIcon,
 } from "lucide-react";
 import type { TrustSignals } from "@/actions/trust-signals";
-import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface TrustBadgesProps {
@@ -26,6 +25,9 @@ interface BadgeDef {
 	icon?: React.ReactNode;
 }
 
+const badgeBase =
+	"inline-flex items-center gap-1 rounded-full border px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.1em]";
+
 function getBadges(signals: TrustSignals): BadgeDef[] {
 	const badges: BadgeDef[] = [];
 
@@ -34,7 +36,7 @@ function getBadges(signals: TrustSignals): BadgeDef[] {
 			key: "forja",
 			label: "FORJA",
 			description: "Created with FORJA token toolkit",
-			className: "bg-molten-amber/15 text-molten-amber border-molten-amber/30",
+			className: "border-gold/30 bg-gold/10 text-gold",
 			icon: <SparklesIcon className="size-2.5" />,
 		});
 	}
@@ -44,7 +46,7 @@ function getBadges(signals: TrustSignals): BadgeDef[] {
 			key: "launchpad",
 			label: "Launchpad",
 			description: "Launched via FORJA bonding curve",
-			className: "bg-molten-amber/15 text-molten-amber border-molten-amber/30",
+			className: "border-ember/30 bg-ember/10 text-ember",
 			icon: <RocketIcon className="size-2.5" />,
 		});
 	}
@@ -54,7 +56,7 @@ function getBadges(signals: TrustSignals): BadgeDef[] {
 			key: "verified",
 			label: "Verified",
 			description: "Creator identity verified by FORJA team",
-			className: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
+			className: "border-green/30 bg-green/10 text-green",
 			icon: <CheckCircleIcon className="size-2.5" />,
 		});
 	} else if (signals.profileClaimed) {
@@ -62,7 +64,7 @@ function getBadges(signals: TrustSignals): BadgeDef[] {
 			key: "claimed",
 			label: "Claimed",
 			description: "Creator has claimed their profile",
-			className: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
+			className: "border-green/30 bg-green/10 text-green",
 			icon: <UserCheckIcon className="size-2.5" />,
 		});
 	}
@@ -72,7 +74,7 @@ function getBadges(signals: TrustSignals): BadgeDef[] {
 			key: "new",
 			label: "New",
 			description: "Token created less than 7 days ago",
-			className: "bg-blue-500/15 text-blue-400 border-blue-500/30",
+			className: "border-indigo/30 bg-indigo/10 text-indigo",
 			icon: <ZapIcon className="size-2.5" />,
 		});
 	}
@@ -82,7 +84,7 @@ function getBadges(signals: TrustSignals): BadgeDef[] {
 			key: "active",
 			label: "Active",
 			description: "Transfers in the last 7 days",
-			className: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
+			className: "border-green/30 bg-green/10 text-green",
 			icon: <ZapIcon className="size-2.5" />,
 		});
 	} else if (signals.isDormant) {
@@ -90,7 +92,7 @@ function getBadges(signals: TrustSignals): BadgeDef[] {
 			key: "dormant",
 			label: "Dormant",
 			description: "No transfers in the last 30 days",
-			className: "bg-zinc-500/15 text-zinc-400 border-zinc-500/30",
+			className: "border-border-hair bg-bg-field text-text-tertiary",
 			icon: <ClockIcon className="size-2.5" />,
 		});
 	}
@@ -100,7 +102,7 @@ function getBadges(signals: TrustSignals): BadgeDef[] {
 			key: "concentration-high",
 			label: `${signals.topHolderPct}% held`,
 			description: "Very high concentration — top holder owns over 80% of supply",
-			className: "bg-red-500/15 text-red-400 border-red-500/30",
+			className: "border-red/30 bg-red/10 text-red",
 			icon: <AlertTriangleIcon className="size-2.5" />,
 		});
 	} else if (signals.topHolderPct > 50) {
@@ -108,7 +110,7 @@ function getBadges(signals: TrustSignals): BadgeDef[] {
 			key: "concentration",
 			label: `${signals.topHolderPct}% held`,
 			description: "High concentration — top holder owns over 50% of supply",
-			className: "bg-yellow-500/15 text-yellow-400 border-yellow-500/30",
+			className: "border-gold/30 bg-gold/10 text-gold",
 			icon: <AlertTriangleIcon className="size-2.5" />,
 		});
 	}
@@ -131,10 +133,10 @@ export function TrustBadges({ signals, compact }: TrustBadgesProps) {
 				{visible.map((badge) => (
 					<Tooltip key={badge.key}>
 						<TooltipTrigger asChild>
-							<Badge className={`${badge.className} inline-flex items-center gap-1`}>
+							<span className={`${badgeBase} ${badge.className}`}>
 								{badge.icon}
 								{badge.label}
-							</Badge>
+							</span>
 						</TooltipTrigger>
 						<TooltipContent>
 							<p>{badge.description}</p>
@@ -144,9 +146,9 @@ export function TrustBadges({ signals, compact }: TrustBadgesProps) {
 				{remaining > 0 && (
 					<Tooltip>
 						<TooltipTrigger asChild>
-							<Badge className="bg-anvil-gray/50 text-smoke border-anvil-gray-light">
+							<span className={`${badgeBase} border-border-hair bg-bg-field text-text-secondary`}>
 								+{remaining}
-							</Badge>
+							</span>
 						</TooltipTrigger>
 						<TooltipContent>
 							<div className="space-y-1">
@@ -177,27 +179,27 @@ export function TokenCardBadges({
 	return (
 		<div className="flex flex-col items-end gap-1">
 			{isForjaCreated && (
-				<Badge className="bg-molten-amber/15 text-molten-amber border-molten-amber/30 inline-flex items-center gap-1">
+				<span className={`${badgeBase} border-gold/30 bg-gold/10 text-gold`}>
 					<SparklesIcon className="size-2.5" />
 					FORJA
-				</Badge>
+				</span>
 			)}
 			{isLaunchpadToken && (
-				<Badge className="bg-molten-amber/15 text-molten-amber border-molten-amber/30 inline-flex items-center gap-1">
+				<span className={`${badgeBase} border-ember/30 bg-ember/10 text-ember`}>
 					<RocketIcon className="size-2.5" />
 					Launchpad
-				</Badge>
+				</span>
 			)}
 			{topHolderPct > 80 ? (
-				<Badge className="bg-red-500/15 text-red-400 border-red-500/30 inline-flex items-center gap-1">
+				<span className={`${badgeBase} border-red/30 bg-red/10 text-red`}>
 					<AlertTriangleIcon className="size-2.5" />
 					{topHolderPct}%
-				</Badge>
+				</span>
 			) : topHolderPct > 50 ? (
-				<Badge className="bg-yellow-500/15 text-yellow-400 border-yellow-500/30 inline-flex items-center gap-1">
+				<span className={`${badgeBase} border-gold/30 bg-gold/10 text-gold`}>
 					<AlertTriangleIcon className="size-2.5" />
 					{topHolderPct}%
-				</Badge>
+				</span>
 			) : null}
 		</div>
 	);

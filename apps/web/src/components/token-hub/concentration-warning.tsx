@@ -14,23 +14,23 @@ export function ConcentrationWarning({ topHolderPct }: ConcentrationWarningProps
 	const isHigh = topHolderPct >= 60;
 	const tone = isHigh
 		? {
-				border: "border-red-500/30",
-				bg: "from-red-500/10 via-red-500/5 to-transparent",
-				iconBg: "bg-red-500/20 text-red-400",
-				title: "text-red-400",
+				border: "border-red/30",
+				bg: "from-red/10 via-red/5 to-transparent",
+				iconBg: "bg-red/20 text-red",
+				title: "text-red",
 			}
 		: {
-				border: "border-molten-amber/30",
-				bg: "from-molten-amber/10 via-molten-amber/5 to-transparent",
-				iconBg: "bg-molten-amber/20 text-molten-amber",
-				title: "text-molten-amber",
+				border: "border-gold/30",
+				bg: "from-gold/10 via-gold/5 to-transparent",
+				iconBg: "bg-gold/15 text-gold",
+				title: "text-gold",
 			};
 
 	return (
 		<ScrollReveal>
 			<div
 				className={cn(
-					"overflow-hidden rounded-xl border bg-gradient-to-r p-4 sm:p-5",
+					"overflow-hidden rounded-2xl border bg-gradient-to-r p-4 sm:p-5",
 					tone.border,
 					tone.bg,
 				)}
@@ -45,12 +45,13 @@ export function ConcentrationWarning({ topHolderPct }: ConcentrationWarningProps
 						<AlertTriangleIcon className="size-4" />
 					</div>
 					<div className="min-w-0">
-						<h3 className={cn("text-sm font-semibold", tone.title)}>
+						<h3 className={cn("font-mono text-[11px] uppercase tracking-[0.14em]", tone.title)}>
 							{isHigh ? "Highly concentrated supply" : "Concentrated supply"}
 						</h3>
-						<p className="mt-0.5 text-xs text-smoke">
-							Top 10 holders control <strong>{topHolderPct}%</strong> of the supply. Large transfers
-							by these wallets can move price or drain liquidity rapidly.
+						<p className="mt-1 text-[13px] text-text-secondary">
+							Top 10 holders control <strong className="text-text-primary">{topHolderPct}%</strong>{" "}
+							of the supply. Large transfers by these wallets can move price or drain liquidity
+							rapidly.
 						</p>
 					</div>
 				</div>

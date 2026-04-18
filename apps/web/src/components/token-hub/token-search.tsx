@@ -2,7 +2,6 @@
 
 import { SearchIcon } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Input } from "@/components/ui/input";
 
 interface TokenSearchProps {
 	value: string;
@@ -33,13 +32,13 @@ export function TokenSearch({ value, onChange }: TokenSearchProps) {
 
 	return (
 		<div className="relative">
-			<SearchIcon className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-smoke-dark" />
-			<Input
+			<SearchIcon className="-translate-y-1/2 absolute top-1/2 left-3 size-4 text-text-tertiary" />
+			<input
 				type="text"
-				placeholder="Search by name, symbol, or address..."
+				placeholder="Search by name, symbol, or address…"
 				value={local}
 				onChange={handleChange}
-				className="h-10 border-anvil-gray-light bg-obsidian-black/50 pl-10 text-smoke placeholder:text-smoke-dark"
+				className="w-full rounded-xl border border-border-hair bg-bg-field py-3 pr-4 pl-10 text-[14px] text-text-primary placeholder:text-text-tertiary focus:border-gold/60 focus:outline-none transition-colors"
 			/>
 		</div>
 	);
