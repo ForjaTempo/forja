@@ -173,25 +173,34 @@ body {
 	background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence baseFrequency='0.9' numOctaves='3'/></filter><rect width='200' height='200' filter='url(%23n)' opacity='0.8'/></svg>");
 }
 
+/* Reveal animations — IMPORTANT: default state is VISIBLE so SSR paints the
+   page immediately and there is no FOUC if JS is slow/blocked. The hook
+   (see use-reveal.ts) adds `.pending` to below-fold elements on mount, then
+   removes it as they enter the viewport. Above-fold elements never hide,
+   so a user on a cold load always sees the hero instantly. */
 .reveal {
-	opacity: 0;
-	transform: translateY(32px) scale(0.985);
-	filter: blur(4px);
 	transition:
 		opacity 1s var(--ease-out),
 		transform 1s var(--ease-spring),
 		filter 0.8s var(--ease-out);
 }
-.reveal.in {
+.reveal.pending {
+	opacity: 0;
+	transform: translateY(32px) scale(0.985);
+	filter: blur(4px);
+}
+.reveal:not(.pending) {
 	opacity: 1;
 	transform: translateY(0) scale(1);
 	filter: blur(0);
 }
 @media (prefers-reduced-motion: reduce) {
-	.reveal {
+	.reveal,
+	.reveal.pending {
 		transition: opacity 0.2s ease;
 		transform: none;
 		filter: none;
+		opacity: 1;
 	}
 }
 
@@ -322,12 +331,27 @@ body {
 	background: transparent;
 }
 
-/* RainbowKit modal — belt-and-suspenders guards against Tailwind v4 preflight
-   stripping the modal background. Since v4's cascade changed how unlayered
-   CSS lands, we force the modal card + any dialog role + common test ids to
-   retain their dark fill. --rk-colors-* come from RainbowKit's darkTheme().
-   Fallback colors match our bg-bg-elevated token so the modal reads even if
-   RainbowKit fails to inject its CSS variables entirely. */
+/* RainbowKit modal — forge-editorial alignment.
+   darkTheme() in providers.tsx handles the color tokens, this block covers
+   what the theme API can't: typography, subtle spacing polish, and defensive
+   background fallbacks in case Tailwind v4's cascade shifts later. */
+
+/* Typography — the theme API only allows 'system'/'rounded' font stacks, so
+   we inject our Geist sans + Instrument Serif here. Headings inside the modal
+   get the serif treatment to match the rest of the site. */
+[data-rk] {
+	font-family: var(--font-sans) !important;
+}
+[data-rk] h1,
+[data-rk] [class*="ju367v97"],
+[data-rk] [class*="modalTitle"] {
+	font-family: var(--font-display) !important;
+	font-weight: 400 !important;
+	letter-spacing: -0.01em !important;
+}
+
+/* Defensive modal background — ensures the dialog card never renders
+   transparent even if --rk-colors-* CSS vars fail to inject. */
 [data-rk] [role="dialog"],
 [data-rk] [data-testid="rk-account-modal"],
 [data-rk] [data-testid="rk-chain-modal"],
@@ -336,8 +360,17 @@ body {
 	background: var(--rk-colors-modalBackground, #141218) !important;
 }
 [data-rk] [class*="ju367vb9"] {
-	background: var(--rk-colors-modalBorder, rgba(255, 255, 255, 0.08)) !important;
+	background: var(--rk-colors-modalBorder, rgba(255, 255, 255, 0.09)) !important;
 }
 [data-rk] [class*="ju367vb3"] {
-	background: var(--rk-colors-modalBackdrop, rgba(0, 0, 0, 0.6)) !important;
+	background: var(--rk-colors-modalBackdrop, rgba(6, 5, 9, 0.78)) !important;
+	backdrop-filter: blur(8px) !important;
+}
+
+/* Wallet list items — smoother hover transition with gold tint so the
+   interaction matches our CTA language rather than the default flat hover. */
+[data-rk] button[class*="ju367v1"] {
+	transition:
+		background-color 180ms ease,
+		border-color 180ms ease !important;
 }

@@ -71,6 +71,9 @@ export function ConnectButton() {
 								);
 							}
 
+							// Balance display intentionally omitted: Tempo's native currency
+							// config in wagmi returns NaN for many wallets, which rendered as
+							// "NaN USD" in the pill. Account modal still shows full balance.
 							return (
 								<button
 									type="button"
@@ -82,11 +85,6 @@ export function ConnectButton() {
 										className="size-1.5 rounded-full bg-green shadow-[0_0_6px_var(--color-green)]"
 									/>
 									<span className="font-mono">{account.displayName}</span>
-									{account.displayBalance ? (
-										<span className="hidden font-mono text-[11px] text-text-tertiary lg:inline">
-											· {account.displayBalance}
-										</span>
-									) : null}
 								</button>
 							);
 						})()}
