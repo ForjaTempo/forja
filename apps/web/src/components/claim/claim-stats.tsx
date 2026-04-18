@@ -1,7 +1,5 @@
 import { formatUnits } from "viem";
 import type { CampaignStats } from "@/actions/claims";
-import { Card, CardContent } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 
 interface ClaimStatsProps {
 	stats: CampaignStats | null | undefined;
@@ -27,11 +25,9 @@ function formatAmount(raw: string, decimals: number): string {
 export function ClaimStats({ stats, decimals, tokenSymbol, sweepEnabled, swept }: ClaimStatsProps) {
 	if (!stats) {
 		return (
-			<Card>
-				<CardContent className="py-6 text-center text-sm text-smoke-dark">
-					Stats unavailable.
-				</CardContent>
-			</Card>
+			<div className="rounded-2xl border border-border-hair bg-bg-elevated p-6 text-center text-[13px] text-text-tertiary">
+				Stats unavailable.
+			</div>
 		);
 	}
 
@@ -43,46 +39,59 @@ export function ClaimStats({ stats, decimals, tokenSymbol, sweepEnabled, swept }
 	const sym = tokenSymbol ?? "";
 
 	return (
-		<Card>
-			<CardContent className="space-y-4 py-6">
-				<div className="grid grid-cols-3 gap-4">
-					<div>
-						<div className="text-xs text-smoke-dark">Total deposited</div>
-						<div className="text-lg font-semibold text-foreground">
-							{formatAmount(stats.totalDeposited, decimals)} {sym}
-						</div>
+		<div className="space-y-5 rounded-2xl border border-border-hair bg-bg-elevated p-6">
+			<div className="grid grid-cols-3 gap-4">
+				<div>
+					<div className="font-mono text-[10px] text-text-tertiary uppercase tracking-[0.12em]">
+						Deposited
 					</div>
-					<div>
-						<div className="text-xs text-smoke-dark">Total claimed</div>
-						<div className="text-lg font-semibold text-foreground">
-							{formatAmount(stats.totalClaimed, decimals)} {sym}
-						</div>
-					</div>
-					<div>
-						<div className="text-xs text-smoke-dark">Remaining</div>
-						<div className="text-lg font-semibold text-foreground">
-							{formatAmount(stats.remaining, decimals)} {sym}
-						</div>
+					<div className="mt-1 font-display text-[20px] tracking-[-0.01em] text-text-primary">
+						{formatAmount(stats.totalDeposited, decimals)} {sym}
 					</div>
 				</div>
-				<div className="space-y-1.5">
-					<div className="flex items-center justify-between text-xs text-smoke-dark">
-						<span>
-							{stats.claimedCount.toLocaleString()} / {stats.recipientCount.toLocaleString()}{" "}
-							recipients claimed
-						</span>
-						<span>{claimedPct}%</span>
+				<div>
+					<div className="font-mono text-[10px] text-text-tertiary uppercase tracking-[0.12em]">
+						Claimed
 					</div>
-					<Progress value={claimedPct} />
+					<div className="mt-1 font-display text-[20px] tracking-[-0.01em] text-green">
+						{formatAmount(stats.totalClaimed, decimals)} {sym}
+					</div>
 				</div>
-				{sweepEnabled && (
-					<div className="text-xs text-smoke-dark">
-						{swept
-							? "Unclaimed tokens were swept by the creator."
-							: "Unclaimed tokens may be swept by the creator after the end date."}
+				<div>
+					<div className="font-mono text-[10px] text-text-tertiary uppercase tracking-[0.12em]">
+						Remaining
 					</div>
-				)}
-			</CardContent>
-		</Card>
+					<div className="mt-1 font-display text-[20px] tracking-[-0.01em] text-text-primary">
+						{formatAmount(stats.remaining, decimals)} {sym}
+					</div>
+				</div>
+			</div>
+
+			<div className="space-y-2">
+				<div className="flex items-center justify-between font-mono text-[10px] text-text-tertiary uppercase tracking-[0.12em]">
+					<span>
+						{stats.claimedCount.toLocaleString()} / {stats.recipientCount.toLocaleString()} claimed
+					</span>
+					<span className="text-text-secondary">{claimedPct}%</span>
+				</div>
+				<div className="h-2 w-full overflow-hidden rounded-full bg-bg-field">
+					<div
+						className="h-full rounded-full transition-all duration-500"
+						style={{
+							width: `${claimedPct}%`,
+							background: "linear-gradient(90deg, rgba(255,107,61,0.9), rgba(255,107,61,0.5))",
+						}}
+					/>
+				</div>
+			</div>
+
+			{sweepEnabled && (
+				<p className="border-border-hair border-t pt-3 text-[12px] text-text-tertiary">
+					{swept
+						? "Unclaimed tokens were swept by the creator."
+						: "Unclaimed tokens may be swept by the creator after the end date."}
+				</p>
+			)}
+		</div>
 	);
 }

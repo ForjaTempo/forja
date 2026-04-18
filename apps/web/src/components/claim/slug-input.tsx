@@ -3,7 +3,6 @@
 import { CheckCircleIcon, LoaderIcon, XCircleIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { validateSlug } from "@/actions/claims";
-import { Input } from "@/components/ui/input";
 import { isValidSlug, normalizeSlug } from "@/lib/merkle";
 
 interface SlugInputProps {
@@ -29,7 +28,7 @@ export function SlugInput({ value, onChange, onValidityChange, disabled }: SlugI
 		}
 		if (!isValidSlug(slug)) {
 			setStatus("bad");
-			setReason("3-40 chars, a-z 0-9 hyphen, must start/end alphanumeric");
+			setReason("3–40 chars · a–z 0–9 hyphen · must start/end alphanumeric");
 			onValidityChange(false);
 			return;
 		}
@@ -53,36 +52,39 @@ export function SlugInput({ value, onChange, onValidityChange, disabled }: SlugI
 
 	const icon =
 		status === "checking" ? (
-			<LoaderIcon className="size-4 animate-spin text-smoke-dark" />
+			<LoaderIcon className="size-4 animate-spin text-text-tertiary" />
 		) : status === "ok" ? (
-			<CheckCircleIcon className="size-4 text-emerald-500" />
+			<CheckCircleIcon className="size-4 text-green" />
 		) : status === "bad" ? (
-			<XCircleIcon className="size-4 text-rose-500" />
+			<XCircleIcon className="size-4 text-red" />
 		) : null;
 
 	return (
-		<div className="space-y-1.5">
-			<label htmlFor="claim-slug" className="block text-sm font-medium text-foreground">
-				Slug (URL)
+		<div className="space-y-2">
+			<label
+				htmlFor="claim-slug"
+				className="font-mono text-[11px] uppercase tracking-[0.12em] text-text-tertiary"
+			>
+				Slug · URL
 			</label>
 			<div className="relative">
-				<span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-smoke-dark">
+				<span className="pointer-events-none absolute inset-y-0 left-4 flex items-center font-mono text-[13px] text-text-tertiary">
 					forja.fun/claim/
 				</span>
-				<Input
+				<input
 					id="claim-slug"
 					type="text"
 					inputMode="text"
 					autoComplete="off"
 					placeholder="my-airdrop"
-					className="pl-32 pr-9"
+					className="w-full rounded-xl border border-border-hair bg-bg-field py-3 pr-10 pl-[138px] font-mono text-[14px] text-text-primary placeholder:text-text-tertiary focus:border-gold/60 focus:outline-none transition-colors"
 					value={value}
 					onChange={(e) => onChange(e.target.value.toLowerCase())}
 					disabled={disabled}
 				/>
 				{icon && <span className="absolute inset-y-0 right-3 flex items-center">{icon}</span>}
 			</div>
-			{reason && <p className="text-xs text-rose-500">{reason}</p>}
+			{reason && <p className="text-[12px] text-red">{reason}</p>}
 		</div>
 	);
 }
