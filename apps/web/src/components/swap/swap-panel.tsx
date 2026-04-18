@@ -12,7 +12,6 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import { formatUnits, type Hex, parseUnits } from "viem";
 import { useAccount, useChainId, useSwitchChain } from "wagmi";
-import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useExplorerUrl } from "@/hooks/use-explorer-url";
 import { usePermit2Approval } from "@/hooks/use-permit2-approval";
@@ -176,7 +175,7 @@ export function SwapPanel({ initialTokenIn, initialTokenOut, onSwapSuccess }: Sw
 	const highImpact = priceImpactPct >= 2;
 
 	return (
-		<div className="space-y-4 rounded-3xl border border-border-subtle bg-bg-card p-5 sm:p-6">
+		<div className="space-y-4 rounded-3xl border border-border-subtle bg-bg-elevated p-5 sm:p-6 shadow-[0_20px_60px_rgba(0,0,0,0.3)]">
 			{/* Chain guard */}
 			{isConnected && !isSupportedChain && (
 				<div className="flex items-start gap-2 rounded-xl border border-red/40 bg-red/5 p-3 text-xs text-red">
@@ -259,14 +258,15 @@ export function SwapPanel({ initialTokenIn, initialTokenOut, onSwapSuccess }: Sw
 					)}
 				</div>
 				<div className="flex items-center gap-3">
-					<Input
+					<input
+						type="text"
 						inputMode="decimal"
 						value={amount}
 						onChange={(e) => {
 							if (VALID_AMOUNT.test(e.target.value)) setAmount(e.target.value);
 						}}
 						placeholder="0.0"
-						className="h-12 border-0 bg-transparent px-0 font-display text-3xl tracking-[-0.02em] focus-visible:ring-0"
+						className="h-12 flex-1 min-w-0 border-0 bg-transparent px-0 font-display text-3xl tracking-[-0.02em] text-text-primary placeholder:text-text-tertiary focus:outline-none"
 					/>
 					<TokenSelectButton
 						token={tokenIn}
