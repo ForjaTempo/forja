@@ -3,9 +3,6 @@
 import { type FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { type Hex, isAddress, parseUnits } from "viem";
 import { useAccount } from "wagmi";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
 import { TransactionStatus } from "@/components/ui/transaction-status";
 import { useCreateLock } from "@/hooks/use-create-lock";
 import { useLockFee } from "@/hooks/use-lock-fee";
@@ -19,11 +16,17 @@ import { TIP20_DECIMALS } from "@/lib/constants";
 import { activeLockerConfig } from "@/lib/contracts";
 import { deriveTxState, formatErrorMessage } from "@/lib/format";
 import { CLIFF_PRESETS, DURATION_PRESETS } from "@/lib/lock-utils";
+import { cn } from "@/lib/utils";
 import { LockButton } from "./lock-button";
 import { VestingPreview } from "./vesting-preview";
 
 const VALID_AMOUNT = /^\d+(\.\d{1,6})?$/;
 const VALID_DAYS = /^\d+$/;
+
+const labelCls = "font-mono text-[11px] uppercase tracking-[0.12em] text-text-tertiary";
+const inputCls =
+	"w-full rounded-xl border border-border-hair bg-bg-field px-4 py-3 text-[15px] text-text-primary placeholder:text-text-tertiary focus:border-gold/60 focus:outline-none transition-colors";
+const presetBtnCls = "rounded-lg border px-3 py-1.5 font-medium text-[12px] transition-colors";
 
 interface LockFormProps {
 	onSuccess?: (data: {
@@ -50,7 +53,6 @@ export function LockForm({ onSuccess, initialToken }: LockFormProps) {
 	const [txDialogOpen, setTxDialogOpen] = useState(false);
 	const successFired = useRef(false);
 
-	// Default beneficiary to connected wallet when wallet connects
 	useEffect(() => {
 		if (address && !beneficiary) {
 			setBeneficiary(address);
@@ -219,326 +221,330 @@ export function LockForm({ onSuccess, initialToken }: LockFormProps) {
 
 	return (
 		<>
-			<Card className="border-anvil-gray-light bg-deep-charcoal">
-				<CardContent>
-					<form onSubmit={handleSubmit} className="space-y-5">
-						{/* Token Address */}
-						<div className="space-y-2">
-							<label htmlFor="lock-token" className="text-sm font-medium text-smoke">
-								Token Address
-							</label>
-							<Input
-								id="lock-token"
-								placeholder="0x..."
-								value={tokenAddress}
-								onChange={(e) => setTokenAddress(e.target.value)}
-								autoComplete="off"
-								spellCheck={false}
-								className="font-mono"
-							/>
-							{validTokenAddress && isTokenInfoLoading && (
-								<p className="text-xs text-smoke-dark">Loading token info...</p>
-							)}
-							{validTokenAddress && isTokenError && (
-								<p className="text-xs text-ember-red">
-									Invalid token address — could not read token contract
-								</p>
-							)}
-							{nonStandardDecimals && (
-								<p className="text-xs text-ember-red">
-									This token uses {tokenDecimals} decimals instead of 6. Only TIP-20 tokens (6
-									decimals) are supported.
-								</p>
-							)}
-							{validTokenAddress && tokenName && tokenSymbol && !nonStandardDecimals && (
-								<div className="flex items-center gap-2 text-sm">
-									<span className="text-smoke">{tokenName}</span>
-									<span className="rounded bg-anvil-gray px-1.5 py-0.5 font-mono text-xs text-smoke-dark">
+			<div className="rounded-2xl border border-border-hair bg-bg-elevated p-6 shadow-[0_20px_60px_rgba(0,0,0,0.4)] sm:p-8">
+				<form onSubmit={handleSubmit} className="space-y-6">
+					<div className="space-y-2">
+						<label htmlFor="lock-token" className={labelCls}>
+							Token address
+						</label>
+						<input
+							id="lock-token"
+							type="text"
+							placeholder="0x…"
+							value={tokenAddress}
+							onChange={(e) => setTokenAddress(e.target.value)}
+							autoComplete="off"
+							spellCheck={false}
+							className={cn(inputCls, "font-mono text-[14px]")}
+						/>
+						{validTokenAddress && isTokenInfoLoading && (
+							<p className="text-[12px] text-text-tertiary">Loading token info…</p>
+						)}
+						{validTokenAddress && isTokenError && (
+							<p className="text-[12px] text-red">
+								Invalid token address — could not read token contract.
+							</p>
+						)}
+						{nonStandardDecimals && (
+							<p className="text-[12px] text-red">
+								This token uses {tokenDecimals} decimals instead of 6. Only TIP-20 tokens (6
+								decimals) are supported.
+							</p>
+						)}
+						{validTokenAddress && tokenName && tokenSymbol && !nonStandardDecimals && (
+							<div className="flex items-center gap-2 text-[13px]">
+								<span className="text-text-secondary">{tokenName}</span>
+								<span className="rounded bg-bg-field px-1.5 py-0.5 font-mono text-[10px] text-gold uppercase tracking-[0.1em]">
+									{tokenSymbol}
+								</span>
+								{tokenBalanceFormatted !== undefined && (
+									<span className="ml-auto font-mono text-[12px] text-text-tertiary">
+										Balance:{" "}
+										{Number.parseFloat(tokenBalanceFormatted).toLocaleString("en-US", {
+											maximumFractionDigits: 2,
+										})}{" "}
 										{tokenSymbol}
 									</span>
-									{tokenBalanceFormatted !== undefined && (
-										<span className="ml-auto font-mono text-xs text-smoke-dark">
-											Balance:{" "}
-											{Number.parseFloat(tokenBalanceFormatted).toLocaleString("en-US", {
-												maximumFractionDigits: 2,
-											})}{" "}
-											{tokenSymbol}
-										</span>
-									)}
-								</div>
+								)}
+							</div>
+						)}
+					</div>
+
+					<div className="space-y-2">
+						<label htmlFor="lock-beneficiary" className={labelCls}>
+							Beneficiary
+						</label>
+						<div className="flex gap-2">
+							<input
+								id="lock-beneficiary"
+								type="text"
+								placeholder="0x… (who can claim the tokens)"
+								value={beneficiary}
+								onChange={(e) => setBeneficiary(e.target.value)}
+								autoComplete="off"
+								spellCheck={false}
+								className={cn(inputCls, "flex-1 font-mono text-[14px]")}
+							/>
+							{isConnected && (
+								<button
+									type="button"
+									onClick={handleUseMyAddress}
+									className="shrink-0 rounded-xl border border-border-hair bg-bg-field px-3 py-3 text-[12px] text-text-secondary transition-colors hover:border-border-subtle hover:text-text-primary"
+								>
+									Use my address
+								</button>
 							)}
 						</div>
+					</div>
 
-						{/* Beneficiary */}
-						<div className="space-y-2">
-							<label htmlFor="lock-beneficiary" className="text-sm font-medium text-smoke">
-								Beneficiary
-							</label>
-							<div className="flex gap-2">
-								<Input
-									id="lock-beneficiary"
-									placeholder="0x... (who can claim the tokens)"
-									value={beneficiary}
-									onChange={(e) => setBeneficiary(e.target.value)}
-									autoComplete="off"
-									spellCheck={false}
-									className="flex-1 font-mono"
-								/>
-								{isConnected && (
-									<button
-										type="button"
-										onClick={handleUseMyAddress}
-										className="shrink-0 rounded-md border border-anvil-gray-light bg-obsidian-black px-3 py-2 text-xs text-smoke-dark transition-colors hover:text-smoke"
-									>
-										Use my address
-									</button>
-								)}
-							</div>
+					<div className="space-y-2">
+						<label htmlFor="lock-amount" className={labelCls}>
+							Amount
+						</label>
+						<div className="flex gap-2">
+							<input
+								id="lock-amount"
+								type="text"
+								placeholder="0.00"
+								value={amount}
+								onChange={(e) => setAmount(e.target.value)}
+								inputMode="decimal"
+								autoComplete="off"
+								className={cn(inputCls, "flex-1 font-mono")}
+							/>
+							{tokenBalance !== undefined && tokenBalance > 0n && (
+								<button
+									type="button"
+									onClick={handleMaxAmount}
+									className="shrink-0 rounded-xl border border-border-hair bg-bg-field px-3 py-3 text-[12px] text-text-secondary transition-colors hover:border-border-subtle hover:text-text-primary"
+								>
+									Max
+								</button>
+							)}
 						</div>
+					</div>
 
-						{/* Amount */}
-						<div className="space-y-2">
-							<label htmlFor="lock-amount" className="text-sm font-medium text-smoke">
-								Amount
-							</label>
-							<div className="flex gap-2">
-								<Input
-									id="lock-amount"
-									placeholder="0.00"
-									value={amount}
-									onChange={(e) => setAmount(e.target.value)}
-									inputMode="decimal"
-									autoComplete="off"
-									className="flex-1 font-mono"
-								/>
-								{tokenBalance !== undefined && tokenBalance > 0n && (
+					<div className="space-y-2">
+						<span className={labelCls}>Lock duration</span>
+						<div className="flex flex-wrap gap-2">
+							{DURATION_PRESETS.map((preset) => {
+								const days = String(Number(preset.seconds / 86400n));
+								const isActive = durationDays === days;
+								return (
 									<button
+										key={preset.label}
 										type="button"
-										onClick={handleMaxAmount}
-										className="shrink-0 rounded-md border border-anvil-gray-light bg-obsidian-black px-3 py-2 text-xs text-smoke-dark transition-colors hover:text-smoke"
+										onClick={() => setDurationDays(days)}
+										className={cn(
+											presetBtnCls,
+											isActive
+												? "border-indigo/40 bg-indigo/10 text-indigo"
+												: "border-border-hair bg-bg-field text-text-secondary hover:border-border-subtle hover:text-text-primary",
+										)}
 									>
-										Max
+										{preset.label}
 									</button>
-								)}
-							</div>
+								);
+							})}
 						</div>
+						<input
+							type="text"
+							placeholder="Custom days"
+							value={durationDays}
+							onChange={(e) => setDurationDays(e.target.value)}
+							inputMode="numeric"
+							autoComplete="off"
+							className={cn(inputCls, "font-mono")}
+						/>
+					</div>
 
-						{/* Lock Duration */}
+					<div className="space-y-2">
+						<span className={labelCls}>Vesting</span>
+						<div
+							className="flex gap-1 rounded-xl border border-border-hair bg-bg-field p-1"
+							role="tablist"
+							aria-label="Vesting"
+						>
+							<button
+								type="button"
+								role="tab"
+								aria-selected={!vestingEnabled}
+								className={cn(
+									"flex-1 rounded-lg px-3 py-2 text-[12.5px] font-medium transition-colors",
+									!vestingEnabled
+										? "bg-bg-elevated text-text-primary"
+										: "text-text-tertiary hover:text-text-secondary",
+								)}
+								onClick={() => {
+									setVestingEnabled(false);
+									setCliffDays("");
+								}}
+							>
+								No vesting
+							</button>
+							<button
+								type="button"
+								role="tab"
+								aria-selected={vestingEnabled}
+								className={cn(
+									"flex-1 rounded-lg px-3 py-2 text-[12.5px] font-medium transition-colors",
+									vestingEnabled
+										? "bg-bg-elevated text-text-primary"
+										: "text-text-tertiary hover:text-text-secondary",
+								)}
+								onClick={() => setVestingEnabled(true)}
+							>
+								Linear vesting
+							</button>
+						</div>
+					</div>
+
+					{vestingEnabled && (
 						<div className="space-y-2">
-							<span className="text-sm font-medium text-smoke">Lock Duration</span>
+							<span className={labelCls}>Cliff period</span>
 							<div className="flex flex-wrap gap-2">
-								{DURATION_PRESETS.map((preset) => {
+								{CLIFF_PRESETS.map((preset) => {
 									const days = String(Number(preset.seconds / 86400n));
-									const isActive = durationDays === days;
+									const isActive = cliffDays === days;
 									return (
 										<button
 											key={preset.label}
 											type="button"
-											onClick={() => setDurationDays(days)}
-											className={`rounded-md border px-3 py-1.5 text-xs font-medium transition-colors ${
+											onClick={() => setCliffDays(days)}
+											className={cn(
+												presetBtnCls,
 												isActive
-													? "border-indigo bg-indigo/10 text-indigo"
-													: "border-anvil-gray-light text-smoke-dark hover:text-smoke"
-											}`}
+													? "border-indigo/40 bg-indigo/10 text-indigo"
+													: "border-border-hair bg-bg-field text-text-secondary hover:border-border-subtle hover:text-text-primary",
+											)}
 										>
 											{preset.label}
 										</button>
 									);
 								})}
 							</div>
-							<Input
-								placeholder="Custom days"
-								value={durationDays}
-								onChange={(e) => setDurationDays(e.target.value)}
+							<input
+								type="text"
+								placeholder="Custom cliff days"
+								value={cliffDays}
+								onChange={(e) => setCliffDays(e.target.value)}
 								inputMode="numeric"
 								autoComplete="off"
-								className="font-mono"
+								className={cn(inputCls, "font-mono")}
 							/>
+							{cliffExceedsDuration && (
+								<p className="text-[12px] text-red">Cliff period cannot exceed lock duration.</p>
+							)}
 						</div>
+					)}
 
-						{/* Vesting Toggle */}
-						<div className="space-y-3">
-							<span className="text-sm font-medium text-smoke">Vesting</span>
-							<div
-								className="flex gap-1 rounded-md border border-anvil-gray-light bg-obsidian-black p-1"
-								role="tablist"
-								aria-label="Vesting"
-							>
-								<button
-									type="button"
-									role="tab"
-									aria-selected={!vestingEnabled}
-									className={`flex-1 rounded px-3 py-1.5 text-xs font-medium transition-colors ${
-										!vestingEnabled
-											? "bg-anvil-gray text-smoke"
-											: "text-smoke-dark hover:text-smoke"
-									}`}
-									onClick={() => {
-										setVestingEnabled(false);
-										setCliffDays("");
-									}}
-								>
-									No Vesting
-								</button>
-								<button
-									type="button"
-									role="tab"
-									aria-selected={vestingEnabled}
-									className={`flex-1 rounded px-3 py-1.5 text-xs font-medium transition-colors ${
-										vestingEnabled ? "bg-anvil-gray text-smoke" : "text-smoke-dark hover:text-smoke"
-									}`}
-									onClick={() => setVestingEnabled(true)}
-								>
-									Linear Vesting
-								</button>
-							</div>
-						</div>
-
-						{/* Cliff Period (only when vesting enabled) */}
-						{vestingEnabled && (
-							<div className="space-y-2">
-								<span className="text-sm font-medium text-smoke">Cliff Period</span>
-								<div className="flex flex-wrap gap-2">
-									{CLIFF_PRESETS.map((preset) => {
-										const days = String(Number(preset.seconds / 86400n));
-										const isActive = cliffDays === days;
-										return (
-											<button
-												key={preset.label}
-												type="button"
-												onClick={() => setCliffDays(days)}
-												className={`rounded-md border px-3 py-1.5 text-xs font-medium transition-colors ${
-													isActive
-														? "border-indigo bg-indigo/10 text-indigo"
-														: "border-anvil-gray-light text-smoke-dark hover:text-smoke"
-												}`}
-											>
-												{preset.label}
-											</button>
-										);
-									})}
-								</div>
-								<Input
-									placeholder="Custom cliff days"
-									value={cliffDays}
-									onChange={(e) => setCliffDays(e.target.value)}
-									inputMode="numeric"
-									autoComplete="off"
-									className="font-mono"
-								/>
-								{cliffExceedsDuration && (
-									<p className="text-xs text-ember-red">Cliff period cannot exceed lock duration</p>
+					<div className="space-y-2">
+						<span className={labelCls}>Revocable</span>
+						<div
+							className="flex gap-1 rounded-xl border border-border-hair bg-bg-field p-1"
+							role="tablist"
+							aria-label="Revocable"
+						>
+							<button
+								type="button"
+								role="tab"
+								aria-selected={!revocable}
+								className={cn(
+									"flex-1 rounded-lg px-3 py-2 text-[12.5px] font-medium transition-colors",
+									!revocable
+										? "bg-bg-elevated text-text-primary"
+										: "text-text-tertiary hover:text-text-secondary",
 								)}
-							</div>
-						)}
-
-						{/* Revocable Toggle */}
-						<div className="space-y-3">
-							<span className="text-sm font-medium text-smoke">Revocable</span>
-							<div
-								className="flex gap-1 rounded-md border border-anvil-gray-light bg-obsidian-black p-1"
-								role="tablist"
-								aria-label="Revocable"
+								onClick={() => setRevocable(false)}
 							>
-								<button
-									type="button"
-									role="tab"
-									aria-selected={!revocable}
-									className={`flex-1 rounded px-3 py-1.5 text-xs font-medium transition-colors ${
-										!revocable ? "bg-anvil-gray text-smoke" : "text-smoke-dark hover:text-smoke"
-									}`}
-									onClick={() => setRevocable(false)}
-								>
-									No
-								</button>
-								<button
-									type="button"
-									role="tab"
-									aria-selected={revocable}
-									className={`flex-1 rounded px-3 py-1.5 text-xs font-medium transition-colors ${
-										revocable ? "bg-anvil-gray text-smoke" : "text-smoke-dark hover:text-smoke"
-									}`}
-									onClick={() => setRevocable(true)}
-								>
-									Yes
-								</button>
-							</div>
-							{revocable && (
-								<p className="text-xs text-smoke-dark">
-									You can revoke this lock and reclaim unvested tokens at any time.
-								</p>
-							)}
+								No
+							</button>
+							<button
+								type="button"
+								role="tab"
+								aria-selected={revocable}
+								className={cn(
+									"flex-1 rounded-lg px-3 py-2 text-[12.5px] font-medium transition-colors",
+									revocable
+										? "bg-bg-elevated text-text-primary"
+										: "text-text-tertiary hover:text-text-secondary",
+								)}
+								onClick={() => setRevocable(true)}
+							>
+								Yes
+							</button>
 						</div>
-
-						{/* Vesting Preview */}
-						{parsedAmount > 0n && lockDurationSeconds > 0n && (
-							<VestingPreview
-								amount={amount}
-								lockDurationDays={Number(durationDays)}
-								cliffDurationDays={vestingEnabled && cliffDays ? Number(cliffDays) : 0}
-								vestingEnabled={vestingEnabled}
-								tokenSymbol={tokenSymbol}
-							/>
+						{revocable && (
+							<p className="text-[12px] text-text-tertiary">
+								You can revoke this lock and reclaim unvested tokens at any time.
+							</p>
 						)}
+					</div>
 
-						<Separator className="bg-anvil-gray-light" />
-
-						{/* Fee section */}
-						<div className="space-y-2">
-							<div className="flex items-center justify-between text-sm">
-								<span className="text-smoke-dark">Lock fee</span>
-								<span className="font-mono text-smoke">{feeFormatted} USDC</span>
-							</div>
-							{isConnected && (
-								<div className="flex items-center justify-between text-sm">
-									<span className="text-smoke-dark">USDC balance</span>
-									<span className="font-mono text-smoke">
-										{usdcBalanceFormatted !== undefined
-											? `${Number.parseFloat(usdcBalanceFormatted).toLocaleString("en-US", { maximumFractionDigits: 2 })} USDC`
-											: "\u2014"}
-									</span>
-								</div>
-							)}
-							{insufficientUsdc && (
-								<p className="text-xs text-ember-red">
-									Insufficient USDC balance to cover the lock fee
-								</p>
-							)}
-							{insufficientToken && (
-								<p className="text-xs text-ember-red">
-									Insufficient {tokenSymbol ?? "token"} balance to cover the lock amount
-								</p>
-							)}
-						</div>
-
-						<LockButton
-							needsUsdcApproval={needsUsdcApproval}
-							needsTokenApproval={needsTokenApproval}
-							isAllowanceLoading={isUsdcAllowanceLoading || isTokenAllowanceLoading}
-							insufficientUsdc={insufficientUsdc}
-							insufficientToken={insufficientToken}
-							isUsdcApproving={isUsdcApproving}
-							isUsdcApprovalConfirming={isUsdcApprovalConfirming}
-							isTokenApproving={isTokenApproving}
-							isTokenApprovalConfirming={isTokenApprovalConfirming}
-							isCreating={isCreating}
-							isConfirming={isConfirming}
-							disabled={!formValid}
+					{parsedAmount > 0n && lockDurationSeconds > 0n && (
+						<VestingPreview
+							amount={amount}
+							lockDurationDays={Number(durationDays)}
+							cliffDurationDays={vestingEnabled && cliffDays ? Number(cliffDays) : 0}
+							vestingEnabled={vestingEnabled}
 							tokenSymbol={tokenSymbol}
-							onApproveUsdc={approveUsdc}
-							onApproveToken={approveToken}
-							onCreateLock={handleCreateLock}
 						/>
-					</form>
-				</CardContent>
-			</Card>
+					)}
+
+					<div className="space-y-2 border-border-hair border-t pt-5">
+						<div className="flex items-center justify-between text-[13px]">
+							<span className={labelCls}>Lock fee</span>
+							<span className="font-mono text-text-primary">{feeFormatted} USDC</span>
+						</div>
+						{isConnected && (
+							<div className="flex items-center justify-between text-[13px]">
+								<span className={labelCls}>Your balance</span>
+								<span className="font-mono text-text-secondary">
+									{usdcBalanceFormatted !== undefined
+										? `${Number.parseFloat(usdcBalanceFormatted).toLocaleString("en-US", { maximumFractionDigits: 2 })} USDC`
+										: "—"}
+								</span>
+							</div>
+						)}
+						{insufficientUsdc && (
+							<p className="text-[12px] text-red">
+								Insufficient USDC balance to cover the lock fee.
+							</p>
+						)}
+						{insufficientToken && (
+							<p className="text-[12px] text-red">
+								Insufficient {tokenSymbol ?? "token"} balance to cover the lock amount.
+							</p>
+						)}
+					</div>
+
+					<LockButton
+						needsUsdcApproval={needsUsdcApproval}
+						needsTokenApproval={needsTokenApproval}
+						isAllowanceLoading={isUsdcAllowanceLoading || isTokenAllowanceLoading}
+						insufficientUsdc={insufficientUsdc}
+						insufficientToken={insufficientToken}
+						isUsdcApproving={isUsdcApproving}
+						isUsdcApprovalConfirming={isUsdcApprovalConfirming}
+						isTokenApproving={isTokenApproving}
+						isTokenApprovalConfirming={isTokenApprovalConfirming}
+						isCreating={isCreating}
+						isConfirming={isConfirming}
+						disabled={!formValid}
+						tokenSymbol={tokenSymbol}
+						onApproveUsdc={approveUsdc}
+						onApproveToken={approveToken}
+						onCreateLock={handleCreateLock}
+					/>
+				</form>
+			</div>
 
 			<TransactionStatus
 				open={txDialogOpen && txState !== "idle"}
 				onOpenChange={handleTxDialogClose}
 				state={txState}
 				txHash={txHash}
-				title="Creating Lock"
+				title="Forging lock"
 				onRetry={error ? handleRetry : undefined}
 				error={error ? formatErrorMessage(error, 120) : undefined}
 			/>

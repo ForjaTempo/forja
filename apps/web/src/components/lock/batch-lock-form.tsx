@@ -4,10 +4,6 @@ import { PlusIcon, TrashIcon } from "lucide-react";
 import { type FormEvent, useCallback, useMemo, useRef, useState } from "react";
 import { formatUnits, type Hex, isAddress, parseUnits } from "viem";
 import { useAccount } from "wagmi";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
 import { TransactionStatus } from "@/components/ui/transaction-status";
 import { useCreateBatchLock } from "@/hooks/use-create-batch-lock";
 import { useLockFee } from "@/hooks/use-lock-fee";
@@ -22,6 +18,7 @@ import { lockerV2Config } from "@/lib/contracts";
 import { detectDelimiter, downloadCsvTemplate, stripBom } from "@/lib/csv-utils";
 import { deriveTxState, formatErrorMessage } from "@/lib/format";
 import { CLIFF_PRESETS, DURATION_PRESETS } from "@/lib/lock-utils";
+import { cn } from "@/lib/utils";
 import { LockButton } from "./lock-button";
 import { VestingPreview } from "./vesting-preview";
 
@@ -29,6 +26,11 @@ const MAX_BATCH = 50;
 const ADDRESS_RE = /^0x[0-9a-fA-F]{40}$/;
 const VALID_AMOUNT = /^\d+(\.\d{1,6})?$/;
 const VALID_DAYS = /^\d+$/;
+
+const labelCls = "font-mono text-[11px] uppercase tracking-[0.12em] text-text-tertiary";
+const inputCls =
+	"w-full rounded-xl border border-border-hair bg-bg-field px-4 py-3 text-[15px] text-text-primary placeholder:text-text-tertiary focus:border-gold/60 focus:outline-none transition-colors";
+const presetBtnCls = "rounded-lg border px-3 py-1.5 font-medium text-[12px] transition-colors";
 
 type InputMode = "paste" | "manual";
 
@@ -107,7 +109,6 @@ function parseManualRows(
 		return { rows: [], errors, totalAmount: 0n };
 	}
 
-	// Validate addresses first
 	for (let i = 0; i < nonEmpty.length; i++) {
 		const r = nonEmpty[i] as BeneficiaryRow;
 		if (!ADDRESS_RE.test(r.address.trim())) {
@@ -127,7 +128,6 @@ function parseManualRows(
 			errors.push("Amount per beneficiary is too small");
 			return { rows: [], errors, totalAmount: 0n };
 		}
-		// Last person gets remainder
 		const remainder = total - perPerson * BigInt(nonEmpty.length);
 		for (let i = 0; i < nonEmpty.length; i++) {
 			const r = nonEmpty[i] as BeneficiaryRow;
@@ -354,458 +354,454 @@ export function BatchLockForm({ onSuccess, initialToken }: BatchLockFormProps) {
 
 	return (
 		<>
-			<Card className="border-anvil-gray-light bg-deep-charcoal">
-				<CardContent>
-					<form onSubmit={handleSubmit} className="space-y-5">
-						{/* Token Address */}
-						<div className="space-y-2">
-							<label htmlFor="batch-token" className="text-sm font-medium text-smoke">
-								Token Address
-							</label>
-							<Input
-								id="batch-token"
-								placeholder="0x..."
-								value={tokenAddress}
-								onChange={(e) => setTokenAddress(e.target.value)}
-								autoComplete="off"
-								spellCheck={false}
-								className="font-mono"
-							/>
-							{validTokenAddress && isTokenInfoLoading && (
-								<p className="text-xs text-smoke-dark">Loading token info...</p>
-							)}
-							{validTokenAddress && isTokenError && (
-								<p className="text-xs text-ember-red">
-									Invalid token address — could not read token contract
-								</p>
-							)}
-							{nonStandardDecimals && (
-								<p className="text-xs text-ember-red">
-									This token uses {tokenDecimals} decimals instead of 6. Only TIP-20 tokens (6
-									decimals) are supported.
-								</p>
-							)}
-							{validTokenAddress && tokenName && tokenSymbol && !nonStandardDecimals && (
-								<div className="flex items-center gap-2 text-sm">
-									<span className="text-smoke">{tokenName}</span>
-									<span className="rounded bg-anvil-gray px-1.5 py-0.5 font-mono text-xs text-smoke-dark">
+			<div className="rounded-2xl border border-border-hair bg-bg-elevated p-6 shadow-[0_20px_60px_rgba(0,0,0,0.4)] sm:p-8">
+				<form onSubmit={handleSubmit} className="space-y-6">
+					<div className="space-y-2">
+						<label htmlFor="batch-token" className={labelCls}>
+							Token address
+						</label>
+						<input
+							id="batch-token"
+							type="text"
+							placeholder="0x…"
+							value={tokenAddress}
+							onChange={(e) => setTokenAddress(e.target.value)}
+							autoComplete="off"
+							spellCheck={false}
+							className={cn(inputCls, "font-mono text-[14px]")}
+						/>
+						{validTokenAddress && isTokenInfoLoading && (
+							<p className="text-[12px] text-text-tertiary">Loading token info…</p>
+						)}
+						{validTokenAddress && isTokenError && (
+							<p className="text-[12px] text-red">
+								Invalid token address — could not read token contract.
+							</p>
+						)}
+						{nonStandardDecimals && (
+							<p className="text-[12px] text-red">
+								This token uses {tokenDecimals} decimals instead of 6. Only TIP-20 tokens (6
+								decimals) are supported.
+							</p>
+						)}
+						{validTokenAddress && tokenName && tokenSymbol && !nonStandardDecimals && (
+							<div className="flex items-center gap-2 text-[13px]">
+								<span className="text-text-secondary">{tokenName}</span>
+								<span className="rounded bg-bg-field px-1.5 py-0.5 font-mono text-[10px] text-gold uppercase tracking-[0.1em]">
+									{tokenSymbol}
+								</span>
+								{tokenBalanceFormatted !== undefined && (
+									<span className="ml-auto font-mono text-[12px] text-text-tertiary">
+										Balance:{" "}
+										{Number.parseFloat(tokenBalanceFormatted).toLocaleString("en-US", {
+											maximumFractionDigits: 2,
+										})}{" "}
 										{tokenSymbol}
 									</span>
-									{tokenBalanceFormatted !== undefined && (
-										<span className="ml-auto font-mono text-xs text-smoke-dark">
-											Balance:{" "}
-											{Number.parseFloat(tokenBalanceFormatted).toLocaleString("en-US", {
-												maximumFractionDigits: 2,
-											})}{" "}
-											{tokenSymbol}
-										</span>
-									)}
-								</div>
-							)}
-						</div>
+								)}
+							</div>
+						)}
+					</div>
 
-						{/* Input mode toggle */}
-						<div className="space-y-2">
-							<span className="text-sm font-medium text-smoke">
-								Beneficiaries (max {MAX_BATCH})
-							</span>
-							<div
-								className="flex gap-1 rounded-md border border-anvil-gray-light bg-obsidian-black p-1"
-								role="tablist"
-								aria-label="Input mode"
+					<div className="space-y-2">
+						<span className={labelCls}>Beneficiaries · max {MAX_BATCH}</span>
+						<div
+							className="flex gap-1 rounded-xl border border-border-hair bg-bg-field p-1"
+							role="tablist"
+							aria-label="Input mode"
+						>
+							<button
+								type="button"
+								role="tab"
+								aria-selected={inputMode === "paste"}
+								className={cn(
+									"flex-1 rounded-lg px-3 py-1.5 text-[12.5px] font-medium transition-colors",
+									inputMode === "paste"
+										? "bg-bg-elevated text-text-primary"
+										: "text-text-tertiary hover:text-text-secondary",
+								)}
+								onClick={() => setInputMode("paste")}
 							>
+								Paste / CSV
+							</button>
+							<button
+								type="button"
+								role="tab"
+								aria-selected={inputMode === "manual"}
+								className={cn(
+									"flex-1 rounded-lg px-3 py-1.5 text-[12.5px] font-medium transition-colors",
+									inputMode === "manual"
+										? "bg-bg-elevated text-text-primary"
+										: "text-text-tertiary hover:text-text-secondary",
+								)}
+								onClick={() => setInputMode("manual")}
+							>
+								Manual entry
+							</button>
+						</div>
+					</div>
+
+					{inputMode === "paste" ? (
+						<div className="space-y-2">
+							<div className="flex justify-end">
 								<button
 									type="button"
-									role="tab"
-									aria-selected={inputMode === "paste"}
-									className={`flex-1 rounded px-3 py-1.5 text-xs font-medium transition-colors ${
-										inputMode === "paste"
-											? "bg-anvil-gray text-smoke"
-											: "text-smoke-dark hover:text-smoke"
-									}`}
-									onClick={() => setInputMode("paste")}
+									onClick={handleDownloadTemplate}
+									className="text-[12px] text-text-tertiary transition-colors hover:text-text-secondary"
 								>
-									Paste / CSV
+									Download template
 								</button>
+							</div>
+							<textarea
+								id="batch-beneficiaries"
+								className="min-h-[140px] w-full rounded-xl border border-border-hair bg-bg-field px-4 py-3 font-mono text-[13px] text-text-primary placeholder:text-text-tertiary focus:border-gold/60 focus:outline-none transition-colors"
+								placeholder={"0x1234…abcd,1000\n0x5678…efgh,2500\n0xabcd…1234,500"}
+								value={pasteText}
+								onChange={(e) => setPasteText(e.target.value)}
+								spellCheck={false}
+							/>
+							<p className="text-[12px] text-text-tertiary">
+								One per line: address,amount (comma, semicolon, or tab separated).
+							</p>
+						</div>
+					) : (
+						<div className="space-y-3">
+							<div className="flex items-center gap-3">
+								<label className="flex cursor-pointer items-center gap-2 text-[12px] text-text-secondary">
+									<input
+										type="checkbox"
+										checked={equalSplit}
+										onChange={(e) => setEqualSplit(e.target.checked)}
+										className="size-3.5 accent-indigo"
+									/>
+									Equal split
+								</label>
+								{equalSplit && (
+									<input
+										type="text"
+										placeholder="Total amount to split"
+										value={equalTotalAmount}
+										onChange={(e) => setEqualTotalAmount(e.target.value)}
+										inputMode="decimal"
+										autoComplete="off"
+										className={cn(inputCls, "h-9 max-w-[220px] py-2 font-mono text-[12px]")}
+									/>
+								)}
+							</div>
+
+							<div className="space-y-2">
+								{manualRows.map((row, i) => (
+									<div key={`row-${i.toString()}`} className="flex items-center gap-2">
+										<input
+											type="text"
+											aria-label={`Beneficiary ${i + 1} address`}
+											placeholder="0x…"
+											value={row.address}
+											onChange={(e) => handleRowChange(i, "address", e.target.value)}
+											className={cn(inputCls, "flex-[2] py-2.5 font-mono text-[13px]")}
+											autoComplete="off"
+											spellCheck={false}
+										/>
+										{!equalSplit && (
+											<input
+												type="text"
+												aria-label={`Beneficiary ${i + 1} amount`}
+												placeholder="Amount"
+												value={row.amount}
+												onChange={(e) => handleRowChange(i, "amount", e.target.value)}
+												className={cn(inputCls, "flex-1 py-2.5 font-mono text-[13px]")}
+												inputMode="decimal"
+												autoComplete="off"
+											/>
+										)}
+										<button
+											type="button"
+											className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg border border-border-hair bg-bg-field text-text-tertiary transition-colors hover:border-border-subtle hover:text-red disabled:cursor-not-allowed disabled:opacity-40"
+											onClick={() => handleRemoveRow(i)}
+											disabled={manualRows.length <= 1}
+											aria-label={`Remove beneficiary ${i + 1}`}
+										>
+											<TrashIcon className="size-3.5" />
+										</button>
+									</div>
+								))}
 								<button
 									type="button"
-									role="tab"
-									aria-selected={inputMode === "manual"}
-									className={`flex-1 rounded px-3 py-1.5 text-xs font-medium transition-colors ${
-										inputMode === "manual"
-											? "bg-anvil-gray text-smoke"
-											: "text-smoke-dark hover:text-smoke"
-									}`}
-									onClick={() => setInputMode("manual")}
+									className="inline-flex items-center gap-1.5 rounded-lg border border-border-hair bg-bg-field px-3 py-2 text-[12px] font-medium text-text-secondary transition-colors hover:border-border-subtle hover:text-text-primary disabled:cursor-not-allowed disabled:opacity-40"
+									onClick={handleAddRow}
+									disabled={manualRows.length >= MAX_BATCH}
 								>
-									Manual Entry
+									<PlusIcon className="size-3" />
+									Add beneficiary
 								</button>
 							</div>
 						</div>
+					)}
 
-						{inputMode === "paste" ? (
-							<div className="space-y-2">
-								<div className="flex justify-end">
-									<button
-										type="button"
-										onClick={handleDownloadTemplate}
-										className="text-xs text-smoke-dark transition-colors hover:text-smoke"
-									>
-										Download template
-									</button>
-								</div>
-								<textarea
-									id="batch-beneficiaries"
-									className="min-h-[120px] w-full rounded-md border border-anvil-gray-light bg-obsidian-black px-3 py-2 font-mono text-sm text-smoke placeholder:text-smoke-dark focus:border-forge-green focus:outline-none focus:ring-1 focus:ring-forge-green"
-									placeholder={"0x1234...abcd,1000\n0x5678...efgh,2500\n0xabcd...1234,500"}
-									value={pasteText}
-									onChange={(e) => setPasteText(e.target.value)}
-									spellCheck={false}
-								/>
-								<p className="text-xs text-smoke-dark">
-									One per line: address,amount (comma, semicolon, or tab separated)
+					{parsed.errors.length > 0 && (
+						<div className="space-y-1" role="alert">
+							{parsed.errors.map((err) => (
+								<p key={err} className="text-[12px] text-red">
+									{err}
 								</p>
-							</div>
-						) : (
-							<div className="space-y-3">
-								{/* Equal split toggle */}
-								<div className="flex items-center gap-3">
-									<label className="flex cursor-pointer items-center gap-2 text-xs text-smoke-dark">
-										<input
-											type="checkbox"
-											checked={equalSplit}
-											onChange={(e) => setEqualSplit(e.target.checked)}
-											className="size-3.5 rounded border-anvil-gray-light accent-indigo"
-										/>
-										Equal split
-									</label>
-									{equalSplit && (
-										<Input
-											placeholder="Total amount to split"
-											value={equalTotalAmount}
-											onChange={(e) => setEqualTotalAmount(e.target.value)}
-											inputMode="decimal"
-											autoComplete="off"
-											className="h-8 max-w-[200px] font-mono text-xs"
-										/>
-									)}
-								</div>
+							))}
+						</div>
+					)}
 
-								{/* Manual rows */}
-								<div className="space-y-2">
-									{manualRows.map((row, i) => (
-										<div key={`row-${i.toString()}`} className="flex items-center gap-2">
-											<Input
-												aria-label={`Beneficiary ${i + 1} address`}
-												placeholder="0x..."
-												value={row.address}
-												onChange={(e) => handleRowChange(i, "address", e.target.value)}
-												className="flex-[2] font-mono text-sm"
-												autoComplete="off"
-												spellCheck={false}
-											/>
-											{!equalSplit && (
-												<Input
-													aria-label={`Beneficiary ${i + 1} amount`}
-													placeholder="Amount"
-													value={row.amount}
-													onChange={(e) => handleRowChange(i, "amount", e.target.value)}
-													className="flex-1 font-mono text-sm"
-													inputMode="decimal"
-													autoComplete="off"
-												/>
-											)}
-											<Button
-												type="button"
-												variant="ghost"
-												size="sm"
-												className="h-9 w-9 shrink-0 p-0"
-												onClick={() => handleRemoveRow(i)}
-												disabled={manualRows.length <= 1}
-												aria-label={`Remove beneficiary ${i + 1}`}
-											>
-												<TrashIcon className="size-3.5 text-smoke-dark" />
-											</Button>
-										</div>
-									))}
-									<Button
-										type="button"
-										variant="ghost"
-										size="sm"
-										className="h-8 text-xs text-smoke-dark"
-										onClick={handleAddRow}
-										disabled={manualRows.length >= MAX_BATCH}
-									>
-										<PlusIcon className="size-3" />
-										Add Beneficiary
-									</Button>
-								</div>
+					{parsed.rows.length > 0 && parsed.errors.length === 0 && (
+						<div className="rounded-xl border border-border-hair bg-bg-field/60 p-3.5">
+							<div className="mb-2.5 flex items-center justify-between text-[12px]">
+								<span className="text-text-tertiary">{parsed.rows.length} beneficiaries</span>
+								<span className="font-mono text-text-primary">
+									Total {formatUnits(parsed.totalAmount, TIP20_DECIMALS)} {tokenSymbol ?? "tokens"}
+								</span>
 							</div>
-						)}
-
-						{/* Parse errors */}
-						{parsed.errors.length > 0 && (
-							<div className="space-y-1" role="alert">
-								{parsed.errors.map((err) => (
-									<p key={err} className="text-xs text-ember-red">
-										{err}
-									</p>
-								))}
-							</div>
-						)}
-
-						{/* Preview */}
-						{parsed.rows.length > 0 && parsed.errors.length === 0 && (
-							<div className="rounded-lg border border-anvil-gray-light bg-obsidian-black/50 p-3">
-								<div className="mb-2 flex items-center justify-between text-xs text-smoke-dark">
-									<span>{parsed.rows.length} beneficiaries</span>
-									<span className="font-mono text-smoke">
-										Total: {formatUnits(parsed.totalAmount, TIP20_DECIMALS)}{" "}
-										{tokenSymbol ?? "tokens"}
-									</span>
-								</div>
-								<div className="max-h-[160px] overflow-y-auto">
-									<table className="w-full text-xs" aria-label="Beneficiaries preview">
-										<thead>
-											<tr className="border-b border-anvil-gray-light text-smoke-dark">
-												<th className="pb-1 text-left font-medium">#</th>
-												<th className="pb-1 text-left font-medium">Address</th>
-												<th className="pb-1 text-right font-medium">Amount</th>
+							<div className="max-h-[180px] overflow-y-auto">
+								<table className="w-full text-[12px]" aria-label="Beneficiaries preview">
+									<thead>
+										<tr className="font-mono text-[10px] text-text-tertiary uppercase tracking-[0.12em]">
+											<th className="pb-1.5 text-left font-medium">#</th>
+											<th className="pb-1.5 text-left font-medium">Address</th>
+											<th className="pb-1.5 text-right font-medium">Amount</th>
+										</tr>
+									</thead>
+									<tbody>
+										{parsed.rows.map((r, i) => (
+											<tr key={`${r.address}-${r.amount}`} className="border-border-hair border-t">
+												<td className="py-1.5 text-text-tertiary">{i + 1}</td>
+												<td className="py-1.5 font-mono text-text-secondary">
+													{r.address.slice(0, 8)}…{r.address.slice(-6)}
+												</td>
+												<td className="py-1.5 text-right font-mono text-text-primary">
+													{r.amount}
+												</td>
 											</tr>
-										</thead>
-										<tbody>
-											{parsed.rows.map((r, i) => (
-												<tr
-													key={`${r.address}-${r.amount}`}
-													className="border-b border-anvil-gray-light/50"
-												>
-													<td className="py-1 text-smoke-dark">{i + 1}</td>
-													<td className="py-1 font-mono text-smoke">
-														{r.address.slice(0, 8)}...{r.address.slice(-6)}
-													</td>
-													<td className="py-1 text-right font-mono text-smoke">{r.amount}</td>
-												</tr>
-											))}
-										</tbody>
-									</table>
-								</div>
+										))}
+									</tbody>
+								</table>
 							</div>
-						)}
+						</div>
+					)}
 
-						{/* Lock Duration */}
+					<div className="space-y-2">
+						<span className={labelCls}>Lock duration</span>
+						<div className="flex flex-wrap gap-2">
+							{DURATION_PRESETS.map((preset) => {
+								const days = String(Number(preset.seconds / 86400n));
+								const isActive = durationDays === days;
+								return (
+									<button
+										key={preset.label}
+										type="button"
+										onClick={() => setDurationDays(days)}
+										className={cn(
+											presetBtnCls,
+											isActive
+												? "border-indigo/40 bg-indigo/10 text-indigo"
+												: "border-border-hair bg-bg-field text-text-secondary hover:border-border-subtle hover:text-text-primary",
+										)}
+									>
+										{preset.label}
+									</button>
+								);
+							})}
+						</div>
+						<input
+							type="text"
+							placeholder="Custom days"
+							value={durationDays}
+							onChange={(e) => setDurationDays(e.target.value)}
+							inputMode="numeric"
+							autoComplete="off"
+							className={cn(inputCls, "font-mono")}
+						/>
+					</div>
+
+					<div className="space-y-2">
+						<span className={labelCls}>Vesting</span>
+						<div
+							className="flex gap-1 rounded-xl border border-border-hair bg-bg-field p-1"
+							role="tablist"
+							aria-label="Vesting"
+						>
+							<button
+								type="button"
+								role="tab"
+								aria-selected={!vestingEnabled}
+								className={cn(
+									"flex-1 rounded-lg px-3 py-2 text-[12.5px] font-medium transition-colors",
+									!vestingEnabled
+										? "bg-bg-elevated text-text-primary"
+										: "text-text-tertiary hover:text-text-secondary",
+								)}
+								onClick={() => {
+									setVestingEnabled(false);
+									setCliffDays("");
+								}}
+							>
+								No vesting
+							</button>
+							<button
+								type="button"
+								role="tab"
+								aria-selected={vestingEnabled}
+								className={cn(
+									"flex-1 rounded-lg px-3 py-2 text-[12.5px] font-medium transition-colors",
+									vestingEnabled
+										? "bg-bg-elevated text-text-primary"
+										: "text-text-tertiary hover:text-text-secondary",
+								)}
+								onClick={() => setVestingEnabled(true)}
+							>
+								Linear vesting
+							</button>
+						</div>
+					</div>
+
+					{vestingEnabled && (
 						<div className="space-y-2">
-							<span className="text-sm font-medium text-smoke">Lock Duration</span>
+							<span className={labelCls}>Cliff period</span>
 							<div className="flex flex-wrap gap-2">
-								{DURATION_PRESETS.map((preset) => {
+								{CLIFF_PRESETS.map((preset) => {
 									const days = String(Number(preset.seconds / 86400n));
-									const isActive = durationDays === days;
+									const isActive = cliffDays === days;
 									return (
 										<button
 											key={preset.label}
 											type="button"
-											onClick={() => setDurationDays(days)}
-											className={`rounded-md border px-3 py-1.5 text-xs font-medium transition-colors ${
+											onClick={() => setCliffDays(days)}
+											className={cn(
+												presetBtnCls,
 												isActive
-													? "border-indigo bg-indigo/10 text-indigo"
-													: "border-anvil-gray-light text-smoke-dark hover:text-smoke"
-											}`}
+													? "border-indigo/40 bg-indigo/10 text-indigo"
+													: "border-border-hair bg-bg-field text-text-secondary hover:border-border-subtle hover:text-text-primary",
+											)}
 										>
 											{preset.label}
 										</button>
 									);
 								})}
 							</div>
-							<Input
-								placeholder="Custom days"
-								value={durationDays}
-								onChange={(e) => setDurationDays(e.target.value)}
+							<input
+								type="text"
+								placeholder="Custom cliff days"
+								value={cliffDays}
+								onChange={(e) => setCliffDays(e.target.value)}
 								inputMode="numeric"
 								autoComplete="off"
-								className="font-mono"
+								className={cn(inputCls, "font-mono")}
 							/>
+							{cliffExceedsDuration && (
+								<p className="text-[12px] text-red">Cliff period cannot exceed lock duration.</p>
+							)}
 						</div>
+					)}
 
-						{/* Vesting Toggle */}
-						<div className="space-y-3">
-							<span className="text-sm font-medium text-smoke">Vesting</span>
-							<div
-								className="flex gap-1 rounded-md border border-anvil-gray-light bg-obsidian-black p-1"
-								role="tablist"
-								aria-label="Vesting"
-							>
-								<button
-									type="button"
-									role="tab"
-									aria-selected={!vestingEnabled}
-									className={`flex-1 rounded px-3 py-1.5 text-xs font-medium transition-colors ${
-										!vestingEnabled
-											? "bg-anvil-gray text-smoke"
-											: "text-smoke-dark hover:text-smoke"
-									}`}
-									onClick={() => {
-										setVestingEnabled(false);
-										setCliffDays("");
-									}}
-								>
-									No Vesting
-								</button>
-								<button
-									type="button"
-									role="tab"
-									aria-selected={vestingEnabled}
-									className={`flex-1 rounded px-3 py-1.5 text-xs font-medium transition-colors ${
-										vestingEnabled ? "bg-anvil-gray text-smoke" : "text-smoke-dark hover:text-smoke"
-									}`}
-									onClick={() => setVestingEnabled(true)}
-								>
-									Linear Vesting
-								</button>
-							</div>
-						</div>
-
-						{/* Cliff Period */}
-						{vestingEnabled && (
-							<div className="space-y-2">
-								<span className="text-sm font-medium text-smoke">Cliff Period</span>
-								<div className="flex flex-wrap gap-2">
-									{CLIFF_PRESETS.map((preset) => {
-										const days = String(Number(preset.seconds / 86400n));
-										const isActive = cliffDays === days;
-										return (
-											<button
-												key={preset.label}
-												type="button"
-												onClick={() => setCliffDays(days)}
-												className={`rounded-md border px-3 py-1.5 text-xs font-medium transition-colors ${
-													isActive
-														? "border-indigo bg-indigo/10 text-indigo"
-														: "border-anvil-gray-light text-smoke-dark hover:text-smoke"
-												}`}
-											>
-												{preset.label}
-											</button>
-										);
-									})}
-								</div>
-								<Input
-									placeholder="Custom cliff days"
-									value={cliffDays}
-									onChange={(e) => setCliffDays(e.target.value)}
-									inputMode="numeric"
-									autoComplete="off"
-									className="font-mono"
-								/>
-								{cliffExceedsDuration && (
-									<p className="text-xs text-ember-red">Cliff period cannot exceed lock duration</p>
+					<div className="space-y-2">
+						<span className={labelCls}>Revocable</span>
+						<div
+							className="flex gap-1 rounded-xl border border-border-hair bg-bg-field p-1"
+							role="tablist"
+							aria-label="Revocable"
+						>
+							<button
+								type="button"
+								role="tab"
+								aria-selected={!revocable}
+								className={cn(
+									"flex-1 rounded-lg px-3 py-2 text-[12.5px] font-medium transition-colors",
+									!revocable
+										? "bg-bg-elevated text-text-primary"
+										: "text-text-tertiary hover:text-text-secondary",
 								)}
-							</div>
-						)}
-
-						{/* Revocable Toggle */}
-						<div className="space-y-3">
-							<span className="text-sm font-medium text-smoke">Revocable</span>
-							<div
-								className="flex gap-1 rounded-md border border-anvil-gray-light bg-obsidian-black p-1"
-								role="tablist"
-								aria-label="Revocable"
+								onClick={() => setRevocable(false)}
 							>
-								<button
-									type="button"
-									role="tab"
-									aria-selected={!revocable}
-									className={`flex-1 rounded px-3 py-1.5 text-xs font-medium transition-colors ${
-										!revocable ? "bg-anvil-gray text-smoke" : "text-smoke-dark hover:text-smoke"
-									}`}
-									onClick={() => setRevocable(false)}
-								>
-									No
-								</button>
-								<button
-									type="button"
-									role="tab"
-									aria-selected={revocable}
-									className={`flex-1 rounded px-3 py-1.5 text-xs font-medium transition-colors ${
-										revocable ? "bg-anvil-gray text-smoke" : "text-smoke-dark hover:text-smoke"
-									}`}
-									onClick={() => setRevocable(true)}
-								>
-									Yes
-								</button>
-							</div>
+								No
+							</button>
+							<button
+								type="button"
+								role="tab"
+								aria-selected={revocable}
+								className={cn(
+									"flex-1 rounded-lg px-3 py-2 text-[12.5px] font-medium transition-colors",
+									revocable
+										? "bg-bg-elevated text-text-primary"
+										: "text-text-tertiary hover:text-text-secondary",
+								)}
+								onClick={() => setRevocable(true)}
+							>
+								Yes
+							</button>
 						</div>
+					</div>
 
-						{/* Vesting Preview */}
-						{parsed.totalAmount > 0n && lockDurationSeconds > 0n && (
-							<VestingPreview
-								amount={formatUnits(parsed.totalAmount, TIP20_DECIMALS)}
-								lockDurationDays={Number(durationDays)}
-								cliffDurationDays={vestingEnabled && cliffDays ? Number(cliffDays) : 0}
-								vestingEnabled={vestingEnabled}
-								tokenSymbol={tokenSymbol}
-							/>
-						)}
-
-						<Separator className="bg-anvil-gray-light" />
-
-						{/* Fee section */}
-						<div className="space-y-2">
-							<div className="flex items-center justify-between text-sm">
-								<span className="text-smoke-dark">Batch fee (flat)</span>
-								<span className="font-mono text-smoke">~{FEES.batchLock} USDC</span>
-							</div>
-							<p className="text-xs text-smoke-dark">
-								One flat fee for the entire batch, regardless of beneficiary count.
-							</p>
-							{isConnected && (
-								<div className="flex items-center justify-between text-sm">
-									<span className="text-smoke-dark">USDC balance</span>
-									<span className="font-mono text-smoke">
-										{usdcBalanceFormatted !== undefined
-											? `${Number.parseFloat(usdcBalanceFormatted).toLocaleString("en-US", { maximumFractionDigits: 2 })} USDC`
-											: "\u2014"}
-									</span>
-								</div>
-							)}
-							{insufficientUsdc && (
-								<p className="text-xs text-ember-red">
-									Insufficient USDC balance to cover the batch fee
-								</p>
-							)}
-							{insufficientToken && (
-								<p className="text-xs text-ember-red">
-									Insufficient {tokenSymbol ?? "token"} balance to cover total lock amount
-								</p>
-							)}
-						</div>
-
-						<LockButton
-							needsUsdcApproval={needsUsdcApproval}
-							needsTokenApproval={needsTokenApproval}
-							isAllowanceLoading={isUsdcAllowanceLoading || isTokenAllowanceLoading}
-							insufficientUsdc={insufficientUsdc}
-							insufficientToken={insufficientToken}
-							isUsdcApproving={isUsdcApproving}
-							isUsdcApprovalConfirming={isUsdcApprovalConfirming}
-							isTokenApproving={isTokenApproving}
-							isTokenApprovalConfirming={isTokenApprovalConfirming}
-							isCreating={isCreating}
-							isConfirming={isConfirming}
-							disabled={!formValid}
+					{parsed.totalAmount > 0n && lockDurationSeconds > 0n && (
+						<VestingPreview
+							amount={formatUnits(parsed.totalAmount, TIP20_DECIMALS)}
+							lockDurationDays={Number(durationDays)}
+							cliffDurationDays={vestingEnabled && cliffDays ? Number(cliffDays) : 0}
+							vestingEnabled={vestingEnabled}
 							tokenSymbol={tokenSymbol}
-							onApproveUsdc={approveUsdc}
-							onApproveToken={approveToken}
-							onCreateLock={handleCreateBatchLock}
 						/>
-					</form>
-				</CardContent>
-			</Card>
+					)}
+
+					<div className="space-y-2 border-border-hair border-t pt-5">
+						<div className="flex items-center justify-between text-[13px]">
+							<span className={labelCls}>Batch fee · flat</span>
+							<span className="font-mono text-text-primary">~{FEES.batchLock} USDC</span>
+						</div>
+						<p className="text-[12px] text-text-tertiary">
+							One flat fee for the entire batch, regardless of beneficiary count.
+						</p>
+						{isConnected && (
+							<div className="flex items-center justify-between text-[13px]">
+								<span className={labelCls}>Your balance</span>
+								<span className="font-mono text-text-secondary">
+									{usdcBalanceFormatted !== undefined
+										? `${Number.parseFloat(usdcBalanceFormatted).toLocaleString("en-US", { maximumFractionDigits: 2 })} USDC`
+										: "—"}
+								</span>
+							</div>
+						)}
+						{insufficientUsdc && (
+							<p className="text-[12px] text-red">
+								Insufficient USDC balance to cover the batch fee.
+							</p>
+						)}
+						{insufficientToken && (
+							<p className="text-[12px] text-red">
+								Insufficient {tokenSymbol ?? "token"} balance to cover total lock amount.
+							</p>
+						)}
+					</div>
+
+					<LockButton
+						needsUsdcApproval={needsUsdcApproval}
+						needsTokenApproval={needsTokenApproval}
+						isAllowanceLoading={isUsdcAllowanceLoading || isTokenAllowanceLoading}
+						insufficientUsdc={insufficientUsdc}
+						insufficientToken={insufficientToken}
+						isUsdcApproving={isUsdcApproving}
+						isUsdcApprovalConfirming={isUsdcApprovalConfirming}
+						isTokenApproving={isTokenApproving}
+						isTokenApprovalConfirming={isTokenApprovalConfirming}
+						isCreating={isCreating}
+						isConfirming={isConfirming}
+						disabled={!formValid}
+						tokenSymbol={tokenSymbol}
+						onApproveUsdc={approveUsdc}
+						onApproveToken={approveToken}
+						onCreateLock={handleCreateBatchLock}
+					/>
+				</form>
+			</div>
 
 			<TransactionStatus
 				open={txDialogOpen && txState !== "idle"}
 				onOpenChange={handleTxDialogClose}
 				state={txState}
 				txHash={txHash}
-				title="Creating Batch Lock"
+				title="Forging batch lock"
 				onRetry={error ? handleRetry : undefined}
 				error={error ? formatErrorMessage(error, 120) : undefined}
 			/>
