@@ -1,8 +1,11 @@
-@import "tailwindcss";
-/* RainbowKit CSS must load AFTER tailwindcss so its modal styles survive
-   Tailwind v4's preflight cascade layer. Do not move this import back into
-   providers.tsx — JS-side imports land in an earlier layer and get stripped. */
+/* External vendor CSS must import BEFORE `@import "tailwindcss"` so it sits
+   in the base cascade layer. When imported after tailwindcss, Tailwind v4's
+   compiler inlines its output then treats any trailing @import as invalid
+   per CSS spec (imports must precede style rules) — silently dropping it on
+   production builds and causing FOUC on cold load. Defensive modal CSS at
+   the bottom of this file keeps the modal background even if cascade shifts. */
 @import "@rainbow-me/rainbowkit/styles.css";
+@import "tailwindcss";
 
 @theme inline {
 	/* ── Surfaces (forge editorial) ── */
