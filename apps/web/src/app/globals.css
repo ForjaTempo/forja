@@ -1,4 +1,8 @@
 @import "tailwindcss";
+/* RainbowKit CSS must load AFTER tailwindcss so its modal styles survive
+   Tailwind v4's preflight cascade layer. Do not move this import back into
+   providers.tsx — JS-side imports land in an earlier layer and get stripped. */
+@import "@rainbow-me/rainbowkit/styles.css";
 
 @theme inline {
 	/* ── Surfaces (forge editorial) ── */
@@ -305,13 +309,22 @@ body {
 	background: transparent;
 }
 
-/* RainbowKit modal — defensive background fill so Tailwind v4 preflight
-   doesn't blank the modal card. Targets the outer modal container and its
-   dialog. --rk-colors-* variables come from RainbowKit's darkTheme(). */
+/* RainbowKit modal — belt-and-suspenders guards against Tailwind v4 preflight
+   stripping the modal background. Since v4's cascade changed how unlayered
+   CSS lands, we force the modal card + any dialog role + common test ids to
+   retain their dark fill. --rk-colors-* come from RainbowKit's darkTheme().
+   Fallback colors match our bg-bg-elevated token so the modal reads even if
+   RainbowKit fails to inject its CSS variables entirely. */
 [data-rk] [role="dialog"],
 [data-rk] [data-testid="rk-account-modal"],
 [data-rk] [data-testid="rk-chain-modal"],
-[data-rk] [data-testid="rk-connect-modal"] {
+[data-rk] [data-testid="rk-connect-modal"],
+[data-rk] [class*="ju367vb6"] {
 	background: var(--rk-colors-modalBackground, #141218) !important;
-	border: 1px solid var(--rk-colors-modalBorder, rgba(255, 255, 255, 0.08)) !important;
+}
+[data-rk] [class*="ju367vb9"] {
+	background: var(--rk-colors-modalBorder, rgba(255, 255, 255, 0.08)) !important;
+}
+[data-rk] [class*="ju367vb3"] {
+	background: var(--rk-colors-modalBackdrop, rgba(0, 0, 0, 0.6)) !important;
 }
